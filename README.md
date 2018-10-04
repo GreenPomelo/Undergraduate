@@ -27,16 +27,19 @@
         <img width="128" height="128" src="https://github.com/solojiang.png?s=128">
         <br>
         <a href="https://github.com/solojiang">@SoloJiang</a>
+        <p>Leader & News</p>
       </td>
       <td align="center" valign="top">
         <img width="128" height="128" src="https://github.com/Bosspwn.png?s=128">
         <br>
         <a href="https://github.com/Bosspwn">@Bosspwn</a>
+        <p>Core</p>
       </td>
       <td align="center" valign="top">
         <img width="128" height="128" src="https://github.com/flytam.png?s=128">
         <br>
         <a href="https://github.com/flytam">@flytam</a>
+        <p>Campus-card-page & Examination</p>
       </td>
       <td align="center" valign="top">
         <img width="128" height="128" src="https://github.com/
@@ -45,11 +48,27 @@ niffler-bkkkkk.png?s=128">
         <a href="https://github.com/
 niffler-bkkkkk">@
 niffler-bkkkkk</a>
+        <p>Questionnaire</p>
       </td>
       <td align="center" valign="top">
         <img width="128" height="128" src="https://github.com/UZIhuhuhu.png?s=128">
         <br>
         <a href="https://github.com/UZIhuhuhu">@UZIhuhuhu</a>
+        <p>Association</p>
+      </td>
+     </tr>
+     <tr>
+      <td align="center" valign="top">
+        <img width="128" height="128" src="https://github.com/GooeyNyan.png?s=128">
+        <br>
+        <a href="https://github.com/GooeyNyan">@GooeyNyan</a>
+        <p>GPA calculator & Authentication</p>
+      </td>
+      <td align="center" valign="top">
+        <img width="128" height="128" src="https://github.com/kishivn.png?s=128">
+        <br>
+        <a href="https://github.com/kishivn">@kishivn</a>
+        <p>Information</p>
       </td>
      </tr>
   </tbody>
