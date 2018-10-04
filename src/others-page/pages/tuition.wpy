@@ -1,0 +1,350 @@
+<template>
+  <view class="container">
+    <image class="tuition-bg" mode="aspectFill" src="https://static.airbob.org/under-graduate/tuition/tuition.png" />
+    <scroll-view scroll-x class="year-container">
+      <repeat for="{{years}}" index="index" key="key" item="item">
+        <view class="year-btn {{ index==tapYear?'year-ontap':'' }}" data-index="{{index}}" data-item="{{ item }}" @tap="changeYear">{{ item }}</view>
+      </repeat>
+    </scroll-view>
+    <view class="boxLoading" wx:if="{{ showLoading }}"></view>
+    <view class="table-container" wx:if="{{ !showBlank }}">
+      <scroll-view scroll-x class="table">
+        <view class="tr">
+          <view class="th">费用名称</view>
+          <view class="th">应缴金额</view>
+          <view class="th">已交金额</view>
+          <view class="th">退款金额</view>
+          <view class="th">欠缴金额</view>
+        </view>
+        <repeat for="{{ categories }}" index="index" key="key" item="item">
+          <view class="tr">
+            <view class="td">{{ item }}</view>
+            <view class="td">{{ dues[index] }}</view>
+            <view class="td">{{ paid[index] }}</view>
+            <view class="td">{{ refunds[index] }}</view>
+            <view class="td">{{ debts[index] }}</view>
+          </view>
+        </repeat>
+      </scroll-view>
+      <image class="table-gradual" mode="aspectFill" src="https://static.airbob.org/under-graduate/tuition/gradual.png" />
+    </view>
+    <view class="abnormal-container" wx:if="{{ abnormal }}">
+      <image class="abnormal" mode="aspectFit" src="https://static.airbob.org/under-graduate/tuition/abnormal.png" />
+      <span>暂无相关信息哟～</span>
+    </view>
+    <QyModal width="500rpx">
+      <view slot="content" class="bind-container">
+        <input class="bind-input" placeholder="统一身份认证密码(默认身份证后六位)" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+      </view>
+    </QyModal>
+    <!-- <view class="web-view" wx:if="{{ showWeb }}">
+      <web-view src="https://wechat.njupt.edu.cn/tuition/"></web-view>
+    </view> -->
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  import QyModal from "@/components/qy-modal";
+  export default class extends wepy.page {
+    config = {
+      navigationBarTitleText: "学费查询"
+    };
+    data = {
+      tapYear: "",
+      showLoading: false,
+      abnormal: false,
+      showBlank: true,
+      years: [],
+      categories: [],
+      dues: [],
+      paid: [],
+      refunds: [],
+      debts: [],
+      tuition: [],
+      password: ""
+      // count: 0,
+      // showWeb: false
+    };
+    components = {
+      QyModal: QyModal
+    };
+    methods = {
+      changeYear(e) {
+        let index = e.currentTarget.dataset.index;
+        this.categories = [];
+        this.dues = [];
+        this.paid = [];
+        this.refunds = [];
+        this.debts = [];
+        this.setTuition(index);
+        this.tapYear = parseInt(index);
+        this.$apply();
+      },
+      bindCardPassword(e) {
+        this.password = e.detail.value;
+      },
+      async bindHandle() {
+        let that = this;
+        if (this.password) {
+          let updatePassword = await wepy.request({
+            url:
+              that.$parent.globalData.requestUrl +
+              this.$parent.globalData.config.changeSecretCode,
+            data: {
+              domainType: 16,
+              username: "",
+              password: this.password
+            },
+            method: "POST"
+          });
+          if (updatePassword.data.success) {
+            that.bindModalVisible = false;
+            that.$invoke("QyModal", "close");
+            that.init();
+          } else {
+            wepy.showModal({
+              content: "密码错误",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            });
+            // that.count++;
+            // if (that.count > 3) {
+            //   await wepy.showModal({
+            //     content: "密码错误次数过多,前往认证平台解除验证码",
+            //     confirmText: "知道了",
+            //     showCancel: false,
+            //     confirmColor: "#353535"
+            //   });
+            //   that.showWeb = true;
+            //   that.$apply();
+            // }
+          }
+        } else {
+          wepy.showModal({
+            content: "密码为空",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+      }
+    };
+    async getTuition() {
+      let that = this;
+      let currentYearTuition = await wepy.request({
+        url:
+          that.$parent.globalData.requestUrl +
+          that.$parent.globalData.config.schoolFee,
+        mehtod: "GET"
+      });
+      setTimeout(() => {
+        that.showLoading = false;
+        if (currentYearTuition.data.success && currentYearTuition.data.data) {
+          that.showBlank = false;
+          that.tuition = currentYearTuition.data.data.data;
+          that.years = [];
+          that.abnormal = false;
+          for (let i = 0; i < that.tuition.length; i++) {
+            let yearItem = this.tuition[i].year.substr(0, 9) + " 学年";
+            that.years.push(yearItem);
+          }
+          that.setTuition(0);
+          that.$apply();
+        } else if (
+          currentYearTuition.data.success &&
+          !currentYearTuition.data.data
+        ) {
+          that.abnormal = true;
+        } else if (!currentYearTuition.data.success) {
+          that.abnormal = true;
+          wepy
+            .showModal({
+              content: "密码已经更新请重新绑定",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            })
+            .then(() => {
+              that.$invoke("QyModal", "open");
+            });
+        }
+        that.$apply();
+      }, 1000);
+      this.$apply();
+    }
+    setTuition(e) {
+      this.showBlank = false;
+      let categories = this.tuition[e].items;
+      let dues = this.tuition[e].shouldPay;
+      let paid = this.tuition[e].payed;
+      let refunds = this.tuition[e].refund;
+      let debts = this.tuition[e].arrears;
+      this.categories = categories;
+      for (let key in categories) {
+        this.dues.push(dues[categories[key]]);
+        this.paid.push(paid[categories[key]]);
+        this.refunds.push(refunds[categories[key]]);
+        this.debts.push(debts[categories[key]]);
+      }
+      this.$apply();
+    }
+    getYears() {
+      let that = this;
+      return new Promise(resolve => {
+        let userInfo = wepy.getStorageSync("userInfo");
+        let nowYear = parseInt(
+          new Date()
+            .getFullYear()
+            .toString()
+            .substr(2, 3)
+        );
+        let enterYear = parseInt(userInfo.studentId.substr(1, 2));
+        let allYears = parseInt(nowYear - enterYear);
+        for (let i = 0; i < allYears; i++) {
+          that.years.unshift(
+            `20${enterYear + i}-20${parseInt(enterYear + i + 1)} 学年`
+          );
+        }
+        that.$apply();
+        resolve();
+      });
+    }
+    async init() {
+      this.years = [];
+      this.showLoading = true;
+      this.abnormal = false;
+      this.showBlank = true;
+      this.getYears();
+      await this.getTuition();
+      this.$apply();
+    }
+    async onLoad() {
+      this.init();
+    }
+  }
+</script>
+
+<style lang="stylus" scoped>
+vendors = official
+@import '../../css/loading'
+
+.container
+  display flex
+  flex-direction column
+  align-items center
+  height 100%
+  min-height 100vh
+  image
+    width 720rpx
+    height 420rpx
+    margin 0 auto
+  .year-container
+    width 100%
+    margin 20rpx 0
+    display flex
+    flex-direction row
+    justify-content center
+    white-space nowrap
+    .year-btn
+      display inline-block
+      box-sizing border-box
+      height 78rpx
+      width 316rpx
+      border-radius 6rpx
+      border solid 2rpx #eb865f
+      font-size 32rpx
+      text-align center
+      line-height 78rpx
+      color #ea875e
+      font-family PingFangSC-Regular
+      margin-left 24rpx
+      margin-bottom 30rpx
+    .year-btn:last-child
+      margin-right 24rpx
+    .year-ontap
+      background-image linear-gradient(90deg, #ebba2e 0%, #ea845f 100%)
+      border 0
+      padding 2rpx 2rpx 0 0
+      color #fff
+  .boxLoading
+    position fixed
+    top 50vh
+  .table-container
+    width 100%
+    position relative
+    .table
+      display flex
+      flex-direction column
+      width 100%
+      .tr
+        width 150%
+        min-height 96rpx
+        display flex
+        flex-direction row
+        align-items center
+        border-bottom solid 2rpx #e0e0e0
+        margin 0 20rpx
+        .th, .td
+          display inline-block
+          width 128rpx
+          font-family PingFangSC-Medium
+          color #353535
+          font-size 32rpx
+          line-height 32rpx
+          margin 0 40rpx 0 40rpx
+      .tr:first-child
+        background-color #efefef
+        border 0
+        border-radius 6px
+      .tr:last-child
+        margin-bottom 30rpx
+    .table-gradual
+      position absolute
+      top 0
+      right 0
+      bottom 0
+      width 170rpx
+      height 100%
+  .abnormal-container
+    height calc(100vh - 568rpx)
+    display flex
+    flex-direction row
+    align-items center
+    image
+      height 64rpx
+      width 64rpx
+    span
+      margin-left 32rpx
+      font-family PingFangSC-Regular
+      color #eb994c
+      font-size 28rpx
+  .bind-container
+    display flex
+    flex-direction column
+    align-items center
+    background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+    background-repeat no-repeat
+    height 485rpx
+    border-radius 30rpx
+    background-size cover
+    .bind-input
+      font-size 26rpx
+      margin 221rpx 0 56rpx
+      width 438rpx
+      border-bottom 2rpx solid #999CA0
+    .bind-button
+      margin-top 26rpx
+      background-color #6AE4FF
+      text-align center
+      width 410rpx
+      height 80rpx
+      line-height 80rpx
+      color #ffffff
+      border-radius 50px
+  .button-click
+    background-image none
+    background-color #D0F5FF
+</style>

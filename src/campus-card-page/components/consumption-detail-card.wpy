@@ -1,0 +1,63 @@
+<template>
+    <view class="card-container">
+        <view class="time">{{occTime}}</view>
+        <repeat for="{{list}}" key="index">
+          <view class="card-list">
+              <view class="list-item" >{{item.mercname}}</view>
+              <view class="list-item">{{item.tranname}}</view>
+              <view class="list-item {{item.tranamt>0?'add':'des'}}">{{item.tranamt}}</view>
+          </view>
+        </repeat>
+
+    </view>
+</template>
+<script>
+import wepy from "wepy";
+export default class ConsumptionDetail extends wepy.component {
+  props = {
+    list: {
+      default: [],
+      type: Array
+    },
+    occTime: {
+      default: "",
+      type: String
+    }
+  };
+}
+</script>
+<style lang="stylus" scoped>
+.card-container
+  color #353535
+  display flex
+  flex-direction column
+  align-items center
+  .time
+    font-size 24rpx
+    font-weight bold
+    height 60rpx
+    line-height 60rpx
+    color #888
+  .card-list
+    display flex
+    width 100%
+    background-color rgb(255,255,255)
+    & + .card-list
+      border-top 2rpx solid #E3E3E3
+    .list-item
+      width 33%
+      font-size 28rpx
+      text-align center
+      word-break keep-all
+      white-space nowrap
+      overflow hidden
+      text-overflow ellipsis
+      height 84rpx
+      line-height 84rpx
+    .add
+      color #09BB07
+      font-weight bold
+    .des
+      color #E64340
+      font-weight bold
+</style>

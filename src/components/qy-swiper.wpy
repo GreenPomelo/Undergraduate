@@ -1,0 +1,105 @@
+<style lang="stylus" scoped>
+.swiper-wrap {
+  display: inline-block;
+  width: 100vw;
+}
+.container {
+  width: 750rpx;
+  height: 400rpx;
+  margin: 20rpx auto;
+}
+.slide-image {
+  height: 400rpx;
+  width: 750rpx
+}
+.dots {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 12rpx;
+  margin: 16rpx auto;
+}
+.dot {
+  height: 12rpx;
+  width: 12rpx;
+  background-color: #353535;
+  border-radius: 100rpx;
+  margin: auto
+}
+.activeDot {
+  height: 12rpx;
+  width: 12rpx;
+  background-color: #353535;
+  border-radius: 100rpx;
+  margin: auto
+  -webkit-animation: moveDot 2s
+}
+@-webkit-keyframes moveDot {
+  0% {
+    width 12rpx
+  }
+  25% {
+    width 54rpx
+  }
+  75% {
+    width 54rpx
+  }
+  100% {
+    width 12rpx
+  }
+}
+</style>
+
+<template>
+  <view class="swiper-wrap">
+    <swiper autoplay="true" interval="2000" duration="500" class="container" bindchange="listenChange">
+      <block wx:for="{{imgUrls}}" wx:key="id">
+        <swiper-item>
+          <image src="{{item.url}}" class="slide-image" catchtap="goToAds({{ item.adId }})"/>
+        </swiper-item>
+      </block>
+    </swiper>
+    <view class="dots" style="width: {{ imgUrls.length * 60 + 'rpx' }}">
+      <block wx:for="{{imgUrls}}" wx:key="id" wx:index="index">
+        <view style="width: 60rpx">
+          <view class="{{item.on}}"></view>
+        </view>
+      </block>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class swiper extends wepy.component {
+  data = {
+    animationDot: {}
+  };
+
+  props = {
+    imgUrls: {
+      type: Array
+    }
+  };
+
+  methods = {
+    bindChange(e) {
+      console.log(e.detail);
+      this.$emit("change", 0);
+    },
+    listenChange(event) {
+      for (let item of this.imgUrls) {
+        item.on = "dot";
+      }
+      this.imgUrls[event.detail.current].on = "activeDot";
+      this.$apply();
+    },
+    goToAds(adId) {
+      wepy.navigateTo({
+        url: "../others-page/pages/advertisement?adId=" + adId
+      });
+    }
+  };
+}
+</script>

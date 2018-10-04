@@ -1,0 +1,149 @@
+<template>
+	<view class="container {{isFinished?'finish-container':'unfinish-container'}}" style="{{isFinished && !show?'height:86rpx;':''}} background-color:{{bg.right}}" @tap.stop="{{isFinished?'toggle':'empty'}}">
+		<view class="{{isFinished?'':'colorful-left'}}" style="background-image:{{bg.left}}">
+			<image src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E5%80%92%E8%AE%A1%E6%97%B6%E5%9B%BE%E6%A0%87.png" wx:if="{{!isFinished}}" class="colorful-bg" />
+			<view class="head" style="{{isFinished && !show?'margin:0 0 0 43rpx;':''}}">
+				{{item.subject}}
+			</view>
+			<view class="list {{isFinished &&  !show?'hidden':''}}">
+				<text class="list-text">考试时间：{{item.time}}</text>
+				<text class="list-text">考试地点：{{item.place}}</text>
+				<text class="list-text">任课老师：{{item.teacher}}</text>
+			</view>
+		</view>
+		<view wx:if="{{!isFinished}}">
+			<image class="cancel" @tap.stop="down" src="https://static.airbob.org/under-graduate/grade/%E5%88%A0%E9%99%A4.png" data-courseCode="{{item.courseCode}}" data-courseTeacher="{{item.teacher}}"/>
+			<view class="remain-list">
+				<text class="remain-text">还有</text>
+				<text class="remain-text">{{item.remain}}</text>
+				<text class="remain-text">天</text>
+			</view>
+		</view>
+		<block wx:if="{{isFinished}}">
+			<image class="up {{item.remain > -1?'':'hidden'}}" @tap.stop="up" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E7%AE%AD%E5%A4%B4.png" data-courseCode="{{item.courseCode}}" data-courseTeacher="{{item.teacher}}"/>
+			<text class="end {{show && item.remain <= -1?'':'hidden'}}">已结束</text>
+			<text class="end {{show && item.remain > -1?'':'hidden'}}">还有{{item.remain}}天</text>
+		</block>
+	</view>
+</template>
+
+<script>
+import wepy from "wepy";
+// 两种状态是否已经结束
+export default class SubjectCard extends wepy.component {
+  props = {
+    item: Object,
+    isFinished: Boolean,
+    bg: {
+      type: String,
+      default: ""
+    },
+    show: {
+      type: Boolean, // 已经完成的考试隐藏详情。只有isFinished为true时生效
+      default: false
+    }
+  };
+  data = {};
+  methods = {
+    toggle(e) {
+      this.$emit("showchange", this.$index);
+    },
+    empty() {},
+    async up(e) {
+      this.$emit(
+        "up",
+        this.item.originIndex,
+        e.target.dataset.coursecode,
+        e.target.dataset.courseteacher
+      );
+    },
+    async down(e) {
+      const res = await wepy.showModal({
+        content: "是否删除该课程？",
+        confirmColor: "#47CFF5"
+      });
+      if (res.confirm) {
+        // 把课程号和originIndex发到Page中
+        this.$emit(
+          "down",
+          this.item.originIndex,
+          e.target.dataset.coursecode,
+          e.target.dataset.courseteacher
+        );
+      }
+    }
+  };
+}
+</script>
+<style lang="stylus" scoped>
+.container
+	width 605rpx
+	height 262rpx
+	border-radius 30rpx
+	margin-bottom 29rpx
+	font-family "SimHei"
+	color rgb(53,53,53)
+	position:relative
+	display flex!important
+	flex-direction row!important
+	.head
+		font-size 36rpx
+		align-self flex-start
+		margin 28rpx 0 0 43rpx
+		width 400rpx
+		overflow hidden
+		text-overflow ellipsis
+		white-space nowrap
+	.list
+		// height 126rpx
+		display flex
+		flex-direction column
+		align-self flex-start
+		margin 26rpx 0 0 43rpx
+		.list-text
+			font-size 24rpx
+			margin-bottom 18rpx
+	.remain-list
+		display flex
+		flex-direction column
+		width 99rpx
+		align-items center
+		.remain-text
+			color rgb(255,255,255)
+	.colorful-left
+		box-shadow 0rpx 3rpx 7rpx 0rpx rgba(0, 0, 0, 0.35)
+		border-radius 30rpx
+		width 486rpx
+		height 262rpx
+		position relative
+		.colorful-bg
+			position absolute
+			width 187rpx
+			height 164rpx
+			top 94rpx
+			left 74rpx
+	.cancel
+		position relative
+		top -7rpx
+		left 58rpx
+		width 34rpx
+		height 35rpx
+	.up
+		width 39rpx
+		height 36rpx
+		position absolute
+		top 24rpx
+		left 488rpx
+	.end
+		font-size 36rpx
+		position absolute
+		top 132rpx
+		left 394rpx
+.unfinish-container
+	background-color rgb(252,192,97)
+.finish-container
+	background-color rgb(223,223,223)
+.hidden
+	display none!important
+</style>
+

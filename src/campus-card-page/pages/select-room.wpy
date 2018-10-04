@@ -1,0 +1,161 @@
+<template>
+  <view class="container">
+    <view wx:if="{{rooms.length === 0}}" class="not-used">你还没冲过电费呢～</view>
+    <view wx:else class="room-container">
+      <view class="room-item-container" wx:for="{{rooms}}" index="index" item="item" wx:key="index">
+        <view class="room-item">
+          <view class="room-name-container">
+            <view class="room-name">{{item.campusName}}校区 {{item.areaName}} {{item.buildingName}} {{item.bigRoom}}{{item.smallRoom ? '-' + item.smallRoom : ''}}</view>
+            <view class="use-once" @tap="useOnce({{index}})">本次使用</view>
+          </view>
+          <view class="opera-container">
+            <view class="opera-default-container" @tap="changeDefult({{index}})">
+              <view class="opera-default" style="background-image:url({{item.default ? 'https://static.airbob.org/under-graduate/btn_circle_hightlight.png' : 'https://static.airbob.org/under-graduate/btn_circle_disable.png'}})"></view>
+              <span>设为默认</span>
+            </view>
+            <view class="opera">
+              <view class="opera-item" @tap="edit({{item}},{{index}})" style="background-image:url('https://static.airbob.org/under-graduate/edit.png');"></view>
+              <view class="opera-item" @tap="Delete({{index}})" style="background-image:url('https://static.airbob.org/under-graduate/campus-card/delete.png');"></view>
+            </view>
+          </view>
+        </view>
+        <view class="divide"></view>
+      </view>
+    </view>
+    <view class="rectangle" @tap="addNewAddress">+ 添加新地址</view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class selectRoom extends wepy.page {
+  data = {
+    rooms: []
+  };
+  config = {
+    navigationBarTitleText: "管理宿舍地址"
+  };
+  onShow() {
+    this.rooms = wepy.getStorageSync("selectRoom")
+      ? wepy.getStorageSync("selectRoom")
+      : [];
+    if (this.rooms.length === 1) {
+      this.rooms[0].default = true;
+      wepy.setStorageSync("selectRoom", this.rooms);
+    }
+  }
+  methods = {
+    addNewAddress() {
+      this.$navigate({
+        url: "./add-room"
+      });
+    },
+    changeDefult(index) {
+      this.rooms.map(item => (item.default = false));
+      this.rooms[index].default = true;
+      wepy.setStorageSync("selectRoom", this.rooms);
+    },
+    Delete(index) {
+      this.rooms.splice(index, 1);
+      wepy.setStorageSync("selectRoom", this.rooms);
+    },
+    useOnce(index) {
+      const page = getCurrentPages();
+      const prevPage = page[page.length - 2];
+      prevPage.data.useOnce = index;
+      wepy.navigateBack({
+        delta: 1
+      });
+    },
+    edit(item, index) {
+      this.$navigate({
+        url: `./add-room?item=${JSON.stringify(item)}&&index=${index}`
+      });
+    }
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  position relative
+  min-height 100vh
+  font-family PingFangSC-Regular
+  font-size 32rpx
+  .room-container
+    .room-item-container
+      padding 20rpx 0 0 0
+      height 170rpx
+      font-family PingFangSC-Regular
+      color #353535
+      .room-item
+        padding 0 0 20rpx 0
+        margin 0 20rpx 0 20rpx
+        .room-name-container
+          display flex
+          height 97rpx
+          font-size 30rpx
+          .room-name
+            width 550rpx
+          .use-once
+            color #47cff5
+            border-radius 50rpx
+            width 150rpx
+            height 50rpx
+            line-height 50rpx
+            text-align center
+            font-size 28rpx
+            border 1rpx solid #47cff5
+        .opera-container
+          font-size 24rpx
+          height 33rpx
+          line-height 33rpx
+          display flex
+          .opera-default-container
+            width 550rpx
+            display flex
+            .opera-default
+              height 33rpx
+              width 33rpx
+              margin-right 10rpx
+              background-repeat no-repeat
+              background-size contain
+              background-position center
+          .opera
+            width 110rpx
+            margin 0 20rpx
+            display flex
+            justify-content space-between
+            .opera-item
+              height 33rpx
+              width 33rpx
+              background-repeat no-repeat
+              background-size contain
+              background-position center
+  .not-used
+    position fixed
+    color #9b9b9b
+    height 100vh
+    width 100vw
+    line-height 100vh
+    text-align center
+  .rectangle
+    position absolute
+    bottom 24rpx
+    width 90%
+    left 5%
+    height 85rpx
+    line-height 85rpx
+    text-align center
+    color #fff
+    background-color #47cff5
+    border-radius 50rpx
+
+.divide
+  width 750rpx
+  height 20rpx
+  background-color #f5f5f5
+</style>
+
+
+

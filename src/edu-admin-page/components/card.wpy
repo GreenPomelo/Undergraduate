@@ -1,0 +1,73 @@
+<template>
+  <view class="container">
+    <view class="head" style="background-image:url({{bg}});">
+      <image class="paper" src="{{showbg}}" mode="widthFix"/>
+      <view class="right">
+        <text class="head-text">{{item.courseName}}</text>
+        <text class="head-text">指导老师：{{item.courseTeacher}}</text>
+      </view>
+    </view>
+    <view class="foot">
+      <view class="foot-left">
+        <text class="text">Time</text>
+        <text class="text">{{item.examDate}}</text>
+        <text class="text">{{item.examTime}}</text>
+      </view>
+      <view class="foot-right">
+        <text class="text">Place</text>
+        <text class="text">{{item.examPosition}}</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class extends wepy.component {
+  props = {
+    item: Object,
+    bg: String,
+    showbg: String
+  };
+}
+</script>
+<style lang="stylus" scoped>
+.container
+  width 605rpx
+  height 275rpx
+  box-shadow 0rpx 3rpx 7rpx 0rpx rgba(0, 0, 0, 0.35)
+  border-radius 30rpx
+  margin-bottom 29rpx
+  .head
+    background-repeat no-repeat
+    background-size 605rpx
+    height 180rpx
+    .right
+      float right
+      display flex
+      flex-direction column
+      align-items flex-end
+      margin 28rpx 24rpx 0 0
+    .paper
+      width 92rpx
+      margin 28rpx 0 0 41rpx
+    .head-text
+      font-size 34rpx
+      font-family 'SimHei'
+      color rgb(88, 88, 88)
+  .foot
+    .text
+      font-size 26rpx
+      color rgb(88, 88, 88)
+      line-height 1.192
+    .foot-left
+      float left
+      display flex
+      flex-direction column
+      margin-left 37rpx
+    .foot-right
+      float right
+      display flex
+      flex-direction column
+      margin-right 37rpx
+</style>

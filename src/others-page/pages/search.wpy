@@ -1,0 +1,275 @@
+<template>
+  <view>
+    <view class="search-bar">
+      <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon"/>
+      <input type="text" class="search-input" @input="search" value="{{keyWord}}" placeholder="搜索个关键词看看？" focus="true"/>
+      <text class="search-cancel" @tap="goBack">取消</text>
+    </view>
+    <view hidden="{{noSearch}}">
+      <view class="hot-search" style="border-bottom:1rpx solid #F5F5F5">
+        <view class="search-title">热门搜索</view>
+        <view class="hot-search-item">        
+          <repeat for="{{hotSearch}}" index="index" item="item" key="key">
+            <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{item.tagId}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="search-item" data-name="{{item}}" style="padding-left:{{item.hotIcon ? '10rpx' : '34rpx'}}">
+              <image wx:if="{{item.hotIcon}}" src="https://static.airbob.org/under-graduate/search-icon-hot@3x.png" mode="aspectFit" class="hot-search-image"/>
+              <span>{{item.tag}}</span>
+            </navigator>
+          </repeat>
+        </view>
+      </view>
+      <view class="hot-search">
+        <view class="search-title">
+          <view class="get-rid" @tap="clearHistory"></view>
+            搜索历史
+        </view>
+        <view class="hot-search-item">                
+          <repeat for="{{searchHistory}}" index="index" key="key" item="item">
+            <view class="search-item" @tap="quickSearch" data-name="{{item}}">{{item}}</view>
+          </repeat>
+        </view>
+      </view>
+    </view>
+    <view hidden="{{!noSearch}}" class="result-page">
+      <view class="result-title">搜索结果</view>
+      <view hidden="{{!result[0]}}">
+        <repeat for="{{result}}" index="index" key="key" item="item">
+          <view class="result-item" @tap="navTo" data-path="{{item.path}}">
+            <view class="result-image" style="background-image:url('{{item.icon}}')"></view>
+            <view class="result-content">
+              {{item.before}}<span class="result-color">{{keyWord}}</span>{{item.leftWord}}
+            </view>
+          </view>
+        </repeat>
+      </view>
+      <view hidden="{{result[0]}}">
+        <view class="no-result"></view>
+        <view class="no-result-content">啥也没搜到~</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import allSearch from "../mixins/all-search-thing";
+
+export default class extends wepy.page {
+  data = {
+    isFocus: false,
+    keyWord: "",
+    hotSearch: [],
+    allSearches: [],
+
+    noSearch: false,
+    searchHistory: [],
+    result: [],
+    change: false
+  };
+  mixins = [allSearch];
+  watch = {
+    keyWord(curVal, oldVal) {
+      this.$apply();
+      if (curVal === "") {
+        this.noSearch = false;
+      } else {
+        this.noSearch = true;
+      }
+    }
+  };
+  methods = {
+    search(e) {
+      if (!wepy.getStorageSync("searchHistory")) {
+        wepy.setStorageSync("searchHistory", []);
+      }
+      this.keyWord = e.detail.value;
+      if (this.keyWord !== "") {
+        this.find(this.keyWord);
+      }
+    },
+    goBack() {
+      wepy.navigateBack();
+    },
+    clearHistory() {
+      wepy.setStorageSync("searchHistory", []);
+      this.searchHistory = [];
+      this.$apply();
+    },
+    // quickSearch(e) {
+    // let name = e.currentTarget.dataset.name;
+    // if (!wepy.getStorageSync("searchHistory")) {
+    //   wepy.setStorageSync("searchHistory", []);
+    // }
+    // this.keyWord = name;
+    // this.find(name);
+    // this.$apply();
+    // },
+    navTo(e) {
+      let path = e.currentTarget.dataset.path;
+      wepy.navigateTo({
+        url: "../../../../" + path
+      });
+    }
+  };
+  find(e) {
+    let that = this;
+    let name = e;
+    this.result = [];
+    this.allSearches.forEach((i, keyWord) => {
+      if (i.name.indexOf(name) !== -1) {
+        let index = i.name.indexOf(name);
+        let before = i.name.substr(0, index);
+        let leftWord = i.name.substr(before.length + that.keyWord.length);
+        i.before = before;
+        i.leftWord = leftWord;
+        that.result.unshift(i);
+        if (that.searchHistory.indexOf(i.name) === -1) {
+          that.searchHistory.unshift(i.name);
+          wepy.setStorageSync("searchHistory", that.searchHistory);
+        }
+      }
+    });
+    this.$apply();
+  }
+  onLoad() {
+    let that = this;
+    this.searchHistory = wepy.getStorageSync("searchHistory");
+    this.allSearches = this.allSearchThing();
+    wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.findIcons}`
+      })
+      .then(res => {
+        that.hotSearch.push(...res.data.data);
+        that.hotSearch.forEach((item, index) => {
+          if (index <= 2) {
+            that.hotSearch[index].hotIcon = true;
+          } else {
+            that.hotSearch[index].hotIcon = false;
+          }
+        });
+        that.$apply();
+      });
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '../../css/search-input'
+
+.search-bar
+  box-shadow 0 10rpx 8rpx 0 rgba(0, 0, 0, 0.05)
+  padding 20rpx
+  position relative
+  font-size 30rpx
+  .search-icon
+    position absolute
+    width 30rpx
+    height 30rpx
+    top 35rpx
+    left 34rpx
+    z-index 1
+  .search-cancel
+    margin-top 10rpx
+    float right
+    color #47CFF5
+
+.hot-search
+  position relative
+  width 700rpx
+  margin 0 auto
+  padding-top 30rpx
+  .search-title
+    color #353535
+    font-size 30rpx
+    line-height 30rpx
+    height 30rpx
+    font-weight bold
+    margin-bottom 30rpx
+    .get-rid
+      position absolute
+      right 25rpx
+      width 30rpx
+      height 30rpx
+      background-image url('https://static.airbob.org/under-graduate/%E6%B8%85%E7%A9%BA.png')
+      background-position center
+      background-repeat no-repeat
+      background-size contain
+  .hot-search-item
+    display flex
+    flex-wrap wrap
+    justify-content flex-start
+    .search-item
+      display flex
+      justify-content center
+      flex-grow 0
+      font-size 28rpx
+      height 40rpx
+      padding 10rpx 34rpx
+      margin-bottom 30rpx
+      margin-right 30rpx
+      background #F5F5F5
+      color #353535
+      border-radius 50rpx
+      .hot-search-image
+        width 40rpx
+        height 40rpx
+        margin-right 10rpx
+
+.result-page
+  position relative
+  padding-top 30rpx
+  width 700rpx
+  margin 0 auto
+  .result-title
+    color #353535
+    font-size 30rpx
+    line-height 30rpx
+    height 30rpx
+    font-weight bold
+    margin-bottom 30rpx
+  .result-item
+    position relative
+    font-size 28rpx
+    color #353535
+    width 700rpx
+    height 50rpx
+    line-height 50rpx
+    margin-top 30rpx
+    .result-image
+      position relative
+      display inline-block
+      width 50rpx
+      height 50rpx
+      margin-left 15rpx
+      background-position center
+      background-repeat no-repeat
+      background-size contain
+    .result-content
+      margin-left 20rpx
+      position absolute
+      display inline-block
+      width 600rpx
+      height 50rpx
+      line-height 50rpx
+      font-weight bold
+      .result-color
+        color #47CFF5
+  .no-result
+    position relative
+    top 200rpx
+    width 400rpx
+    height 287rpx
+    background-image url('https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E9%A1%B5_%E7%A9%BA.png')
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+    margin 0 auto
+  .no-result-content
+    position relative
+    margin 0 auto
+    text-align center
+    color #999CA0
+    font-size 28rpx
+    top 270rpx
+</style>

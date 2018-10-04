@@ -1,0 +1,340 @@
+<template>
+	<view class="container">
+		<view class="background" />
+		<view class="head-container">
+			<view class="button-list">
+				<view class="button-common {{current==='class'?'button-active':''}}" @tap.stop="toClass">体育课</view>
+				<view class="button-common {{current==='test'?'button-active':''}}" @tap.stop="toTest">体测</view>
+			</view>
+			<image class="head-icon" src="https://static.airbob.org/under-graduate/%E4%BD%93%E8%82%B2%E6%88%90%E7%BB%A9/Sport.png" mode="widthFix" />
+		</view>
+		<block wx:if="{{current==='class'}}">
+			<repeat for="{{peClass}}" key="index" item="item" index="index">
+				<PeCard1 :result.sync="item" :titleBgColor.sync="titleBgColor[index%2]" :animation.sync="peClassAnimations[index]" :indexx="index" />
+			</repeat>
+		</block>
+    <block wx:if="{{(peClass.length === 0 && current==='class')}}">
+		<view class="no-container">
+			<image class="no-image" mode="widthFix" src="https://static.airbob.org/under-graduate/%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B52.png" />
+			<view class="no-text">还没参加过体育考试，但要多运动哦</view>
+		</view>
+    </block>
+		<block wx:if="{{current==='test'}}">
+			<repeat for="{{peTest}}" key="index" item="item" index="index">
+				<PeCard2 :result.sync="item" :titleBgColor.sync="titleBgColor[index%2]" :animation.sync="peTestAnimations[index]" :indexx="index" />
+			</repeat>
+		</block>
+    <block wx:if="{{peTest.length === 0 && current==='test'}}">
+		<view class="no-container">
+			<image class="no-image" mode="widthFix" src="https://static.airbob.org/under-graduate/%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B52.png" />
+			<view class="no-text">还没参加过体测，但要多运动哦</view>
+		</view>
+    </block>
+		<QyBinding :isGet="isGet" :visible.sync="bindingVisible" :zIndex="bindingZIndex" :width="bindingWidth" :height="bindingHeight" :top="bindingTop" :mockURL.sync="bindingURL" :domainType.sync="bindingDomainType" :domainUserName.sync="studentId" :VerifyURL.sync="bindingDomainVerifyURL"></QyBinding>
+		<!-- <QyBinding :visible.sync="bindingVisible"  :mockURL.sync="URL" :domainType.sync="bindingDomainType" :domainUserName="studentId" :VerifyURL="bindingDomainVerifyURL"></QyBinding> -->
+	</view>
+</template>
+
+<script>
+import wepy from "wepy";
+// import QyNav from "@/components/qy-navigation";
+// import QyContainer from "@/components/qy-container";
+import PeCard from "../components/pe-card";
+import QyBinding from "@/components/qy-binding-modal";
+export default class PeScore extends wepy.page {
+  components = {
+    // QyNav,
+    // QyContainer,
+    PeCard1: PeCard,
+    PeCard2: PeCard,
+    QyBinding
+  };
+  data = {
+    current: "class", // or test
+    peClass: [],
+    peClassShows: [],
+    peClassAnimations: [],
+    peTest: [],
+    peTestShows: [],
+    peTestAnimations: [],
+    titleBgColor: ["rgb(20,126,232)", "rgb(239,90,97)"],
+    winWidth: 750,
+    studentId: "",
+    bindingZIndex: 2000,
+    bindingWidth: "500rpx",
+    bindingTop: "35vh",
+    bindingHeight: "500rpx",
+    bindingDomainType: 2,
+    bindingVisible: false,
+    bindingURL: "",
+    bindingDomainVerifyURL: "",
+    isGet: true
+  };
+  config = {
+    navigationBarTitleText: "体育部"
+  };
+  async onLoad() {
+    const { studentId } = wepy.getStorageSync("userInfo");
+    this.studentId = studentId;
+    this.bindingURL = `${this.$parent.globalData.requestUrl +
+      this.$parent.globalData.config.changeSecretCode}`;
+    this.bindingDomainVerifyURL = `${this.$parent.globalData.requestUrl +
+      this.$parent.globalData.config.getUserPEGrade}?semester=${studentId.slice(
+      1,
+      3
+    )}00`;
+    this.check();
+  }
+  methods = {
+    toTest() {
+      if (this.current !== "test") {
+        this.current = "test";
+      }
+    },
+    toClass() {
+      if (this.current !== "class") {
+        this.current = "class";
+      }
+    }
+  };
+  watch = {
+    bindingVisible(next) {
+      if (next === false) {
+        this.getData();
+        this.$apply();
+      }
+    }
+  };
+  async check() {
+    const { data: check } = await wepy.request({
+      url: `${this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config
+          .getUserPEGrade}?semester=20${this.studentId.slice(1, 3)}00`
+    });
+    if (check.success) {
+      wepy.showLoading();
+      // 校验成功
+      this.getData();
+    } else {
+      wepy.hideLoading();
+      this.bindingVisible = true;
+      this.$apply();
+      // this.getData();
+    }
+  }
+  async getData() {
+    const fetchData1 = [];
+    const fetchData2 = [];
+    const studentYear = this.studentId.slice(1, 3); // 学生年级
+    const tempYear = [
+      `20${studentYear}`,
+      `20${parseInt(studentYear) + 1}`,
+      `20${parseInt(studentYear) + 2}`,
+      `20${parseInt(studentYear) + 3}`
+    ]; // 四年
+    const allTestReq = tempYear.map(item =>
+      wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getUserPEGrade}?semester=${item}00`
+      })
+    );
+    // 获取体侧数据
+    let total1;
+    Promise.all(allTestReq).then(Tests => {
+      Tests.forEach((item, index) => {
+        if (item.data && item.data.data && item.data.data.length > 1) {
+          fetchData1.push({
+            term: "体测",
+            data: item.data.data,
+            year: `${tempYear[index].slice(0, 4)}-${parseInt(
+              tempYear[index].slice(0, 4)
+            ) + 1}学年`
+          });
+        }
+      });
+      fetchData1.forEach(item => {
+        for (let i = 0; i < item.data.length; i++) {
+          if (item.data[i].project === "total") {
+            total1 = item.data.splice(i, 1);
+            break;
+          }
+        }
+        item.data.sort((a, b) => b.mark - a.mark);
+        item.data.push(total1[0]);
+      });
+      this.peTest = fetchData1.reverse();
+      this.peTestShows = new Array(fetchData1.length).fill(false);
+      this.peTestAnimations = new Array(fetchData1.length).fill({});
+      this.$apply();
+    });
+    // 获取体育成绩 大一大二
+    const allClassReq1 = tempYear.slice(0, 2).map(item =>
+      wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getUserPEGrade}?semester=${item}01`
+      })
+    );
+    const allClassReq2 = tempYear.slice(0, 2).map(item =>
+      wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getUserPEGrade}?semester=${item}02`
+      })
+    );
+    let total2;
+    Promise.all([...allClassReq1, ...allClassReq2]).then(Classes => {
+      Classes.forEach((item, index) => {
+        if (item.data && item.data.data && item.data.data.length > 1) {
+          fetchData2.push({
+            term: `第${(index >> 1) + 1}学期`,
+            data: item.data.data,
+            year: `${tempYear[index % 2].slice(0, 4)}-${parseInt(
+              tempYear[index % 2].slice(0, 4)
+            ) + 1}学年`
+          });
+        }
+      });
+      // 把总分调到最后一项
+      fetchData2.forEach(item => {
+        for (let i = 0; i < item.data.length; i++) {
+          if (item.data[i].project === "total") {
+            total2 = item.data.splice(i, 1);
+            break;
+          }
+        }
+        item.data.sort((a, b) => b.mark - a.mark);
+        item.data.push(total2[0]);
+      });
+      this.peClass = fetchData2.reverse();
+      this.peClassShows = new Array(fetchData2.length).fill(false);
+      this.peClassAnimations = new Array(fetchData2.length).fill({});
+      this.$apply();
+    });
+    wepy.hideLoading();
+    const systemInfo = await wepy.getSystemInfo();
+    this.winWidth = systemInfo.windowWidth;
+  }
+  events = {
+    changeClassShow: index => {
+      const animation = wepy.createAnimation({
+        timingFunction: "ease-in-out",
+        duration: 1000
+      });
+      if (this.peClassShows[index]) {
+        // 去关闭
+        this.peClassAnimations[index] = animation
+          .height("0rpx")
+          .step()
+          .export();
+        this.$apply();
+      } else {
+        // 去打开
+        const query = wepy
+          .createSelectorQuery()
+          .select(`#Class-${index}`)
+          .boundingClientRect();
+        query.exec(res => {
+          const real = (res[0].height + 50) * 750 / this.winWidth + "rpx";
+          this.peClassAnimations[index] = animation
+            .height(real)
+            .step()
+            .export();
+          this.$apply();
+        });
+      }
+      this.peClassShows[index] = !this.peClassShows[index];
+    },
+    changeTestShow: index => {
+      const animation = wepy.createAnimation({
+        timingFunction: "ease-in-out",
+        duration: 1000
+      });
+      if (this.peTestShows[index]) {
+        this.peTestAnimations[index] = animation
+          .height("0rpx")
+          .step()
+          .export();
+        this.$apply();
+      } else {
+        // 去打开
+        const query = wepy
+          .createSelectorQuery()
+          .select(`#Test-${index}`)
+          .boundingClientRect();
+        query.exec(res => {
+          const real = (res[0].height + 50) * 750 / this.winWidth + "rpx";
+          this.peTestAnimations[index] = animation
+            .height(real)
+            .step()
+            .export();
+          this.$apply();
+        });
+      }
+      this.peTestShows[index] = !this.peTestShows[index];
+    }
+  };
+}
+</script>
+<style lang="stylus" scoped>
+.container
+	display flex
+	flex-direction column
+	align-items center
+	.no-container
+		.no-image
+			width 400rpx
+			margin-top 129rpx
+		.no-text
+			color #999CA0
+			font-size 28rpx
+			margin-top 55rpx
+			text-align center
+	.background
+		position fixed
+		width 100vw
+		height 100vh
+		background-color rgb(#C2D8F8)
+		z-index -1000
+	.head-container
+		display flex
+		flex-direction column
+		align-items  center
+		width 100%
+		height 284rpx
+		background-size cover
+		background-position-y -116rpx
+		background-image url("https://static.airbob.org/under-graduate/%E4%BD%93%E8%82%B2%E6%88%90%E7%BB%A9/Half.png")
+		.button-list
+			display flex
+			margin-top 58rpx
+			justify-content space-between
+			width 381rpx
+			.button-common
+				width 157rpx
+				height 63rpx
+				line-height 63rpx
+				font-size 30rpx
+				text-align center
+				border-radius 33rpx
+				font-family 'SimHei'
+				background-color white
+				background-image url("https://static.airbob.org/under-graduate/supplementary/%E6%8C%89%E9%92%AE%E8%99%9A%E7%BA%BF.png")
+				background-size contain
+				background-repeat no-repeat
+				color rgb(53, 53, 53)
+				cursor pointer
+			.button-active
+				background-color rgb(101, 205, 230)
+				color rgb(255, 255, 255)
+				background-image none
+		.head-icon
+			width 102rpx
+			margin-top 23rpx
+</style>
+
+
+
+
+
+
+
+

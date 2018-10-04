@@ -1,0 +1,48 @@
+<template>
+  <view>
+    <view class="item-header">
+      <image src="https://static.airbob.org/under-graduate/circle.png" class="header-round"/>
+      <text>{{log.title}}</text>
+    </view>
+    <view class="item-body">
+      <view class="change-item" wx-if="{{log.content !== ''}}">更新概述：</view>
+      <repeat for="{{log.content}}">
+        <view class="change-item">{{index + 1}}. {{item}}</view>
+      </repeat>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class extends wepy.component {
+  props = {
+    log: Object
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+.item-header
+  color #f65357
+  font-size 36rpx
+  margin 2rpx 0
+  .header-round
+    width 40rpx
+    height 40rpx
+    margin 0 48rpx 0 0
+    vertical-align middle
+  text
+    vertical-align middle
+
+.item-body
+  margin 0 30rpx 0 20rpx
+  border-left #6f8392 solid 4rpx
+  padding 20rpx 0 40rpx 0
+  .change-item
+    margin-left 68rpx
+    font-size 30rpx
+    color #a4b6c2
+    line-height 1.5
+</style>

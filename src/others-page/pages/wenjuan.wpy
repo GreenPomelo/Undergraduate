@@ -1,0 +1,32 @@
+<template>
+  <view>
+    <block wx:hidden="{{token === ''}}">
+      <web-view class="webview" src="https://wechat.njupt.edu.cn/wenjuan/temporary?token={{token}}"></web-view>
+    </block>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: ""
+  };
+
+  data = {
+    token: ""
+  };
+
+  onLoad() {
+    this.token = wepy.getStorageSync("token");
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.webview
+  width 100vw
+  height 100vh
+</style>

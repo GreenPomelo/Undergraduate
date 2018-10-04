@@ -1,0 +1,185 @@
+<template>
+  <view>
+    <view class="container">
+      <view style="margin-bottom:128rpx;">
+        <view class="news-title">{{title}}</view>
+        <view class="news-date">发布时间：{{date}}<view class="ads-tip" wx-if="{{isAds}}">推广资讯</view></view>
+        <view class="news-content">
+          <rich-text nodes="{{content}}"></rich-text>
+        </view>
+      </view>
+      <view class="news-file-list" hidden="{{fileList.length === 0}}">
+        <repeat for="{{fileList}}">
+          <view class="news-file-item">
+            <image mode="aspectFit" src="{{filterWxs.filter(item.name)}}" class="file-type-img"/>
+            <view class="file-name">{{item.name}}</view>
+            <image mode="aspectFit" @tap="downLoad({{item.url}})" src="https://static.airbob.org/admin/news_icon_download.png" class="file-download-img"/>
+          </view>
+          <view class="divide"></view>
+        </repeat>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import filterWxs from "../wxs/filter.wxs";
+
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: ""
+  };
+  data = {
+    title: "",
+    content: "",
+    date: "",
+    isAds: false,
+    fileList: []
+  };
+  wxs = {
+    filterWxs
+  };
+  methods = {
+    downLoad(url) {
+      wepy
+        .showModal({
+          title: "提示",
+          content: "预览或下载附件需要消耗流量，是否继续？",
+          confirmText: "继续"
+        })
+        .then(res => {
+          if (res.confirm) {
+            wepy.showLoading({
+              title: "下载中，请稍候",
+              mask: true
+            });
+            wepy
+              .downloadFile({
+                url: url
+              })
+              .then(res => {
+                const filePath = res.tempFilePath;
+                wepy.hideLoading();
+                wepy
+                  .openDocument({
+                    filePath: filePath
+                  })
+                  .then(() => {
+                    console.info("预览成功");
+                  })
+                  .catch(() => {
+                    wepy.showToast({
+                      title: "文件打开失败！",
+                      icon: "none",
+                      mask: true
+                    });
+                  });
+              })
+              .catch(() => {
+                wepy.showToast({
+                  title: "下载失败！",
+                  icon: "none",
+                  mask: true
+                });
+                wepy.hideLoading();
+              });
+          }
+        });
+    }
+  };
+  onLoad(data) {
+    this.title = data.title;
+    let url;
+    if (data.time) {
+      this.date = data.time;
+      this.isAds = true;
+      url = `${this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.getPromotionInformation}`;
+    } else {
+      this.isAds = false;
+      url = `${this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.getNewsInformationContent}?newsId=${
+        data.newsId
+      }`;
+    }
+    wepy
+      .request({
+        url
+      })
+      .then(res => {
+        if (res.data.success) {
+          if (this.date) {
+            this.content = res.data.data.content;
+          } else {
+            this.content = res.data.data.detail;
+            this.fileList = res.data.data.links;
+            this.date = res.data.data.createTime;
+          }
+          this.$apply();
+          console.log(this.isAds);
+        }
+      });
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  font-family 'SimHei'
+  overflow hidden
+  display flex
+  flex-direction column
+  justify-content space-between
+  min-height 100vh
+  .news-title
+    font-size 36rpx
+    color #353535
+    padding 0 55rpx
+    text-align center
+    font-weight bold
+  .news-date
+    margin 40rpx 0
+    font-size 24rpx
+    color #888
+    text-align center
+    .ads-tip
+      display inline-block
+      color #00b8ec
+      border 1rpx solid #00b8ec
+      border-radius 10px
+      padding 4rpx 8rpx
+      font-size 22rpx
+      margin-left 20rpx
+  .news-content
+    font-size 30rpx
+    color #353535
+    line-height 50rpx
+    padding 0 46rpx
+  .news-file-list
+    .divide
+      height 35rpx
+    .news-file-item
+      padding 10rpx 26rpx
+      width 650rpx
+      margin 0 auto
+      border-radius 16rpx
+      display flex
+      align-items center
+      box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.1);
+    .file-type-img
+      width 100rpx
+      height 100rpx
+    .file-name
+      font-size 28rpx
+      margin 0 30rpx
+      overflow hidden
+      text-overflow ellipsis
+      display -webkit-box
+      -webkit-line-clamp 2
+      -webkit-box-orient vertical
+      flex 1
+    .file-download-img
+      width 65rpx
+      height 65rpx
+</style>

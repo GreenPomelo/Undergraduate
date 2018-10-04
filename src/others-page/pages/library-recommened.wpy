@@ -1,0 +1,230 @@
+<template>
+  <view>
+    <!-- <qy-navigation :title="navTitle"></qy-navigation> -->
+    <!-- <qy-container> -->
+      <!-- <view slot="qy-content"> -->
+        <view class="divide-line"></view>
+        <view class="recommened-container">
+          <form class="recommened-form" @submit="submitRecomened">
+            <view class="recommened-title">
+              书名（必填）
+            </view>
+            <input type="text" class="recommened-input" name="bookname" placeholder="输入书名" placeholder-style="color: #999CA0" bindinput="inputBookName"/>
+            <view class="recommened-title">
+              作者（必填）
+            </view>
+            <input type="text" class="recommened-input" name="author" placeholder="输入作者名字" placeholder-style="color: #999CA0" bindinput="inputAuthor"/>
+            <view class="recommened-title">
+              出版社
+            </view>
+            <input type="text" class="recommened-input" name="publisher" placeholder="输入出版社" placeholder-style="color: #999CA0"/>
+            <view class="recommened-title">
+              出版年份
+            </view>
+            <input type="text" class="recommened-input" name="publishtime" placeholder="输入出版年份" placeholder-style="color: #999CA0"/>
+            <view class="recommened-title">
+              ISBN
+            </view>
+            <input type="text" class="recommened-input" name="ISBN" placeholder="输入该书的ISBN号，如978-7-121-16072-1" placeholder-style="color: #999CA0"/>
+            <view class="radio-group">
+              <label class="recommened-title-inline">语种</label>
+              <label class="radio" wx:for="{{languages}}" wx:for-item="lang" wx:key="key">
+                <icon type="success" wx:if="{{lang.checked}}" color="#000" size="{{(winWidth/750)*30}}"></icon>
+                <icon type="circle" wx:else size="{{(winWidth/750)*30}}"></icon>
+                <text class="radio-group-text" data-langName="{{lang.name}}" @tap="selectLanguage">{{lang.value}}</text>
+              </label>
+            </view>
+            <button class="recommened-button" form-type="submit" style="background-image:url({{necessary?submitbtn.highlight:submitbtn.disabled}});" disabled="{{!necessary}}">荐购</button>
+          </form>
+        </view>
+      </view>
+    <!-- </qy-container> -->
+  <!-- </view> -->
+</template>
+
+<script>
+import wepy from "wepy";
+import navigation from "@/components/qy-navigation";
+import container from "@/components/qy-container";
+
+export default class LibraryRecommened extends wepy.page {
+  config = {
+    navigationBarTitleText: "读者荐购"
+  };
+  data = {
+    navTitle: "读者荐购",
+    winWidth: 0,
+    winHeight: 0,
+    languages: [
+      { name: "Chinese", value: "中文", checked: true },
+      { name: "Foreign", value: "西文", checked: false }
+    ],
+    lang: "Chinese",
+    submitbtn: {
+      highlight:
+        "https://static.airbob.org/under-graduate/btn_next_highlight.png",
+      disabled: "https://static.airbob.org/under-graduate/btn_next_disable.png"
+    },
+    hasBookName: false,
+    hasAuthor: false,
+    necessary: false,
+    bookname: "",
+    recommenedHistory: []
+  };
+  components = {
+    "qy-navigation": navigation,
+    "qy-container": container
+  };
+  methods = {
+    selectLanguage(e) {
+      let checkedLang = e.target.dataset.langname;
+      var that = this;
+      for (var i = 0; i < this.languages.length; i++) {
+        if (that.languages[i].name === checkedLang) {
+          that.languages[i].checked = true;
+          that.lang = that.languages[i].name;
+        } else {
+          that.languages[i].checked = false;
+        }
+      }
+      that.$apply();
+    },
+    async submitRecomened(e) {
+      const that = this;
+      that.necessary = "true";
+      e.detail.value.language = that.lang;
+      that.bookname = e.detail.value.bookname;
+      if (that.recommenedHistory.indexOf(that.bookname) === -1) {
+        that.recommenedHistory.unshift(that.bookname);
+        wepy.setStorageSync("recommenedHistory", that.recommenedHistory);
+        // 发送请求;
+        wepy
+          .request({
+            url:
+              that.$parent.globalData.requestUrl +
+              that.$parent.globalData.config.recommendation,
+            method: "POST",
+            data: {
+              bookName: e.detail.value.bookname,
+              authorName: e.detail.value.author,
+              press: e.detail.value.publisher,
+              year: e.detail.value.publishtime,
+              ISBN: e.detail.value.ISBN,
+              language: e.detail.value.language
+            }
+          })
+          .then(res => {
+            if (res.data.success) {
+              wepy.navigateBack().then(res => {
+                wepy.showToast({
+                  title: "荐购成功",
+                  icon: "success",
+                  duration: 2000
+                });
+              });
+            } else if (res.data.errMsg === "荐购失败") {
+              wepy.navigateBack().then(res => {
+                wepy.showToast({
+                  title: "荐购失败",
+                  duration: 2000
+                });
+              });
+            }
+          });
+      } else {
+        wepy.showToast({
+          title: "请勿重复提交",
+          icon: "none",
+          duration: 1000
+        });
+      }
+      that.$apply();
+    },
+    inputBookName(e) {
+      if (e.detail.value !== "") {
+        this.hasBookName = true;
+      } else {
+        this.hasBookName = false;
+      }
+    },
+    inputAuthor(e) {
+      if (e.detail.value !== "") {
+        this.hasAuthor = true;
+      } else {
+        this.hasAuthor = false;
+      }
+    }
+  };
+  watch = {};
+  computed = {
+    necessary() {
+      return this.hasBookName && this.hasAuthor;
+    }
+  };
+  onLoad() {
+    wepy.getSystemInfo().then(res => {
+      this.winWidth = parseInt(res.windowWidth);
+      this.winHeight = parseInt(res.windowHeight);
+    });
+    if (!wepy.getStorageSync("recommenedHistory"))
+      wepy.setStorageSync("recommenedHistory", []);
+    else this.recommenedHistory = wepy.getStorageSync("recommenedHistory");
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+
+.divide-line
+  width 750rpx
+  height 1rpx
+  background-color #999CA0
+
+.recommened-container
+  width 750rpx
+  .recommened-form
+    width 630rpx
+    margin 60rpx auto
+    font-size 30rpx
+    display flex
+    flex-direction column
+    justify-content flex-start
+    .recommened-title
+      width 630rpx
+      line-height 30rpx
+      height 30rpx
+      color #888888
+      font-weight bolder
+      margin-bottom 30rpx
+    .recommened-title-inline
+      color #888888
+      height 30rpx
+      line-height 30rpx
+      font-weight bolder
+    .recommened-input
+      width 630rpx
+      height 30rpx
+      color #353535
+      border-bottom 1px solid #999CA0
+      margin-bottom 70rpx
+    .radio-group
+      .radio
+        margin 0 40rpx
+        .radio-group-text
+          color #353535
+          margin 0 20rpx
+    .recommened-button
+      background-repeat no-repeat
+      background-position top center
+      background-size 605rpx 80rpx
+      width 605rpx
+      height 80rpx
+      font-size 30rpx
+      text-align center
+      line-height 80rpx
+      color #fff
+      margin 50rpx auto 0 auto
+      border transparent
+    .recommened-button::after
+      display none
+</style>

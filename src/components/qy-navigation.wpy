@@ -1,0 +1,103 @@
+<!--
+- background 控制导航栏背景色
+- showBackBtn 强制显示回退按钮（除非是产生Bug的时候，不然不建议使用）
+- backBtnColor 回退按钮的颜色
+- title 存在即忽略 slot 的内容，标题为文字，文字居中
+- titleColor 默认标题的颜色
+-->
+<template>
+  <view class="nav-container" style="background: {{background}}">
+    <view class="back-wrapper" @tap="goBack" wx:if="{{showBack || showBackBtn}}">
+      <view class="back-icon" style="color: {{backBtnColor}}"></view>
+    </view>
+    <view class="nav-content">
+      <view class="title" style="color: {{titleColor}}">{{title}}</view>
+      <view wx-if="{{title.length < 1}}">
+        <slot name="content"></slot>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class extends wepy.component {
+  data = {
+    showBack: false
+  };
+  methods = {
+    goBack() {
+      wepy.navigateBack();
+    }
+  };
+  props = {
+    showBackBtn: {
+      default: false,
+      type: Boolean
+    },
+    backBtnColor: {
+      default: "#000",
+      type: String
+    },
+    background: {
+      default: "#fff",
+      type: String
+    },
+    title: {
+      default: "",
+      type: String
+    },
+    titleColor: {
+      default: "#000",
+      type: String
+    }
+  };
+  onLoad() {
+    if (getCurrentPages().length > 1) {
+      this.showBack = true;
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.nav-container {
+  position: fixed;
+  height: 66px;
+  width: 100%;
+  display: flex;
+  padding-top: 30rpx;
+  align-items: center;
+  box-sizing: border-box;
+  top: 0;
+  z-index: 10000;
+
+  .back-wrapper {
+    position: absolute;
+    top: 55%;
+    width: 60rpx;
+    left: 30rpx;
+    text-align: center;
+
+    .back-icon {
+      border-left: 5rpx solid;
+      border-bottom: 5rpx solid;
+      width: 20rpx;
+      height: 20rpx;
+      padding-right: 10rpx;
+      transform: rotate(45deg);
+    }
+  }
+
+  .nav-content {
+    width: 100%;
+
+    .title {
+      text-align: center;
+      font-size: 36rpx;
+      font-weight: bold;
+    }
+  }
+}
+</style>

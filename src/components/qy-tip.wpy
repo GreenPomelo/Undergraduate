@@ -1,0 +1,88 @@
+<!--
+- on 控制提示开关
+- LastTime 控制tips显示时间，单位毫秒
+-->
+<template>
+  <view class="tips-container" style="z-index:{{showIndex}}">
+    <view class="tip-content" animation="{{animationData}}" on="{{on}}">
+      {{content}}
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class QyTip extends wepy.component {
+  props = {
+    content: String,
+    on: {
+      default: false,
+      twoWay: true
+    },
+    LastTime: {
+      default: 1500
+    }
+  };
+  watch = {
+    on(curVal, oldVal) {
+      this.$apply();
+      const that = this;
+      if (curVal === true) {
+        that.showIndex = 999999;
+        let animation = wepy.createAnimation({
+          duration: 500
+        });
+        animation.opacity(1).step();
+        that.animationData = animation.export();
+        that.$apply();
+        setTimeout(() => {
+          animation.opacity(0).step();
+          that.animationData = animation.export();
+          that.$apply();
+          that.on = false;
+          that.animationData = {};
+          that.$apply();
+          // clearTimeout(TimeOut);
+        }, that.LastTime);
+        setTimeout(() => {
+          that.showIndex = -999999;
+          that.$apply();
+        }, Number(that.LastTime) * 2);
+      }
+    }
+  };
+  data = {
+    animationData: {},
+    animationOn: false,
+    showIndex: -999999
+  };
+  onLoad() {}
+}
+</script>
+
+<style lang="stylus" scoped>
+.tips-container
+  position fixed
+  width 100%
+  height 100%
+  display flex
+  justify-content center
+  align-items center
+  text-align center
+  .tip-content
+    position relative
+    margin 0 auto
+    max-width 600rpx
+    padding 12rpx 40rpx
+    background #000
+    opacity 0.7
+    border-radius 15rpx
+    display flex
+    justify-content center
+    align-items center
+    font-size 28rpx
+    flex-direction column
+    color #fff
+    opacity 0
+</style>

@@ -1,0 +1,12 @@
+{
+  "singleQuote": false,
+  "semi": true,
+  "overrides": [
+    {
+      "files": "*.wpy",
+      "options": {
+        "parser": "babylon"
+      }
+    }
+  ]
+}

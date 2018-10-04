@@ -1,0 +1,253 @@
+<template>
+  <view>
+    <QyModal width="500rpx">
+			<view slot="content" class="bind-container">
+				<input class="bind-input" placeholder="自主学分密码" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+			</view>
+		</QyModal>
+    <view class="credit-top">
+      <view class="credit-top-item">
+        <view class="credit-name">创新有效学分</view>
+        <view class="credit-count">{{innovationValidScore}}</view>
+      </view>
+      <view class="credit-top-item">
+        <view class="credit-name">创新总学分</view>
+        <view class="credit-count">{{innovationScore}}</view>
+      </view>
+      <view class="credit-top-item">
+         <view class="credit-name">有效学分</view>
+        <view class="credit-count">{{totalValidScore}}</view>
+      </view>
+      <view class="credit-top-item" style="border:none;">
+        <view class="credit-name">总学分</view>
+        <view class="credit-count">{{totalScore}}</view>
+      </view>
+    </view>
+    <view class="detailed">
+      <view class="detail-circle"></view>
+      <view class="detail-info">详细信息</view>
+    </view>
+    <view class="main-load" hidden="{{loadHide}}">        
+      <view class="boxLoading"></view>        
+    </view>
+    <view class="main-container">
+      <repeat for="{{creditDetails}}" key="key" index="index" item="item">
+        <view class="credit-info" @tap="showCreditDetail({{index}})">
+          <view class="credit-main-info">
+            <view class="credit-semester">{{item.semester}}</view>
+            <view class="credit-standard">{{item.standard}}</view>
+            <view class="credit-score">{{item.score}}学分</view>
+          </view>
+          <view class="credit-detail-info" animation="{{showDetailAnimation[index]}}">
+            <view>所属内容：{{item.project}}</view>
+            <view>考核内容：{{item.content}}</view>
+            <view>考核标准：{{item.standard}}</view>
+            <view>级别：{{item.level}}</view>          
+          </view>
+        </view>
+      </repeat>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import QyModal from "@/components/qy-modal";
+
+export default class extends wepy.page {
+  components = {
+    QyModal
+  };
+  config = {
+    navigationBarTitleText: "自主学分"
+  };
+  data = {
+    bindInputPassword: "",
+    creditDetails: [],
+    isShow: [],
+    showDetailAnimation: [],
+    loadHide: false,
+    innovationScore: "",
+    innovationValidScore: "",
+    totalScore: "",
+    totalValidScore: ""
+  };
+  methods = {
+    bindCardPassword(e) {
+      this.bindInputPassword = e.detail.value;
+    },
+    async bindHandle() {
+      await wepy
+        .request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.changeSecretCodeLower}`,
+          method: "POST",
+          data: {
+            domainType: "3",
+            username: wepy.getStorageSync("userInfo").studentId,
+            password: this.bindInputPassword
+          }
+        })
+        .then(res => {
+          if (res.data.success && res.data.data) {
+            // 绑定成功
+            this.bindModalVisible = false;
+            this.$invoke("QyModal", "close");
+            this.init();
+          } else {
+            wepy.showModal({
+              content: "密码错误",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            });
+          }
+        });
+    },
+    showCreditDetail(id, e) {
+      this.isShow[id] = !this.isShow[id];
+      let animation = wepy.createAnimation({
+        duration: 100
+      });
+      animation.height(this.isShow[id] ? "200rpx" : "0rpx").step();
+      this.showDetailAnimation[id] = animation.export();
+      this.$apply();
+    }
+  };
+  async init() {
+    let that = this;
+    const creditDetail = await wepy.request({
+      url:
+        that.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.ownGraduateGrade
+    });
+    if (!creditDetail.data.success || !creditDetail.data.data) {
+      wepy.showModal({
+        content: "密码已经更新请重新绑定",
+        confirmText: "知道了",
+        showCancel: false,
+        confirmColor: "#353535"
+      });
+      this.$invoke("QyModal", "open");
+    } else {
+      that.loadHide = true;
+      that.creditDetails = creditDetail.data.data.ziZhuResultModels;
+      that.totalValidScore = creditDetail.data.data.totalValidScore;
+      that.totalScore = creditDetail.data.data.totalScore;
+      that.innovationScore = creditDetail.data.data.innovationScore;
+      that.innovationValidScore = creditDetail.data.data.innovationValidScore;
+      that.$apply();
+    }
+  }
+  async onLoad() {
+    this.init();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+vendors = official
+
+@import '../../css/loading'
+
+.main-load
+  position relative
+  margin 100rpx
+
+.credit-top
+  width 720rpx
+  height 186rpx
+  margin 0 auto
+  background linear-gradient(109deg, rgb(64, 174, 255) 0%, rgb(115, 234, 255) 100%)
+  border-radius 5rpx
+  display flex
+  justify-content center
+  text-align center
+  .credit-top-item
+    height 110rpx
+    margin-top 38rpx
+    width 25%
+    color rgb(255, 255, 255)
+    border-right 2rpx solid rgb(255, 255, 255)
+    .credit-name
+      font-size 24rpx
+    .credit-count
+      font-size 50rpx
+      padding-top 15rpx
+
+.detailed
+  width 720rpx
+  display flex
+  margin 50rpx auto 0 auto
+  height 30rpx
+  font-size 30rpx
+  line-height 30rpx
+  font-weight bold
+  .detail-circle
+    position inline-block
+    border 1rpx solid rgb(52, 177, 244)
+    border-radius 50%
+    width 20rpx
+    height 20rpx
+    margin 5rpx 10rpx 5rpx 0
+  .detail-info
+    position inline-block
+    width 300rpx
+    font-size 30rpx
+    line-height 30rpx
+
+.credit-info
+  position relative
+  width 670rpx
+  margin 26rpx auto 0rpx auto
+  box-shadow rgba(4, 0, 0, 0.35) 2rpx 2rpx 14rpx 0
+  font-family SimHei
+  border-radius 50rpx
+  .credit-main-info
+    min-height 100rpx
+    display flex
+    align-items center
+    font-size 26rpx
+    text-align center
+    .credit-semester
+      width 200rpx
+    .credit-standard
+      width 350rpx
+    .credit-score
+      width 120rpx
+  .credit-detail-info
+    height 0
+    overflow hidden
+    text-align center
+    font-size 26rpx
+    padding 20rpx auto
+    view
+      line-height 50rpx
+
+.main-container
+  padding-bottom 50rpx
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
+</style>

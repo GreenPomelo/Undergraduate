@@ -1,0 +1,223 @@
+<template>
+  <view>
+    <view class="head">
+      <text class="title">你一共挂了{{credit}}个学分</text>
+    </view>
+    <view class="button-list">
+      <view @tap.stop="toTutorials" class="button-common {{current==='tutorials'?'button-active':null}}">考前辅导</view>
+      <view @tap.stop="toSupplements" class="button-common {{current==='supplements'?'button-active':null}}"> 补考安排</view>
+    </view>
+    <!-- <view class="line" /> -->
+    <view class="card-list">
+      <repeat wx:if="{{current==='tutorials'}}" for="{{tutorials}}" key="index" index="index" item="item">
+        <card1 :item.sync="item" :bg.sync="bg[index % 4]" showbg="https://static.airbob.org/under-graduate/%E8%BE%85%E5%AF%BC%E8%AF%BE.png" />
+      </repeat>
+      <repeat wx:if="{{current==='supplements'}}" for="{{supplements}}" key="index" index="index" item="item">
+        <card2 :item.sync="item" :bg.sync="bg[index % 4]" showbg="https://static.airbob.org/under-graduate/%E8%AF%95%E5%8D%B7.png" />
+      </repeat>
+      <view wx:if="{{supplements.length === 0}}">
+        <image class="no-image" mode="widthFix" src="https://static.airbob.org/under-graduate/%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B52.png" />
+        <view class="no-text">你不需要补考哦</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import card from "../components/card";
+// import QyNav from "@/components/qy-navigation";
+// import QyContainer from "@/components/qy-container";
+export default class SupplementAndTutorials extends wepy.page {
+  // 辅导课和补考查询页面
+  components = {
+    card1: card,
+    card2: card
+    // QyNav,
+    // QyContainer
+  };
+  config = {
+    navigationBarTitleText: "辅导课" // "补考"
+  };
+  data = {
+    credit: 0,
+    current: "tutorials", // or supplements补考
+    supplements: [
+      // {
+      //   subject: "微型计算机原理与接口技术",
+      //   teacher: "薛明",
+      //   place: "3-203",
+      //   time: "2018.3.14"
+      // }
+    ],
+    tutorials: [
+      // {
+      //   subject: "C语言",
+      //   teacher: "xxx",
+      //   place: "3-221",
+      //   time: "2018.2.14"
+      // }
+    ],
+    bg: [
+      "https://static.airbob.org/under-graduate/supplementary/bg1.png",
+      "https://static.airbob.org/under-graduate/supplementary/bg2.png",
+      "https://static.airbob.org/under-graduate/supplementary/bg3.png",
+      "https://static.airbob.org/under-graduate/supplementary/bg4.png"
+    ]
+  };
+  onLoad(option) {
+    option.title = option.title || "tutorials";
+    this.current = option.title;
+    const title = option.title === "tutorials" ? "辅导课" : "补考查询";
+    wepy.setNavigationBarTitle({
+      title
+    });
+    this.getData();
+  }
+  methods = {
+    toTutorials() {
+      if (this.current !== "tutorials") {
+        wepy.setNavigationBarTitle({
+          title: "辅导课"
+        });
+        this.current = "tutorials";
+      }
+    },
+    toSupplements() {
+      if (this.current !== "supplements") {
+        wepy.setNavigationBarTitle({
+          title: "补考查询"
+        });
+        this.current = "supplements";
+      }
+    }
+  };
+  getData() {
+    // 获取挂了的学分
+    wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getUserGrade}`
+      })
+      .then(res => {
+        if (res.data.success) {
+          this.credit =
+            Number(res.data.data.creditSelected) -
+            Number(res.data.data.creditGained);
+          this.$apply();
+        }
+      });
+
+    // 获取辅导课
+    wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getSupplyment}`
+      })
+      .then(res => {
+        // console.log(res.data.data.courseDate.split(" "));
+        if (res.statusCode === 200) {
+          if (res.data.data != null) {
+            const requestData = res.data.data.map(x => {
+              const year = x.courseDate.split("年")[0];
+              const month = x.courseDate.split("年")[1].split(`月`)[0];
+              const day = x.courseDate
+                .split("年")[1]
+                .split(`月`)[1]
+                .split(`日`)[0];
+              const times = x.courseDate
+                .split("年")[1]
+                .split(`月`)[1]
+                .split(`日`)[1];
+              const time = times.substring(1, times.length - 1);
+              const formatDate = `${year}.${month}.${day}`;
+              x.examDate = formatDate;
+              x.examPosition = x.coursePosition;
+              x.examTime = `${time}`;
+              return x;
+            });
+            this.tutorials = requestData;
+            // 9月3日（8:00-11:00）
+            this.$apply();
+          }
+        }
+      });
+    // 获取补考
+    wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getYourOwnExam}?type=1`
+      })
+      .then(res => {
+        if (res.statusCode === 200) {
+          const requestData = res.data.data;
+          const formatData = requestData.map(x => {
+            let formatDate = new Date(x.examDate);
+            let minute =
+              formatDate.getMinutes() === 0 ? "00" : formatDate.getMinutes();
+            const examTime = `${formatDate.getHours()}:${minute}`;
+            formatDate = `${formatDate.getFullYear()}年${formatDate.getMonth() +
+              1}月${formatDate.getDate()}日`;
+            x.examDate = formatDate;
+            x.examTime = examTime;
+            return x;
+          });
+          this.supplements = formatData;
+        }
+      });
+  }
+}
+</script>
+<style lang="stylus" scoped>
+.head
+  background-image url('https://static.airbob.org/under-graduate/supplementary/head.png')
+  background-size contain
+  height 243rpx
+  display flex
+  justify-content center
+  .title
+    font-family 'DengXian'
+    font-size 44rpx
+    margin-top 50rpx
+.button-list
+  display flex
+  justify-content space-between
+  width 381rpx
+  margin 0 auto
+  .button-common
+    width 157rpx
+    height 63rpx
+    line-height 63rpx
+    font-size 30rpx
+    text-align center
+    border-radius 33rpx
+    font-family 'SimHei'
+    background-color white
+    background-image url('https://static.airbob.org/under-graduate/supplementary/%E6%8C%89%E9%92%AE%E8%99%9A%E7%BA%BF.png')
+    background-size contain
+    background-repeat no-repeat
+    color rgb(53, 53, 53)
+    cursor pointer
+  .button-active
+    background-color rgb(101, 205, 230)
+    color rgb(255, 255, 255)
+    background-image none
+.no-image
+  width 400rpx
+  margin-top 129rpx
+.no-text
+  color #999CA0
+  font-size 28rpx
+  margin-top 55rpx
+  text-align center
+.card-list
+  display flex
+  align-items center
+  flex-direction column
+  border-top 4rpx dotted rgb(126, 226, 255)
+  width 86%
+  margin 36rpx auto 0
+  padding-top 30rpx
+</style>
+
+

@@ -1,0 +1,987 @@
+<style lang="stylus" scoped>
+vendors = official
+@import '../css/search-input'
+@import '../css/loading'
+.container
+  min-height 100vh
+.split-line
+  width 750rpx
+  height 15rpx
+  background #f5f5f5
+.open-page-container
+  height 100vh
+  background-size cover
+  background-repeat no-repeat
+  background-position bottom center
+  .pass-open-page
+    position absolute
+    right 54rpx
+    padding 0rpx 6rpx
+    bottom 54rpx
+    height 44rpx
+    line-height 44rpx
+    font-size 24rpx
+    color #AAAAAA
+    text-align center
+    border-radius 20rpx
+    border 1rpx solid #AAAAAA
+    background #fff
+.navbar
+  box-shadow 0 10rpx 8rpx 0 rgba(0, 0, 0, 0.05)
+  display flex
+  align-items center
+.search-bar
+  padding 20rpx
+  position relative
+  font-size 30rpx
+  width 650rpx
+  box-sizing border-box
+  .virsual-placeholder
+    width 630rpx
+    position absolute
+    display inline-block
+    z-index 1
+    color #999CA0
+    top 32rpx
+    left 30rpx
+    text-align center
+    .search-icon
+      width 30rpx
+      height 30rpx
+      margin-right 25rpx
+      position relative
+      top 4rpx
+  .search-input
+    pointer-events none
+.alert-img
+  width 45rpx
+  height 48rpx
+  margin-left 35rpx
+  margin-top -8rpx
+  &.shake
+    animation shaking 1.5s ease-in 1s infinite normal
+    transform-origin 50% -20%
+    animation-iteration-count 3
+    @keyframes shaking
+      0%
+        transform rotate(0)
+      20%
+        transform rotate(-10deg)
+      40%
+        transform rotate(16deg)
+      50%
+        transform rotate(-16deg)
+      60%
+        transform rotate(16deg)
+      70%
+        transform rotate(-16deg)
+      80%
+        transform rotate(10deg)
+      100%
+        transform rotate(0)
+.functional
+  width 750rpx
+  display flex
+  font-size 28rpx
+  flex-wrap wrap
+  margin-top 50rpx
+  margin-bottom 7rpx
+  .functional-item
+    width 25%
+    margin-bottom 41rpx
+    text-align center
+    .functional-item-image
+      width 60rpx
+      height 60rpx
+      display block
+      margin 0 auto
+      margin-bottom 10rpx
+.school-talk-container
+  width 550rpx
+  margin 0 auto
+  .school-talk
+    width 550rpx
+    min-height 0rpx
+    height 130rpx
+.notification-container
+  width 710rpx
+  margin 0 auto
+  min-height 100rpx
+  display flex
+  align-items center
+  .notification-image
+    height 100rpx
+    width 100rpx
+    background-image url('https://static.airbob.org/under-graduate/%E8%82%96%E8%BE%B0%E6%97%AD%E6%89%81%E5%B9%B3%E5%8C%96.png')
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+    margin-left 20rpx
+    margin-right 55rpx
+  .notification-content
+    position relative
+    height 80rpx
+    line-height 80rpx
+    width 600rpx
+    font-size 24rpx
+    .swiper-content
+      width 500rpx
+      height 80rpx
+      line-height 80rpx
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
+    .notification-arrow
+      position absolute
+      right 0
+      top 28rpx
+      width 26rpx
+      height 26rpx
+      background-image url('https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png')
+      background-position center
+      background-repeat no-repeat
+      background-size contain
+.course-container
+  width 710rpx
+  margin 0 auto
+  padding 30rpx 0
+  .nocourse-list
+    width 710rpx
+    height 150rpx
+    display flex
+    align-item center
+    background #FFFFFF
+    box-shadow 0 0 20rpx 0 rgba(0, 0, 0, 0.1)
+    border-radius 30rpx
+    .nocourse-image
+      width 200rpx
+      height 100rpx
+      margin 25rpx 35rpx
+      background-image url('https://static.airbob.org/under-graduate/pic_noclass.png')
+      background-position center
+      background-size contain
+      background-repeat no-repeat
+    .nocourse-word
+      text-align center
+      font-family PingFangSC-Regular
+      font-size 28rpx
+      line-height 150rpx
+      color #353535
+      letter-spacing -0.62px
+  .course-list
+    width 100%
+    white-space nowrap
+    color #fff
+    .course-item
+      display inline-block
+      margin-right 30rpx
+      width 300rpx
+      height 150rpx
+      font-size 24rpx
+      background-position center
+      background-repeat no-repeat
+      background-size contain
+      .course-thing
+        width 270rpx
+        height 150rpx
+        margin-top 22rpx
+        margin-left 30rpx
+        view
+          line-height 40rpx
+          overflow hidden
+          text-overflow ellipsis
+          white-space nowrap
+.container-top
+  position relative
+  display flex
+  align-items center
+  font-size 30rpx
+  height 30rpx
+  margin-bottom 20rpx
+  .container-top-title
+    color #353535
+    font-weight bold
+  span
+    position absolute
+    font-size 24rpx
+    right 35rpx
+    color #888888
+  .arrow
+    position absolute
+    top 2rpx
+    right 0rpx
+    width 26rpx
+    height 26rpx
+    background-image url('https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png')
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+.card-container
+  width 710rpx
+  margin 0 auto
+  padding 30rpx 0
+.campus-card
+  width 710rpx
+  height 280rpx
+  background-image url('https://static.airbob.org/under-graduate/%E4%B8%80%E5%8D%A1%E9%80%9A%E5%8D%A1%E7%89%87.png')
+  background-position center
+  background-repeat no-repeat
+  background-size contain
+  font-size 28rpx
+  text-align center
+  .content
+    padding-top 50rpx
+    .bigger
+      font-size 40rpx
+      font-weight 600
+.run-card
+  width 710rpx
+  height 280rpx
+  background-image url('https://static.airbob.org/under-graduate/%E6%99%A8%E8%B7%91%E5%8D%A1%E7%89%87.png')
+  background-position center
+  background-repeat no-repeat
+  background-size contain
+  .run-detail
+    padding-top 80rpx
+    margin-left 40rpx
+    font-size 28rpx
+    span
+      font-weight 600
+      font-size 40rpx
+.perfect-info
+  position absolute
+  z-index 999
+  width 100%
+  height 100%
+  background rgba(0, 0, 0, 0.5)
+  display flex
+  justify-content center
+  .perfect-info-body
+    margin-top 111px
+    height 300px
+    .perfect-img
+      display flex
+      justify-content center
+      margin-bottom -18px
+      image
+        width 186px
+        height 152px
+    .perfect-info-card
+      width 250px
+      height 188px
+      background #ffffff
+      border-radius 9px
+      display flex
+      align-items center
+      flex-direction column
+      position relative
+      .command-avatar
+        position absolute
+        top -20px
+        view
+          background-image url('https://static.airbob.org/under-graduate/face.png')
+          background-size 100%
+          width 50px
+          height 49px
+          display flex
+          justify-content center
+          align-items center
+          .command-avatar-img
+            width 46px
+            height 45px
+            background-color #ffffff
+            border-radius 50%
+      .submission
+        width 202px
+        height 49px
+        margin-bottom 0
+        background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+        box-shadow 0px 0px 25px 0px rgba(168, 168, 168, 0.5)
+        border-radius 14px
+        display flex
+        justify-content center
+        align-items center
+        view
+          font-family 'PingFangSC-Semibold'
+          font-size 18px
+          color #ffffff
+      .command-name
+        height 28px
+        font-family 'PingFangSC-Semibold'
+        font-size 20px
+        color #606266
+        padding-bottom 22px
+      .perfect-info-tip
+        font-size 14px
+        color #606266
+        font-family 'PingFangSC-Regular'
+        height 20px
+        text-align center
+        padding 43px 0 3px 0
+</style>
+
+<template>
+  <view>
+    <view class="perfect-info" wx:if="{{commandInfoStatus === false}}">
+      <view class="perfect-info-body">
+        <view class="perfect-img">
+          <image src="https://static.airbob.org/under-graduate/kl.png" />
+        </view>
+        <view class="perfect-info-card">
+          <view class="command-avatar">
+            <view>
+              <image class="command-avatar-img" src="{{command.avatar}}" />
+            </view>
+          </view>
+          <view class="perfect-info-tip">发现了社团口令{{command.data}}</view>
+          <view class="command-name">{{command.name}}</view>
+          <view class="submission" @tap="codeToDetail">
+            <view>点击查看</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view  @tap.stop="loadTheQuestion" class="open-page-container" hidden="{{openPage}}" style="background-image:url('{{displayPic}}');">
+      <view class="pass-open-page" @tap.stop="passOpenPage" >跳过{{passTime}}秒</view>
+    </view>
+    <view class="container" hidden="{{!openPage}}" style="{{commandInfoStatus === false ? 'height:100vh;overflow:hidden;' : ''}}">
+      <view class="navbar">
+        <view class="search-bar" @tap="goSearch">
+          <view class="virsual-placeholder">
+            <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon" />
+            <text>{{schoolTalkText}}</text>
+          </view>
+          <input type="text" class="search-input" @focus="focus" />
+        </view>
+        <image src="{{isNewInfo ? 'https://static.airbob.org/under-graduate/alert-active.png' : 'https://static.airbob.org/under-graduate/alert.png'}}" class="alert-img {{isNewInfo ? 'shake' : ''}}" @tap="goInfobox"/>
+      </view>
+      <view class="functional">
+        <repeat for="{{functionalList}}">
+          <view class="functional-item" @tap="moveTo" data-path="{{item.path}}" data-module="{{item.module}}" data-name="{{item.name}}">
+            <image src="{{item.src}}" class="functional-item-image" /> {{item.name}}
+          </view>
+        </repeat>
+      </view>
+        <navigator open-type="navigate" target="miniProgram" app-id="wxa16acae9f9d131fb" style="width:750rpx;">
+          <view class="school-talk-container">
+              <image src="https://static.airbob.org/under-graduate/home-bannerbar-chat@3x.png" mode="aspectFit" class="school-talk"/>
+          </view>
+        </navigator>
+        <!-- <navigator url="../others-page/pages/association" style="width:750rpx;">
+          <view class="school-talk-container">
+              <image src="https://static.airbob.org/club-enter.png" mode="aspectFill" class="school-talk"/>
+          </view>
+        </navigator> -->
+      <view class="split-line"></view>            
+      <view class="notification-container" @tap="goInfobox" wx:if="{{!swiperInfo[0]}}" >
+        <view class="notification-image"></view>
+        <view class="notification-content">
+          <view class="swiper-content">你没有新消息哟～</view>
+          <view class="notification-arrow"></view>
+        </view>
+      </view>
+      <view class="notification-container" @tap="goInfobox" wx:else>
+        <view class="notification-image"></view>
+        <swiper class="notification-content" autoplay="true" vertical="true" circular="true">
+          <repeat for="{{swiperInfo}}" item="item" index="index" key="key">
+            <swiper-item>
+              <view class="swiper-content">{{item.title}}</view>
+              <view class="notification-arrow"></view>
+            </swiper-item>
+          </repeat>
+        </swiper>
+      </view>
+      <view class="split-line"></view>      
+      <view class="course-container">
+        <view class="container-top">
+          <view class="container-top-title">今日课表</view>
+          <span @tap="showAllCourse">完整课表</span>
+          <view class="arrow"></view>
+        </view>
+        <view class="boxLoading" hidden="{{loadHide}}"></view>
+        <view class="nocourse-list" wx:if="{{loadWrong}}">
+          <view class="nocourse-image"></view>
+          <view class="nocourse-word">加载失败了，请您重试哟`~`</view>
+        </view>
+        <view class="nocourse-list" wx:if="{{noCourseItem}}">
+          <view class="nocourse-image"></view>
+          <view class="nocourse-word">今日无课，要合理安排时间哦</view>
+        </view>
+        <scroll-view class="course-list" scroll-x="true" wx:if="{{!noCourseItem}}">
+          <repeat for="{{courses}}" index="index" key="key" item="item">
+            <view class="course-item" style="background-image:url({{item.bgc}})">
+              <view class="course-thing">
+                <view style="font-size:28rpx;">{{item.name}}</view>
+                <view>{{item.time}}</view>
+                <view>{{item.teacher}} <span wx:if="{{item.locale}}">| {{item.locale}}</span></view>
+              </view>
+            </view>
+          </repeat>
+        </scroll-view>
+      </view>
+      <view class="split-line"></view>
+      <view class="card-container">
+        <view class="container-top">
+          <view class="container-top-title">一卡通</view><span @tap.stop="goYkt">完整记录</span>
+          <view class="arrow"></view>
+        </view>
+        <view class="campus-card">
+          <view class="content">
+            <view hidden="{{!isNum}}">
+              <view><span wx:if="{{balance !== '暂停服务'}}">余额: </span><span class="bigger">{{balance}}</span><span wx:if="{{balance !== '暂停服务'}}">元</span></view>
+              <view wx:if="{{balance !== '暂停服务'}}">截止时间：{{time}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="split-line"></view>      
+      <view class="card-container" style="border:none">
+        <view class="container-top">
+          <view class="container-top-title">晨跑</view><span @tap="showRuntime">完整记录</span>
+          <view class="arrow"></view>
+        </view>
+        <view class="run-card">
+          <view class="run-detail">
+            <view wx:if="{{runTime !== -1 && runTime !== '-1'}}">
+              <view wx:if="{{runTime !== 0 && runTime !== '0'}}">
+                跑操总数：<span>{{runTime}}</span>次
+              </view>
+            </view>
+            <view wx:else>
+              抱歉,查询失败了呢。。。
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+// import { connect } from "wepy-redux";
+import ClassMixin from "../mixins/class.js";
+// @connect({})
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: "NJUPT",
+    enablePullDownRefresh: true
+  };
+  mixins = [];
+  data = {
+    moreFunc: {},
+    courseColor: [
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%80.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%89.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%8C.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%94.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E5%9B%9B.png"
+    ],
+    courses: [],
+    noCourseItem: false,
+    balance: "",
+    time: "",
+    functionalList: "",
+    swiperInfo: [],
+    isNewInfo: false,
+    runTime: "",
+    isNum: false,
+    isGoYkt: true,
+    isGoRun: true,
+    isGoCourse: true,
+    loadWrong: false,
+    loadHide: false,
+    openPage: true,
+    passTime: 5,
+    displayPic: "",
+    displayColor: "",
+    schoolTalkText: "搜点什么吧~",
+    // 是否检测到口令
+    commandInfoStatus: true,
+    // 弹窗社团的口令,头像,名称
+    command: {},
+    // 社团口令数组
+    commands: [],
+    commandData: {}
+  };
+  computed = {};
+  // 首页广告
+  watch = {
+    openPage(newValue, oldValue) {
+      if (!newValue) {
+        wepy.setNavigationBarColor({
+          frontColor: "#ffffff",
+          backgroundColor:
+            this.displayColor || wepy.getStorageSync("display").displayColor,
+          animation: {
+            duration: 0,
+            timingFunc: "easeIn"
+          }
+        });
+        wepy.setNavigationBarTitle({
+          title: ""
+        });
+        this.$apply();
+        wepy.hideTabBar();
+        let timer = setInterval(() => {
+          this.passTime--;
+          if (Number(this.passTime) <= 0) {
+            clearInterval(timer);
+            this.openPage = true;
+            wepy.showTabBar();
+            wepy.setNavigationBarColor({
+              frontColor: "#000000",
+              backgroundColor: "#fff",
+              animation: {
+                duration: 0,
+                timingFunc: "easeIn"
+              }
+            });
+            wepy.setNavigationBarTitle({
+              title: "NJUPT"
+            });
+            this.$apply();
+          }
+          this.$apply();
+        }, 1000);
+      }
+    }
+  };
+  methods = {
+    goSearch() {
+      this.$navigate({
+        url: "../others-page/pages/search"
+      });
+    },
+    goInfobox() {
+      this.$navigate({
+        url: "../others-page/pages/information-box"
+      });
+    },
+    goYkt() {
+      this.$navigate({
+        url: this.isGoYkt
+          ? "../campus-card-page/pages/campus-card-index"
+          : "../others-page/pages/close"
+      });
+    },
+    moveTo(e) {
+      if (
+        e.currentTarget.dataset.path === "../others-page/pages/more" &&
+        wepy.getStorageSync("indexIcon") === ""
+      ) {
+        wepy.setStorageSync("indexIcon", this.functionalList);
+      }
+      if (wepy.getStorageSync("moduleStatus")) {
+        for (let i of wepy.getStorageSync("moduleStatus")) {
+          if (
+            !e.currentTarget.dataset.module ||
+            e.currentTarget.dataset.module === ""
+          ) {
+            this.$navigate({
+              url: e.currentTarget.dataset.path
+            });
+            break;
+          } else {
+            if (i.moduleName === e.currentTarget.dataset.module) {
+              if (!i.open && e.currentTarget.dataset.name !== "课表") {
+                this.$navigate({
+                  url: "../others-page/pages/close"
+                });
+              } else {
+                this.$navigate({
+                  url: e.currentTarget.dataset.path
+                });
+              }
+              break;
+            }
+          }
+        }
+      } else {
+        this.$navigate({
+          url: e.currentTarget.dataset.path
+        });
+      }
+    },
+    showAllCourse() {
+      this.$navigate({
+        url: this.isGoCourse
+          ? "../edu-admin-page/pages/course"
+          : "../others-page/pages/close"
+      });
+    },
+    showRuntime() {
+      this.$navigate({
+        url: this.isGoRun
+          ? "../others-page/pages/run"
+          : "../others-page/pages/close"
+      });
+    },
+    // 首页广告
+    passOpenPage() {
+      this.openPage = true;
+      wepy.setNavigationBarColor({
+        frontColor: "#000000",
+        backgroundColor: "#fff",
+        animation: {
+          duration: 0
+        }
+      });
+      wepy.setNavigationBarTitle({
+        title: "NJUPT"
+      });
+      wepy.showTabBar();
+      this.$apply();
+    },
+    loadTheQuestion() {
+      wepy.setNavigationBarColor({
+        frontColor: "#000000",
+        backgroundColor: "#fff",
+        animation: {
+          duration: 0
+        }
+      });
+      wepy.setNavigationBarTitle({
+        title: "NJUPT"
+      });
+      wepy.showTabBar();
+      this.$apply();
+      this.$navigate({
+        url: "../others-page/pages/wenjuan"
+      });
+    },
+    // 通过口令跳转到社团详情
+    codeToDetail() {
+      wepy.navigateTo({
+        url: `../others-page/pages/association-detail?info=${JSON.stringify(
+          this.commandData.assoInfo
+        )}&koulingStatus=true&command=${this.command.data}`
+      });
+      wepy.setClipboardData({
+        data: "剪贴板清空惹~"
+      });
+    }
+  };
+  events = {};
+  mixins = [ClassMixin];
+  async getBalance() {
+    const moduleStatus = wepy.getStorageSync("moduleStatus");
+    // 先判断是否可用
+    if (!moduleStatus[0].open) {
+      this.balance = "暂停服务";
+      this.isNum = true;
+    } else {
+      const tempDate = new Date();
+      this.time = `${tempDate.getFullYear()}-${tempDate.getMonth() +
+        1}-${tempDate.getDate()}`;
+      const res = await wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.campusCardRequestInfo}`,
+        method: "POST"
+      });
+      if (res.data.success) {
+        this.balance =
+          (Number(res.data.data.db_balance) +
+            Number(res.data.data.unsettle_amount)) /
+          100;
+        this.isNum = true;
+        wepy.setStorageSync("sno", res.data.data.sno);
+      } else {
+        this.balance = "密码需要更新";
+        this.isNum = false;
+      }
+    }
+    this.$apply();
+  }
+  dealCourse(course) {
+    let common = wepy.getStorageSync("common");
+    let nowWeek = parseInt(common.week);
+    let todayCourse = this.handleCourses(course, nowWeek);
+    let today = new Date().getDay() - 1;
+    today = today === -1 ? 6 : today;
+    let allcourses = todayCourse[0][today];
+    if (todayCourse[2][today].length >= 1) {
+      allcourses.push(...todayCourse[2][today]);
+    }
+    let colorArr = this.courseColor;
+    let nowCourses = [];
+    for (let i in allcourses) {
+      if (
+        allcourses[i].weekarr.indexOf(nowWeek) !== -1 &&
+        allcourses[i].weekarr.indexOf(nowWeek) !== "-1"
+      ) {
+        allcourses[i].time =
+          "第" +
+          allcourses[i].sectionstart +
+          "-" +
+          allcourses[i].sectionend +
+          "节";
+        allcourses[i].bgc = colorArr[i % 5];
+        nowCourses.push(allcourses[i]);
+      }
+    }
+    this.courses = nowCourses;
+    if (this.courses.length >= 0) {
+      this.courses.sort((a, b) => {
+        return a.sectionstart - b.sectionstart;
+      });
+    }
+    this.noCourseItem = this.courses.length === 0;
+    this.loadWrong = false;
+    this.loadHide = true;
+    this.$apply();
+  }
+  async init() {
+    let that = this;
+    const { data: { data: userInfo } } = await wepy.request({
+      url: `${this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.userInformation}`,
+      method: "GET"
+    });
+    wepy.setStorageSync("User", userInfo);
+    if (!wepy.getStorageSync("token") || !wepy.getStorageSync("User").enabled) {
+      wepy.reLaunch({
+        url: "/others-page/pages/login"
+      });
+      this.$apply();
+    } else {
+      let moduleStatus = await wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getModStatus}`
+      });
+      if (moduleStatus.data.success) {
+        wepy.setStorageSync("moduleStatus", moduleStatus.data.data);
+        that.$apply();
+        let cantUse = [];
+        for (let i of wepy.getStorageSync("moduleStatus")) {
+          if (i.open === false) {
+            cantUse.push(i);
+            if (i.moduleName === "一卡通") {
+              that.isGoYkt = false;
+            }
+            if (i.moduleName === "正方") {
+              that.isGoCourse = false;
+            }
+            if (i.moduleName === "跑操") {
+              that.isGoRun = false;
+            }
+          }
+        }
+        for (let i of that.functionalList) {
+          if (i.id === 15 || i.id === "15") {
+            i.module = "正方";
+            wepy.setStorageSync("indexIcon", that.functionalList);
+          }
+          for (let j of cantUse) {
+            if (i.module === j.moduleStatus && i.id !== -1 && i.id !== -1) {
+              i.path = "../others-page/pages/close";
+              that.$apply();
+            }
+          }
+        }
+        const common = await wepy.request({
+          url:
+            this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.commonInformation
+        });
+        if (common.data.success) {
+          wepy.setStorageSync("common", common.data.data);
+        }
+        if (
+          !wepy.getStorageSync("userInfo") ||
+          !wepy.getStorageSync("userInfo").studentId ||
+          wepy.getStorageSync("userInfo").studentId === "" ||
+          wepy.getStorageSync("userInfo").studentId === null ||
+          wepy.getStorageSync("userInfo").studentId === "null"
+        ) {
+          wepy
+            .request({
+              url:
+                this.$parent.globalData.requestUrl +
+                this.$parent.globalData.config.educationSystemInformation
+            })
+            .then(res => {
+              if (res.data.success) {
+                wepy.setStorageSync("userInfo", res.data.data);
+              }
+            });
+        }
+        wepy
+          .request({
+            url: `${this.$parent.globalData.requestUrl}search`
+          })
+          .then(res => {
+            that.schoolTalkText = res.data.data[0].tag;
+          });
+        wepy
+          .request({
+            url:
+              this.$parent.globalData.requestUrl +
+              this.$parent.globalData.config.getExercise
+          })
+          .then(res => {
+            if (res.data.success) {
+              that.runTime = res.data.data.totalCount;
+            } else {
+              that.runTime = -1;
+            }
+          });
+        that.getBalance();
+        wepy
+          .request({
+            url:
+              this.$parent.globalData.requestUrl +
+              this.$parent.globalData.config.classSchedule
+          })
+          .then(timetable => {
+            if (!timetable.data.success) {
+              if (!wepy.getStorageSync("timetable")) {
+                that.loadWrong = true;
+                that.loadHide = true;
+              }
+              that.$apply();
+            } else {
+              wepy.setStorageSync("timetable", timetable.data.data.timetable);
+              that.dealCourse(timetable.data.data.timetable);
+            }
+          });
+        this.$apply();
+      }
+    }
+  }
+  async onShow() {
+    let that = this;
+    if (wepy.getStorageSync("token") && wepy.getStorageSync("User").enabled) {
+      if (
+        wepy.getStorageSync("indexIcon") &&
+        wepy.getStorageSync("indexIcon").length === 8
+      ) {
+        that.functionalList = wepy.getStorageSync("indexIcon");
+      } else {
+        that.functionalList = this.$parent.globalData.modules.slice(0, 8);
+      }
+      if (wepy.getStorageSync("timetable")) {
+        that.loadWrong = false;
+        that.$apply();
+        setTimeout(() => {
+          that.dealCourse(wepy.getStorageSync("timetable"));
+        }, 1000);
+      }
+      that.getBalance();
+      that.$apply();
+      wepy
+        .request({
+          url:
+            this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.getOwnMessage
+        })
+        .then(res => {
+          if (res.data.success) {
+            let data = [];
+            for (let i of res.data.data) {
+              if (i.enable && !i.read) {
+                data.unshift(i);
+              }
+            }
+            that.isNewInfo = data.length !== 0;
+            that.swiperInfo = data;
+          }
+        });
+    }
+    const copyData = await wepy.getClipboardData();
+    const filterStr = copyData.data.match(/€(.+?)€/g);
+    if (filterStr === null) {
+      this.commandInfoStatus = true;
+    } else {
+      this.commandInfoStatus = false;
+    }
+  }
+  async onLoad() {
+    const copyData = await wepy.getClipboardData();
+    const filterStr = copyData.data.match(/€(.+?)€/g);
+    if (filterStr === null) {
+      this.commandInfoStatus = true;
+    } else {
+      this.commandInfoStatus = false;
+      const filterCommand = filterStr[0].substring(1, filterStr[0].length - 1);
+      wepy
+        .request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.AssociationMembers}${filterCommand}`,
+          method: `GET`
+        })
+        .then(res => {
+          if (res.data.success) {
+            const requestData = res.data.data;
+            this.commandData = requestData;
+            const logo = requestData.assoInfoDetails.filter(x => x.type === 1)
+              .picUrl;
+            this.command = {
+              avatar: logo,
+              name: requestData.assoInfo.fullname,
+              data: filterCommand
+            };
+            this.$apply();
+          } else {
+            if (res.data.errCode === 52) {
+              wepy.showModal({
+                content: "学号或密码错误",
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#47CFF5"
+              });
+            }
+          }
+        });
+      this.$apply();
+    }
+    if (wepy.getStorageSync("token")) {
+      // 首页广告
+      wepy
+        .request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.getIndexShow}`
+        })
+        .then(res => {
+          if (
+            res.data.data.displayId === "" ||
+            res.data.data.displayId === null
+          ) {
+            this.openPage = true;
+            this.$apply();
+          } else if (
+            !wepy.getStorageSync("display").displayId &&
+            wepy.getStorageSync("display").displayId !== res.data.data.displayId
+          ) {
+            wepy.setStorageSync("display", {
+              displayId: res.data.data.displayId,
+              displayColor: res.data.data.color,
+              displayPic: res.data.data.picture
+            });
+            wepy.setStorageSync("openthePage", 0);
+            this.openPage = false;
+          } else {
+            if (wepy.getStorageSync("openthePage") < Number(5)) {
+              this.openPage = false;
+              let number = ~~wepy.getStorageSync("openthePage");
+              wepy.setStorageSync("openthePage", ~~(number + 1));
+              this.$apply();
+            } else {
+              this.openPage = true;
+            }
+          }
+          wepy.removeStorageSync("openPage");
+          this.displayPic = wepy.getStorageSync("display").displayPic;
+          this.displayColor = wepy.getStorageSync("display").displayColor;
+          this.$apply();
+        });
+    }
+    this.init();
+  }
+  async onPullDownRefresh() {
+    this.init();
+    wepy.stopPullDownRefresh();
+  }
+}
+</script>

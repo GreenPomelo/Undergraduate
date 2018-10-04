@@ -1,0 +1,284 @@
+<template lang="pug">
+view.card
+  view.header( @tap="toggleCardFolded")
+    text.title {{termScores.title}}
+    image.angle(class="{{termScores.isFolded ? '' : 'active'}}" src="https://static.airbob.org/under-graduate/gpa/button_down.png")
+
+  view.guide( class="{{guideStatus}}")
+    view.content 点击编辑可以删课或修改成绩哦
+    view.triangle
+
+  view.score-wrapper(style="height:{{!termScores.isFolded ? scoreItemHeight * termScores.count * 750 / screenWidth + 10 : 0}}rpx")
+    repeat(for="{{termScores.scores}}" key="key" index="index" item="scoreItem")
+      view.score-item( @tap="closeEdit({{scoreItem}})")
+        view.info-wrapper
+          view.name {{scoreItem.name}}
+          view.info
+            text.credit 学分：{{scoreItem.credit}}
+            text.score 成绩：
+            input.input( @input="handleScoreInput({{scoreItem.name}}, {{scoreItem.isOptionalCourses}})" @blur="handleBlur({{scoreItem.name}})" value="{{scoreItem.score === 0 ? '' : scoreItem.score}}" focus="{{scoreItem.shouldFocus}}" disabled="{{ !scoreItem.shouldFocus }}" type="number")
+        view.btn-wrapper
+          view.edit-wrapper( @tap.stop="toggleEditScore({{scoreItem}})" class="{{!scoreItem.isEditing ? 'active' : ''}}")
+            view.edit-btn 编辑
+          view.wrapper(class="{{scoreItem.isEditing ? 'active' : ''}}")
+            view.delete-btn( @tap.stop="deleteScore({{scoreItem}})" ) 删课
+            view.modify-btn( @tap.stop="handleClickModifyBtn({{scoreItem}})")
+              text.text 修改成绩
+</template>
+
+<script>
+import wepy from "wepy";
+import GpaMixin from "../../mixins/Gpa/Gpa.js";
+
+export default class GpaCard extends wepy.component {
+  props = {
+    termScores: {
+      // 学期成绩
+      type: Object,
+      twoWay: true
+    }
+  };
+
+  data = {
+    scoreItemHeight: null,
+    screenWidth: null
+  };
+
+  mixins = [GpaMixin];
+
+  computed = {
+    guideStatus() {
+      if (this.$index !== 0) {
+        return `destroyed`;
+      }
+
+      switch (this.termScores.showGuide) {
+        case 1:
+          return `active`;
+        case 0:
+          return `inactive`;
+        case -1:
+          return `destroyed`;
+      }
+    }
+  };
+
+  methods = {
+    // 控制卡片折叠
+    toggleCardFolded() {
+      this.termScores.isFolded = !this.termScores.isFolded;
+    },
+
+    // 关闭编辑面板
+    closeEdit({ name }) {
+      const item = this.termScores.scores.find(x => x.name === name);
+      item.isEditing = false;
+      item.shouldFocus = false;
+    },
+
+    // 开启编辑
+    toggleEditScore({ name }) {
+      const item = this.termScores.scores.find(x => x.name === name);
+      item.isEditing = true;
+    },
+
+    // 删除该条成绩
+    async deleteScore({ name, credit, point, isOptionalCourses }) {
+      const res = await wepy.showModal({
+        title: "确认删除",
+        content: "确认删除该课程吗？",
+        confirmText: "确认",
+        confirmColor: "#353535",
+        cancelColor: `#86d6ef`
+      });
+
+      if (res.confirm) {
+        for (let i = 0; i < this.termScores.scores.length; i++) {
+          const score = this.termScores.scores[i];
+          if (score.name === name) {
+            this.termScores.scores.splice(i, 1);
+            this.termScores.count--;
+            break;
+          }
+        }
+        this.$emit("delete", credit, point, isOptionalCourses);
+      }
+    },
+
+    // 点击修改按钮
+    handleClickModifyBtn({ name }) {
+      const item = this.termScores.scores.find(x => x.name === name);
+      item.shouldFocus = true;
+    },
+
+    // 修改成绩的逻辑
+    handleScoreInput(name, isOptionalCourses, { detail }) {
+      // 如果只输入"."，会无法计算
+      if (detail.value.startsWith(".")) return;
+
+      let { value: score } = detail;
+
+      score = this.discardUnnecessaryChars(score);
+      score = this.limitScore(score);
+      score = score.length === 0 ? 0 : score;
+      this.$emit("modifyScore", this.$index, name, score, isOptionalCourses);
+
+      return score;
+    },
+
+    handleBlur(name) {
+      const item = this.termScores.scores.find(x => x.name === name);
+      item.shouldFocus = false;
+    }
+  };
+
+  onLoad() {
+    let timer1 = setInterval(() => {
+      this.scoreItemHeight = this.$parent.scoreItemHeight;
+      this.screenWidth = this.$parent.screenWidth;
+
+      if (this.scoreItemHeight !== null && this.screenWidth !== null) {
+        clearInterval(timer1);
+        timer1 = null;
+      }
+    }, 100);
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.card
+  position relative
+  margin-top 30rpx
+  padding 0 56rpx 0 28rpx
+  overflow hidden
+  box-shadow 0 0 10rpx 0 rgba(0, 0, 0, 0.05)
+  background #fff
+  .header
+    display flex
+    position relative
+    z-index 1
+    height 94rpx
+    justify-content space-between
+    align-items center
+    border-bottom 1rpx solid #e3e3e3
+    background #fff
+    .title
+      font-size 28rpx
+      color #353535
+    .angle
+      padding 30rpx
+      width 30rpx
+      height 16rpx
+      transition transform 0.4s ease-out
+      &.active
+        transform rotate(-180deg)
+  .guide
+    position absolute
+    top 218rpx
+    right 56rpx
+    z-index 3
+    opacity 0
+    transition opacity 0.4s ease-out
+    &.active
+      opacity 1
+    &.inactive
+      opacity 0
+    &.destroyed
+      display none
+    .content
+      padding 14rpx
+      font-size 28rpx
+      color #fff
+      background #ffc145
+      border-radius 18rpx
+    .triangle
+      position absolute
+      top -20rpx
+      right 64rpx
+      width 0
+      height 0
+      border-left 16rpx solid transparent
+      border-right 16rpx solid transparent
+      border-bottom 24rpx solid #ffc145
+  .score-wrapper
+    transition height 0.6s ease-in-out
+    .score-item
+      display flex
+      color #353535
+      border-bottom 1rpx solid #e3e3e3
+      justify-content space-between
+      .info-wrapper
+        margin 30rpx 0 20rpx 0
+        // width 控制显示字符数
+        width 60%
+        .name
+          width 100%
+          font-size 32rpx
+          font-weight bold
+          overflow hidden
+          white-space nowrap
+          text-overflow ellipsis
+        .info
+          display flex
+          margin-top 4rpx
+          font-size 24rpx
+          align-items center
+          .score
+            margin-left 50rpx
+          .input
+            display inline-block
+            width 60rpx
+            font-size 24rpx
+            line-height 24rpx
+            min-height 0
+      .btn-wrapper
+        display flex
+        position relative
+        justify-content flex-end
+        align-items center
+        .edit-wrapper
+          display none
+          padding 36rpx
+          &.active
+            display block
+          .edit-btn
+            padding 10rpx 20rpx
+            line-height 28rpx
+            font-size 28rpx
+            color #47cff5
+            border 1rpx solid #47cff5
+            border-radius 30rpx
+        .wrapper
+          display flex
+          position absolute
+          top 0
+          right 0
+          z-index 1
+          height 100%
+          transform scaleX(0)
+          transform-origin right center
+          transition transform 0.3s ease-out
+          &.active
+            transform scaleX(1)
+            .delete-btn,
+            .modify-btn
+              display flex
+          .delete-btn,
+          .modify-btn
+            display flex
+            width 110rpx
+            height 100%
+            font-size 28rpx
+            font-weight bold
+            color #fff
+            text-align center
+            justify-content center
+            align-items center
+          .delete-btn
+            background linear-gradient(-225deg, #ffb6b6, #ff808c)
+          .modify-btn
+            background linear-gradient(-225deg, #9ec9ff, #80ddff)
+            .text
+              width 70%
+</style>

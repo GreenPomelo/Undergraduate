@@ -1,0 +1,226 @@
+<template>
+  <view class="container">
+    <view class="head-bg">
+      <view class="head-bg-title">账户余额（元）</view>
+      <view class="head-bg-remain">{{balance}}</view>
+    </view>
+    <view class="main-container">
+      <view class="pay-account">充值账号：{{sno}}</view>
+      <view class="pay-way">支付方式：银行卡绑定校园卡</view>
+      <view class="quick-pay-container">
+        <view class="quick-pay-item" @tap.stop="put" data-charge="5">5元</view>
+        <view class="quick-pay-item" @tap.stop="put" data-charge="10">10元</view>
+        <view class="quick-pay-item" @tap.stop="put" data-charge="20">20元</view>
+        <view class="quick-pay-item" @tap.stop="put" data-charge="30">30元</view>
+      </view>
+      <view class="list">
+        <view class="list-item-quick">
+          <view class="list-item-text item"> 充值金额</view>
+          <input class="list-item-text  input" type="digit" @input="put" value="{{charge}}" placeholder="可输入1-300元整数金额" placeholder-style="font-size:30rpx;color:#888888" cursor-spacing="130" />
+        </view>
+      </view>
+      <button @tap.stop="openPayModal" class="enter-button {{(charge==='' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}" hover-class="button-click" disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}">
+        确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}
+      </button>      
+    </view>
+    <PayFlow :open.sync="isPayModalOpen" :charge.sync="charge" type="net" payWay="银行卡绑定校园卡" operateContent="校园卡/银行卡转账" />
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import PayFlow from "../components/pay-flow";
+export default class NetCharge extends wepy.page {
+  data = {
+    balance: "0.00",
+    charge: "",
+    isPayModalOpen: false,
+    sno: ""
+  };
+  config = {
+    navigationBarTitleText: "校园网充值",
+    enablePullDownRefresh: true
+  };
+  components = {
+    PayFlow
+  };
+  onLoad() {
+    const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
+    if (!moduleStatus) {
+      // 一卡通维护中
+      wepy.redirectTo({
+        url: "../../others-page/pages/close"
+      });
+    }
+    this.getRemain();
+  }
+  onShow() {
+    this.getRemain();
+  }
+  onPullDownRefresh() {
+    this.getRemain();
+    wepy.stopPullDownRefresh();
+  }
+  getRemain() {
+    wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.internetRemain}`,
+        method: "POST"
+      })
+      .then(res => {
+        if (res.data.success) {
+          this.balance = res.data.data / 100;
+          this.sno = wepy.getStorageSync("sno");
+          this.$apply();
+        }
+      });
+  }
+  methods = {
+    openPayModal() {
+      this.isPayModalOpen = true;
+    },
+    closePayModal() {
+      this.isPayModalOpen = false;
+    },
+    put(e) {
+      const value = Number(e.detail.value || e.target.dataset.charge);
+      this.putCharge(value);
+    }
+  };
+  events = {
+    closePayModal: () => {
+      this.isPayModalOpen = false;
+      this.$apply();
+    }
+  };
+  putCharge(number) {
+    this.charge = number;
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  display flex
+  flex-direction column
+  margin-top 38rpx
+  .head-bg
+    background-image url('https://static.airbob.org/under-graduate/campus-card/net.png')
+    width 100%
+    height 243rpx
+    background-size cover
+    margin 0 auto
+    display flex
+    flex-direction column
+    text-align center
+    color #fff
+    .head-bg-title
+      margin-top 45rpx
+      height 40rpx
+      line-height 40rpx
+      font-size 28rpx
+      font-family PingFangSC-Regular
+    .head-bg-remain
+      font-size 80rpx
+      font-family PingFangSC-Medium
+      height 112rpx
+      line-height 112rpx
+  .main-container
+    margin 50rpx 35rpx 0 35rpx
+    font-family PingFangSC-Regular
+    .pay-account
+      font-family PingFangSC-Medium
+      color #353535
+      height 45rpx
+      line-height 45rpx
+      font-size 32rpx
+    .pay-way
+      font-size 24rpx
+      margin-top 9rpx
+      height 33rpx
+      line-height 33rpx
+      color #888888
+    .quick-pay-container
+      display flex
+      justify-content space-between
+      margin-top 50rpx
+      .quick-pay-item
+        height 100rpx
+        width 150rpx
+        border-radius 10rpx
+        border 1rpx solid #47cff5
+        color #47cff5
+        font-family PingFangSC-Medium
+        font-size 36rpx
+        line-height 100rpx
+        text-align center
+        &:hover
+          background-color #47cff5
+          color #fff
+    .list
+      margin-top 60rpx
+      font-size 30rpx
+      color #353535
+      font-family PingFangSC-Regular
+      .list-item
+        display flex
+        align-items center
+        position relative
+        .why
+          position absolute
+          width 30rpx
+          border-radius 50%
+          top 21rpx
+          left 167rpx
+        & + .list-item
+          border-top 2rpx solid #E3E3E3
+        .list-item-text
+          margin 0rpx 0 15rpx 0
+          &:first-of-type
+            margin-left 34rpx
+            margin-right 100rpx
+      .list-item-quick
+        display flex
+        align-items center
+        border-bottom 2rpx solid #E3E3E3
+        .money-list
+          display flex
+          align-items center
+          .money-item
+            border-radius 60rpx
+            width 93rpx
+            height 45rpx
+            line-height 45rpx
+            color #47CFF5
+            text-align center
+            border 2rpx solid #47CFF5
+            margin-right 30rpx
+        .input
+          z-index auto
+        .list-item-text
+          display flex
+          margin 15rpx 0
+          &.item
+            width 177rpx
+          &.input
+            width 500rpx
+          &:first-of-type
+            color #353535
+  .enter-button
+    background #47cff5
+    border-radius 100rpx
+    width 100%
+    height 85rpx
+    line-height 85rpx
+    color rgb(255, 255, 255)
+    margin-top 60rpx
+    &:after
+      border 0
+  .button-click
+    background-image none
+    background-color #D0F5FF
+</style>
+
+
+

@@ -1,0 +1,135 @@
+<template lang="pug">
+view.custom-score
+  view.course-name-wrapper
+    input( @input="handleCourseNameInput" value="{{score.name}}" placeholder="(点击可修改课程名)" placeholder-style="{{placeholderStyles1}}")
+  view.input-wrapper
+    view.credit
+      text.desc 学分
+      input.input( @input="handleCreditInput" value="{{score.credit === 0 ? '' : score.credit}}" type="digit" placeholder="点击填写课程学分" placeholder-style="{{placeholderStyles2}}")
+    view.score
+      text.desc 成绩
+      input.input( @input="handleScoreInput" value="{{score.score === 0 ? '' : score.score}}" type="number" placeholder="点击填写考试成绩" placeholder-style="{{placeholderStyles2}}")
+    image.close( @tap="closeCard" src="https://static.airbob.org/under-graduate/gpa/close.png")
+</template>
+
+<script>
+import wepy from "wepy";
+import GpaMixin from "../../mixins/Gpa/Gpa.js";
+
+export default class GpaCustomScore extends wepy.component {
+  props = {
+    score: {
+      type: Object,
+      twoWay: true
+    }
+  };
+
+  data = {
+    placeholderStyles1: `
+      font-size: 24rpx;
+      color: #fff;
+      text-align: center;
+    `,
+    placeholderStyles2: `
+      font-size: 28rpx;
+      font-weight: normal;
+      color: #999ca0;
+    `
+  };
+
+  mixins = [GpaMixin];
+
+  methods = {
+    handleCreditInput({ detail }) {
+      // 如果只输入"."，会无法计算
+      if (detail.value.startsWith(".")) return;
+
+      let { value: credit } = detail;
+
+      credit = this.discardUnnecessaryChars(credit);
+      if (Number(credit) > 100) {
+        // 如果 score 大于 100，截断后面的
+        credit = credit.slice(0, 2);
+      }
+      credit = credit.length === 0 ? 0 : credit;
+      this.$emit("modifyCredit", this.$index, credit);
+      return credit;
+    },
+
+    handleScoreInput({ detail }) {
+      // 如果只输入"."，会无法计算
+      if (detail.value.startsWith(".")) return;
+
+      return this.processScoreInput(detail, "modifyCustomScore");
+    },
+
+    handleCourseNameInput({ detail }) {
+      let { value: name } = detail;
+      this.$emit("modifyName", this.$index, name);
+    },
+
+    async closeCard() {
+      const res = await wepy.showModal({
+        title: "确认删除",
+        content: "确认删除该课程吗？",
+        confirmText: "确认",
+        confirmColor: "#353535",
+        cancelColor: `#86d6ef`
+      });
+
+      if (res.confirm) {
+        this.$emit("close", this.score.id);
+      }
+    }
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+.custom-score
+  display flex
+  margin-top 30rpx
+  align-items center
+  .course-name-wrapper
+    display flex
+    flex 1
+    min-height 130rpx
+    font-size 24rpx
+    font-weight bold
+    color #fff
+    text-align center
+    justify-content center
+    align-items center
+    box-shadow 0 0 10rpx 0 rgba(0, 0, 0, 0.1)
+    background linear-gradient(-45deg, #75d3ce, #98e9e3)
+  .input-wrapper
+    display flex
+    position relative
+    padding-left 76rpx
+    flex 0 0 460rpx
+    height 150rpx
+    font-size 28rpx
+    font-weight bold
+    color #353535
+    flex-wrap wrap
+    align-items center
+    box-shadow 0 0 10rpx 0 rgba(0, 0, 0, 0.1)
+    box-sizing border-box
+    .credit,
+    .score
+      display flex
+      align-items center
+      .desc
+        min-width 70rpx
+      .input
+        display inline-block
+        margin-left 18rpx
+    .close
+      position absolute
+      z-index 2
+      top 0
+      right 0
+      padding 20rpx
+      width 20rpx
+      height 20rpx
+</style>

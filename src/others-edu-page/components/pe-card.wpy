@@ -1,0 +1,78 @@
+<template>
+  <view class="container" style="background-color:{{titleBgColor}};" @tap.stop="toggle" data-h="{{indexx}}">
+    <view class="banner">{{result.year}}</view>
+    <view class="result-list" animation="{{animation}}" @tap.stop="prevent" >
+        <view class="result-item">
+          <view class="result-text1">项目</view>
+          <view class="result-text2">项目成绩</view>
+          <view class="result-text3">得分</view>
+        </view>
+        <view id="{{result.term==='体测'?'Test':'Class'}}-{{indexx}}">
+        <repeat for="{{result.data}}" item="item">
+          <view class="result-item">
+          <view class="result-text1">{{item.project==='total'?'总分':item.project}}</view>
+          <view class="result-text2">{{item.score==null?'无':item.score}}</view>
+          <view class="result-text3">{{item.mark==null?'无':item.mark}}</view>
+          </view>
+        </repeat>
+        </view>
+    </view>
+    <view class="banner">{{result.term}}</view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class PeCard extends wepy.component {
+  props = {
+    result: Array,
+    titleBgColor: {
+      type: String, // rgb
+      default: "rgb(20,126,232)"
+    },
+    animation: Object,
+    indexx: Number
+  };
+  methods = {
+    toggle(e) {
+      if (this.result.term !== "体测") {
+        this.$emit("changeClassShow", this.$index);
+      } else {
+        this.$emit("changeTestShow", this.$index);
+      }
+    },
+    prevent(e) {}
+  };
+}
+</script>
+<style lang="stylus" scoped>
+.container
+	margin-top 30rpx
+	border-radius 30rpx
+	width 601rpx
+	font-family "SimHei"
+	color rgb(255, 255, 255)
+	display flex
+	flex-direction column
+	align-items center
+	.banner
+		padding 10rpx 0
+	.result-list
+		overflow hidden
+		height 0
+		width 584rpx
+		box-sizing border-box
+		background-color rgb(255,255,255)
+		font-size 24rpx
+		color rgb(0, 0, 0)
+		.result-item
+			display flex
+			margin 16rpx 52rpx
+			.result-text1
+				width 216rpx
+			.result-text2
+				width 192rpx
+</style>
+
+
+

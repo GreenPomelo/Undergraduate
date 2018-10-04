@@ -1,0 +1,108 @@
+<template>
+	<view class="picker-container input" style="{{style}}">
+		<picker class="item" mode="date" value="{{date}}" start="{{startDate}}" end="{{endDate}}" @change.stop="dateChange">
+			<text class="show-text">{{date}}</text>
+		</picker>
+		<picker class="item" mode="time" value="{{time}}" start="{{startTime}}" end="{{endTime}}" @change.stop="begintimeChange">
+			<text class="show-text">{{begintime}}</text>
+		</picker>
+		<text class="show-text item">——</text>
+		<picker mode="time" value="{{time}}" start="{{startTime}}" end="{{endTime}}" @change.stop="endtimeChange">
+			<text class="show-text">{{endtime}}</text>
+		</picker>
+	</view>
+</template>
+<script>
+import wepy from "wepy";
+export default class QyDatetimeSelect extends wepy.component {
+  props = {
+    startDate: {
+      type: String,
+      default: this.formateDate(new Date(), "yyyy-MM-dd")
+    },
+    endDate: {
+      type: String,
+      default: "2020-01-01"
+    },
+    startTime: {
+      type: String,
+      default: "00:00"
+    },
+    endTime: {
+      type: String,
+      default: "23:59"
+    },
+    style: {
+      type: String,
+      default: ""
+    }
+  };
+  data = {
+    date: this.formateDate(new Date(), "yyyy-MM-dd"),
+    begintime: "00:00",
+    endtime: "00:00"
+  };
+  onLoad() {
+    this.date = this.startDate;
+    this.begintime = this.startTime;
+    this.endtime = this.startTime;
+    this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+  }
+  methods = {
+    dateChange(e) {
+      this.date = e.detail.value;
+      this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+    },
+    begintimeChange(e) {
+      this.begintime = e.detail.value;
+      this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+    },
+    endtimeChange(e) {
+      // end时间如果比begin小处理下。。
+      this.endtime = e.detail.value;
+      this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+    }
+  };
+  formateDate(date, fmt) {
+    {
+      const o = {
+        "M+": date.getMonth() + 1,
+        "d+": date.getDate(),
+        "h+": date.getHours(),
+        "m+": date.getMinutes(),
+        "s+": date.getSeconds(),
+        "q+": Math.floor((date.getMonth() + 3) / 3),
+        S: date.getMilliseconds()
+      };
+      if (/(y+)/.test(fmt))
+        fmt = fmt.replace(
+          RegExp.$1,
+          (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+        );
+      for (let k in o)
+        if (new RegExp("(" + k + ")").test(fmt))
+          fmt = fmt.replace(
+            RegExp.$1,
+            RegExp.$1.length === 1
+              ? o[k]
+              : ("00" + o[k]).substr(("" + o[k]).length)
+          );
+      return fmt;
+    }
+  }
+}
+</script>
+<style lang="stylus" scoped>
+@import "../css/normal-input";
+.picker-container
+	display flex
+	.item
+		margin-right 28rpx
+	.show-text
+		font-size 30rpx
+		font-family "SimHei"
+		color rgb(84, 83, 83)
+		line-height 72rpx
+</style>
+
+

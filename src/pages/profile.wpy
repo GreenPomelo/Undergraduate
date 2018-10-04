@@ -1,0 +1,210 @@
+<template>
+  <view>
+    <view class="container" slot="qy-content">
+      <view class="info-card">
+        <view class="main-info">
+          <view class="main-info-avatar" style="background-image:url({{avatar}})"></view>
+          <view class="main-info-name">
+            <view class="main-info-name-items" style="font-size:32rpx">{{name}}</view>
+            <view class="main-info-name-items" style="margin-top:15rpx">已绑定的手机号：{{phoneNumber}}<view class="change-phonenumber" @tap="goChangePhone"></view></view>
+          </view>
+        </view>
+      </view>
+      <view class="function-line">
+        <view class="function-line-image" style="background-image:url('https://static.airbob.org/under-graduate/userpage/mine_icon_help.png')"></view>
+        <view class="function-line-content" @tap="goFeedback">帮助与反馈<view class="function-line-arrow"></view></view>
+      </view>
+      <view class="function-line">
+        <view class="function-line-image" style="background-image:url('https://static.airbob.org/under-graduate/userpage/mine_icon_about.png')"></view>
+        <view class="function-line-content" @tap="goAboutUs">关于我们<view class="function-line-arrow"></view></view>
+      </view>
+      <!-- <view class="function-line">
+        <view class="function-line-image" style="background-image:url('https://static.airbob.org/under-graduate/userpage/mine_icon_join.png')"></view>
+        <view class="function-line-content">加入我们<view class="function-line-arrow"></view></view>
+      </view> -->
+      <view class="function-line">
+        <view class="function-line-image" style="background-image:url('https://static.airbob.org/under-graduate/userpage/mine_icon_changelog.png')"></view>
+        <view class="function-line-content" @tap="goChangelog" >更新日志<view class="function-line-arrow"></view></view>
+      </view>
+      <view class="cancel-bind" @tap="removeBind">退出登录</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+// import { connect } from "wepy-redux";
+
+// @connect({})
+export default class Profile extends wepy.page {
+  config = {
+    navigationBarTitleText: "我的"
+  };
+
+  mixins = [];
+
+  data = {
+    avatar: "",
+    phoneNumber: "",
+    name: ""
+  };
+
+  computed = {};
+
+  methods = {
+    goChangePhone() {
+      this.$navigate({
+        url: "../others-page/pages/change-phone"
+      });
+    },
+    goFeedback() {
+      this.$navigate({
+        url: "../others-page/pages/feedback"
+      });
+    },
+    goAboutUs() {
+      this.$navigate({
+        url: "../others-page/pages/aboutus"
+      });
+    },
+    goChangelog() {
+      this.$navigate({
+        url: "../others-page/pages/changelog"
+      });
+    },
+    removeBind() {
+      wepy
+        .showModal({
+          title: "即将登出",
+          content: "您确定将登出吗",
+          confirmColor: "#47CFF5"
+        })
+        .then(response => {
+          if (response.confirm) {
+            wepy
+              .request({
+                url: `${this.$parent.globalData.requestUrl +
+                  this.$parent.globalData.config.signOut}`
+              })
+              .then(res => {
+                if (res.data.data) {
+                  wepy.clearStorage();
+                  wepy.redirectTo({
+                    url: "/others-page/pages/login?step=1"
+                  });
+                }
+              });
+          }
+        });
+    }
+  };
+
+  events = {};
+
+  onLoad() {
+    if (wepy.getStorageSync("User").nativeInformation) {
+      this.avatar = wepy.getStorageSync("User").nativeInformation.avatar;
+      this.phoneNumber = wepy.getStorageSync(
+        "User"
+      ).nativeInformation.phoneNumber;
+    } else {
+      this.phoneNumber = "xxx";
+    }
+    this.name =
+      wepy.getStorageSync("userInfo").name || wepy.getStorageSync("User").name;
+  }
+}
+</script>
+
+<style lang="stylus">
+.container
+  width 750rpx
+  .info-card
+    position relative
+    display flex
+    width 750rpx
+    height 390rpx
+    background-image url('https://static.airbob.org/under-graduate/userpage/mine_pic_card.png')
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+    margin-bottom 60rpx
+    .main-info
+      position relative
+      width 750rpx
+      height 150rpx
+      margin-top 120rpx
+      display flex
+      .main-info-avatar
+        display inline-block
+        width 150rpx
+        height 150rpx
+        margin 0 30rpx 0 60rpx
+        border-radius 50%
+        background-position center
+        background-repeat no-repeat
+        background-size contain
+      .main-info-name
+        display inline-block
+        margin-top 25rpx
+        height 100rpx
+        color #fff
+        font-size 24rpx
+        .main-info-name-items
+          height 50rpx
+          display flex
+          line-height 50rpx
+          .change-phonenumber
+            display inline-block
+            margin-left 16rpx
+            width 50rpx
+            height 50rpx
+            background-image url('https://static.airbob.org/under-graduate/phonenum.png')
+            background-repeat no-repeat
+            background-size contain
+            background-position center
+  .function-line
+    position relative
+    width 750rpx
+    height 80rpx
+    display flex
+    align-items center
+    .function-line-image
+      position relative
+      display inline-block
+      width 150rpx
+      height 40rpx
+      background-position center
+      background-repeat no-repeat
+      background-size contain
+    .function-line-content
+      position relative
+      display inline-block
+      font-size 32rpx
+      color #353535
+      width 600rpx
+      height 80rpx
+      line-height 80rpx
+      border-bottom 1rpx solid #F4F4F4
+      .function-line-arrow
+        position absolute
+        width 30rpx
+        height 30rpx
+        top 25rpx
+        right 25rpx
+        background-image url('https://static.airbob.org/under-graduate/userpage/button_right.png')
+        background-position center
+        background-repeat no-repeat
+        background-size contain
+  .cancel-bind
+    width 700rpx
+    font-size 32rpx
+    color #fff
+    height 80rpx
+    line-height 80rpx
+    margin-left 25rpx
+    margin-top 100rpx
+    border-radius 50rpx
+    text-align center
+    background linear-gradient(-255deg, #ABDCFF 0%, #6AE4FF 100%)
+</style>

@@ -1,0 +1,275 @@
+<style lang="stylus">
+.container
+  font-family -apple-system-font, Helvetica Neue, Helvetica, sans-serif
+</style>
+
+<script>
+import wepy from "wepy";
+import { CONFIG } from "./config/apiConfig.js";
+// 抽离api
+import "wepy-async-function";
+// import { setStore } from "wepy-redux";
+// import configStore from "./store";
+// const store = configStore();
+// setStore(store);
+export default class extends wepy.app {
+  config = {
+    pages: ["pages/index", "pages/news-list", "pages/profile"],
+    subPackages: [
+      {
+        root: "others-page/",
+        pages: [
+          "pages/search",
+          "pages/login",
+          "pages/news",
+          "pages/information-box",
+          "pages/library",
+          "pages/library-recommened",
+          "pages/run",
+          "pages/feedback",
+          "pages/myfeedback",
+          "pages/historyfeedback",
+          "pages/more",
+          "pages/changelog",
+          "pages/aboutus",
+          "pages/close",
+          "pages/protocol",
+          "pages/advertisement",
+          "pages/wenjuan",
+          "pages/tuition",
+          "pages/change-phone",
+          "pages/association",
+          "pages/association-detail",
+          "pages/association-register",
+          "pages/register-success",
+          "pages/club-personal",
+          "pages/auth",
+          "pages/questionnaire-homepage",
+          "pages/questionnaire"
+        ]
+      },
+      {
+        root: "edu-admin-page/",
+        pages: [
+          "pages/supplement-and-tutorials",
+          "pages/check-grade",
+          "pages/cut-down",
+          "pages/course",
+          "pages/score-inquire",
+          "pages/credit"
+        ]
+      },
+      {
+        root: "others-edu-page/",
+        pages: ["pages/pe-score", "pages/GpaCalculator", "pages/calendar"]
+      },
+      {
+        root: "campus-card-page/",
+        pages: [
+          "pages/campus-card-index",
+          "pages/campus-card-charge",
+          "pages/campus-card-loss",
+          "pages/campus-card-lossPage",
+          "pages/consumption-detail",
+          "pages/electric-charge",
+          "pages/net-charge",
+          "pages/select-room",
+          "pages/add-room"
+        ]
+      }
+    ],
+    window: {
+      backgroundTextStyle: "light",
+      navigationBarBackgroundColor: "#fff",
+      navigationBarTitleText: "NJUPT",
+      navigationBarTextStyle: "black"
+    },
+    tabBar: {
+      color: "#353535",
+      selectedColor: "#47CFF5",
+      list: [
+        {
+          pagePath: "pages/index",
+          text: "首页",
+          iconPath: "assets/icon/char_guo/inactive.png",
+          selectedIconPath: "assets/icon/char_guo/active.png"
+        },
+        {
+          pagePath: "pages/news-list",
+          text: "资讯",
+          iconPath: "assets/icon/char_xin/inactive.png",
+          selectedIconPath: "assets/icon/char_xin/active.png"
+        },
+        {
+          pagePath: "pages/profile",
+          text: "我的",
+          iconPath: "assets/icon/char_qing/inactive.png",
+          selectedIconPath: "assets/icon/char_qing/active.png"
+        }
+      ]
+    }
+  };
+  globalData = {
+    userInfo: null,
+    requestUrl: CONFIG.REQUEST_URL,
+    config: CONFIG,
+    associationUserTableInfo: {},
+    associationStatus: [],
+    modules: [
+      {
+        name: "课表",
+        path: "../edu-admin-page/pages/course",
+        src: "https://static.airbob.org/under-graduate/more/timetable.png",
+        isIndex: true,
+        id: 16,
+        isOpen: true,
+        module: "正方"
+      },
+      {
+        name: "成绩查询",
+        path: "../edu-admin-page/pages/score-inquire",
+        src: "https://static.airbob.org/under-graduate/more/results query.png",
+        isIndex: true,
+        id: 9,
+        isOpen: true,
+        module: "正方"
+      },
+      {
+        name: "一卡通",
+        path: "../campus-card-page/pages/campus-card-index",
+        src: "https://static.airbob.org/under-graduate/more/card.png",
+        isIndex: true,
+        id: 4,
+        isOpen: true,
+        module: "一卡通"
+      },
+      {
+        name: "图书馆",
+        path: "../others-page/pages/library",
+        src: "https://static.airbob.org/under-graduate/more/library.png",
+        isIndex: true,
+        id: 0,
+        isOpen: true,
+        module: "图书馆"
+      },
+      {
+        name: "晨跑",
+        path: "../others-page/pages/run",
+        src: "https://static.airbob.org/under-graduate/more/run.png",
+        isIndex: true,
+        id: 19,
+        isOpen: true,
+        module: "跑操"
+      },
+      {
+        name: "体育部",
+        path: "../others-edu-page/pages/pe-score",
+        src: "https://static.airbob.org/under-graduate/more/sport.png",
+        isIndex: true,
+        id: 10,
+        isOpen: true,
+        module: "体育部"
+      },
+      {
+        name: "GPA计算器",
+        src: "https://static.airbob.org/under-graduate/more/gpa.png",
+        isIndex: false,
+        id: 15,
+        path: "../others-edu-page/pages/GpaCalculator",
+        module: "正方",
+        isOpen: true
+      },
+      {
+        name: "更多",
+        path: "../others-page/pages/more",
+        src: "https://static.airbob.org/under-graduate/more/more.png",
+        isIndex: true,
+        id: -1
+      }
+    ]
+  };
+  constructor() {
+    super();
+    this.use("requestfix");
+    this.use("promisify");
+    this.intercept("request", {
+      // 发出请求时的回调函数
+      config(p) {
+        // 对所有request请求中的OBJECT参数对象统一附加时间戳属性
+        p.timestamp = +new Date();
+        // let currentPage = getCurrentPages()[getCurrentPages().length - 1].route;
+        if (wepy.getStorageSync("token")) {
+          p.header = {
+            cookie: `session_id=${wepy.getStorageSync(
+              "token"
+            )}; token=${wepy.getStorageSync("questionnaire_token")}`
+          };
+        }
+        // 必须返回OBJECT参数对象，否则无法发送请求到服务端
+        return p;
+      },
+      // 请求成功后的回调函数
+      async success(p) {
+        // 可以在这里对收到的响应数据对象进行加工处理
+        if (!p.data.success) {
+          if (p.data.errMsg === "会话过期" || p.data.errMsg === "会话不存在") {
+            // let currentPage = getCurrentPages()[getCurrentPages().length - 1].route
+            wepy.reLaunch({
+              url: "/others-page/pages/login"
+            });
+          } else {
+            switch (Number(p.data.errCode)) {
+              case 406:
+                return this.showTip("无效的密码");
+              case 407:
+                return this.showTip("无当前userId");
+              case 430:
+                return this.showTip("无法验证用户身份");
+              case 431:
+                return this.showTip("验证超时");
+              case 500:
+                return this.showTip("未知错误");
+              case 503:
+                return this.showTip("参数未找到");
+              case 504:
+                return this.showTip("此用户已注册");
+              case 505:
+                return this.showTip("手机号已注册");
+              default:
+                return p;
+            }
+          }
+        }
+        // 必须返回响应数据对象，否则后续无法对响应数据进行处理
+        return p;
+      },
+      // 请求失败后的回调函数
+      fail(p) {
+        // 必须返回响应数据对象，否则后续无法对响应数据进行处理
+        return p;
+      },
+      // 请求完成时的回调函数(请求成功或失败都会被执行)
+      complete(p) {}
+    });
+  }
+  onLaunch() {}
+  showTip(title = "请求发生错误") {
+    wepy.showToast({
+      title,
+      icon: "none"
+    });
+  }
+  timeToDate(timestamp) {
+    const date = new Date(timestamp);
+    const Y = date.getFullYear() + "-";
+    const M =
+      (date.getMonth() + 1 < 10
+        ? "0" + (date.getMonth() + 1)
+        : date.getMonth() + 1) + "-";
+    const D = date.getDate() + " ";
+    return Y + M + D;
+  }
+}
+</script>
+
+

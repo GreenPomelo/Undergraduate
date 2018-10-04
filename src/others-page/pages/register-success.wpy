@@ -1,0 +1,117 @@
+<template>
+  <view class="container">
+    <view class="header"></view>
+    <view class="body-container">
+      <view class="body">
+        <view class="register-result">
+          <image src="{{modifyStatus}}" />
+        </view>
+        <view class="advertisement">
+          <image src="https://static.airbob.org/under-graduate/advertise_asso.jpg" />
+        </view>
+        <view class="cut-line"></view>
+        <view class="footer">
+          使用南邮小程序招新系统报名社团与线下填写纸质表具有相同报名效力。
+且线上报名更加方便、快捷、环保。
+        </view>
+      </view>
+      <navigator open-type="navigate" hover-class="none" path="/other-pages/tag?id={{tagId}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="submission">
+        <view>去校谈,聊社团</view>
+      </navigator>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "社团报名"
+  };
+  data = {
+    modify: false,
+    tagId: 0,
+    schoolTalkToken: ""
+  };
+  computed = {
+    modifyStatus() {
+      return this.modify === "true"
+        ? `https://static.airbob.org/under-graduate/xgcg.png`
+        : `https://static.airbob.org/under-graduate/ok.png`;
+    }
+  };
+  onLoad(option) {
+    this.schoolTalkToken = wepy.getStorageSync("token");
+    this.modify = option.modify;
+    this.tagId = Number(option.tagId);
+    this.$apply();
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+.container
+  width 100%
+  height 100vh
+  .header
+    width 100%
+    height 136px
+    background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)
+    background-blend-mode normal, normal
+    position fixed
+    top 0
+    z-index -1
+  .body-container
+    width 100%
+    display flex
+    flex-direction column
+    align-items center
+    .body
+      margin 14px 12.5px 16px 12.5px
+      width 350px
+      height 536px
+      background-color #ffffff
+      box-shadow 0px 0px 12px 0px rgba(168, 168, 168, 0.5)
+      border-radius 14px
+      display flex
+      flex-direction column
+      align-items center
+      .register-result
+        margin-top 75px
+        margin-bottom 37px
+        image
+          width 218px
+          height 153px
+      .advertisement
+        margin-bottom 39px
+        image
+          width 319px
+          height 136px
+      .cut-line
+        width 100%
+        height 1px
+        background rgba(218, 218, 218, 0.5)
+        margin-bottom 21px
+      .footer
+        width 246px
+        height 51px
+        text-align center
+        font-family 'PingFangSC-Regular'
+        font-size 12px
+        color #9b9b9b
+    .submission
+      width 350px
+      height 49px
+      background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+      box-shadow 0px 0px 25px 0px rgba(168, 168, 168, 0.5)
+      border-radius 14px
+      display flex
+      justify-content center
+      align-items center
+      margin-bottom 38px
+      view
+        font-family 'PingFangSC-Semibold'
+        font-size 18px
+        color #ffffff
+</style>

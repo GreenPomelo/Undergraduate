@@ -1,0 +1,75 @@
+<template>
+  <view class="container">
+    <view class="head" @tap.stop="toggleShow">{{result.title}}</view>
+    <view class="list-container" style="{{show?'':'display:none'}}">
+        <view class="grade-item">
+          <text class="grade-text">考试年份：{{result.year}}</text>
+          <text class="grade-text">考试学期：{{result.term}}</text>
+          <text class="grade-text">准考证号：{{result.number}}</text>
+          <text class="grade-text">考试成绩：{{result.result}}</text>
+        </view>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from "wepy";
+  export default class GradeCard extends wepy.component {
+    props = {
+      result: Object,
+      show: {
+        default: false,
+        type: Boolean
+      }
+    };
+    methods = {
+      toggleShow() {
+        this.$emit("showGradeChange", this.$index);
+      }
+    };
+  }
+</script>
+<style lang="stylus" scoped>
+.container
+  display flex
+  flex-direction column
+  align-items center
+  margin-top 31rpx
+  min-height auto!important
+  .head
+    font-size  30rpx
+    font-family "SimHei"
+    color rgb(52, 177, 244)
+    line-height 1.2
+    height 100rpx
+    width 545rpx
+    box-shadow 0rpx 3rpx 13.8rpx 6.2rpx rgba(50, 203, 240, 0.35)
+    border-radius 30rpx
+    background-color rgb(255, 255, 255)
+    z-index: 40
+    display flex
+    align-items center
+    justify-content center
+  .list-container
+    border-radius 30rpx
+    background-color rgb(255, 255, 255)
+    width 605rpx
+    z-index 34
+    margin -44rpx 0 0 0
+    padding 71rpx 0 31rpx
+    .grade-item
+      width 520rpx
+      height auto
+      display flex
+      flex-direction column
+      padding-left 57rpx
+      margin-bottom 6rpx
+      .grade-text
+        font-size 29rpx
+        margin-bottom 6rpx
+        font-family "SimHei"
+        color rgb(53, 53, 53)
+        line-height 1.458
+  .none
+    margin-bottom 31rpx
+</style>
+

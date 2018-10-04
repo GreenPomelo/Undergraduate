@@ -1,0 +1,110 @@
+<!--
+-PlaceHolder 输入框的placeholder
+-Image 输入框的靠前的图片
+-putValue 输入框的值
+-inputType 输入框的input-type，默认number
+-verification 输入框靠后的图片
+-imageHeight,imageWidth,verificationImagewidth 图片的大小,微调用
+-verificationText 靠后图片上的内容
+-TapFunc 靠后图片的点击事件，尚未完成
+-->
+<template>
+  <view class="type-container">
+    <view class="front-image-container" style="height:{{imageHeight}};width:{{imageWidth}}">
+      <image class="contain-image" src="{{Image}}" mode="aspectFit" />
+    </view>
+    <input type="{{inputType}}" @input="putValue" class="place-to-type" placeholder="{{PlaceHolder}}"/>
+    <view class="to-verification" wx:if="{{verification}}" @tap="Tap">
+      <image class="to-verification" mode="aspectFit" src="{{verification}}" style="width:{{verificationImagewidth}};"/>
+      <view class="get-verification">{{verificationText}}</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class Input extends wepy.component {
+  data = {
+    Value: ""
+  };
+  props = {
+    PlaceHolder: String,
+    Image: String,
+    imageHeight: String,
+    imageWidth: String,
+    verification: String,
+    verificationImagewidth: String,
+    verificationText: String,
+    inputValue: {
+      twoWay: true
+    },
+    index: Number,
+    inputType: {
+      default: "number",
+      type: String
+    },
+    TapFunc: {
+      type: Object
+    }
+  };
+  methods = {
+    putValue(e) {
+      this.inputValue = e.detail.value;
+    },
+    Tap(e) {
+      this.$emit("TapFunc", e);
+    }
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+input
+  min-height 0rpx
+
+.type-container
+  position relative
+  margin 0 auto
+  width 100%
+  height 50rpx
+  line-height 40rpx
+  font-size 30rpx
+  display flex
+  justify-content flex-start
+  align-items center
+  border-bottom 1rpx solid #F2F2F2
+  .front-image-container
+    position relative
+    height 40rpx
+    width 26rpx
+    display flex
+    justify-content center
+    align-items center
+    .contain-image
+      flex 1
+  .place-to-type
+    font-size 28rpx
+    min-height 0rpx
+    height 50rpx
+    line-height 40rpx
+    padding-left 25rpx
+    width 100%
+  .to-verification
+    position relative
+    width 180rpx
+    height 50rpx
+    display flex
+    font-size 28rpx
+    align-items center
+    justify-content center
+    .get-verification
+      position absolute
+      top 0rpx
+      height 50rpx
+      color #fff
+      text-align center
+      display flex
+      align-items center
+      justify-content center
+</style>

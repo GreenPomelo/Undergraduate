@@ -1,0 +1,436 @@
+<template>
+  <view class="container">
+    <QyModal height="329rpx" width="434rpx">
+      <view slot="content" class="info-container">
+        <view class="info-title">你可以通过下面的方式联系{{cardIndex===2?"失主":"拾卡人"}}</view>
+        <view class="info-content">{{info}}</view>
+        <button class="info-button" style="color:{{cardIndex===2?'#408175':'#e66c10'}};" @tap.stop="copy">复制信息</button>
+      </view>
+    </QyModal>
+    <view class="loss-header">
+        <image class="card-pic" mode="aspectFit" src="{{cardUrl}}"/>
+        <view class="card-text">{{ items[cardIndex] }}</view>
+    </view>
+    <view class="loss-content">
+      <view class="input-container" wx:if="{{cardIndex===0||cardIndex===4}}">
+        <view class="input-text">校园卡密码</view>
+        <input placeholder="输入你的校园卡密码" @input="inputCampusPassword" value="{{campusPassword}}"/>
+      </view>
+      <view class="input-container" wx:if="{{cardIndex===1}}">
+        <view class="input-text">校园卡卡号</view>
+        <input placeholder="输入你拾到的校园卡卡号" @input="inputCampusNumber" value="{{campusNumber}}"/>
+      </view>
+      <view class="input-container" wx:if="{{cardIndex===0||cardIndex===1}}">
+        <view class="input-text">备注</view>
+        <input placeholder="你的联系方式" @input="inputCampusDescription" value="{{description}}"/>
+      </view>
+      <scroll-view class="table-container" wx:if="{{cardIndex===2}}" scroll-y @scrolltolower="loadMoreLossInfoList">
+        <view class="tr" style="background:#6bdec9;">
+          <view class="th">挂失时间</view>
+          <view class="th">姓名</view>
+          <view class="th">卡号后四位</view>
+          <view class="th">备注</view>
+        </view>
+        <repeat for="{{ lossInfoData }}" index="index" key="key" item="item">
+          <view class="tr">
+            <view class="td">{{ item.times }}</view>
+            <view class="td">{{ item.name }}</view>
+            <view class="td">{{ item.card }}</view>
+            <view class="td" style="color:#408175;" @tap.stop="showModal" data-tips="{{item.remark?item.remark:'无'}}">详情</view>
+          </view>
+        </repeat>
+      </scroll-view>
+      <scroll-view class="table-container" wx:if="{{cardIndex===3}}" scroll-y @scrolltolower="loadMoreLossObjectList">
+        <view class="tr" style="background:#fc9d57;">
+          <view class="th">挂失时间</view>
+          <view class="th">姓名</view>
+          <view class="th">卡号后四位</view>
+          <view class="th">备注</view>
+        </view>
+        <repeat for="{{ lossObjectData }}" index="index" key="key" item="item">
+          <view class="tr">
+            <view class="td">{{ item.times }}</view>
+            <view class="td">{{ item.name }}</view>
+            <view class="td">{{ item.card }}</view>
+            <view class="td" style="color:#e66c10;" @tap.stop="showModal" data-tips="{{item.remark?item.remark:'无'}}">详情</view>
+          </view>
+        </repeat>
+      </scroll-view>
+    </view>
+    <button class="submitBtn" style="background:{{colors[cardIndex]}};" wx:if="{{cardIndex===0||cardIndex===1||cardIndex===4}}" @tap="submitInformation">提交</button>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import QyModal from "@/components/qy-modal";
+export default class CampusCardLoss extends wepy.page {
+  components = {
+    QyModal
+  };
+  config = {
+    navigationBarTitleText: "校园卡挂失"
+  };
+  data = {
+    // 页面
+    items: ["校园卡丢失", "拾到校园卡", "挂失信息", "失物招领", "挂失解除"],
+    colors: ["#3891ff", "#ed53e3", "", "", "#26c4ef"],
+    cardUrl: "",
+    cardIndex: 0,
+    campusPassword: "",
+    campusDescription: "",
+    campusNumber: "",
+    // 挂失信息
+    lossInfoPage: 1,
+    lossInfoData: [],
+    lossInfoLoading: false,
+    // 失物招领
+    lossObjectPage: 1,
+    lossObjectData: [],
+    lossObjectLoading: false,
+    // modal
+    info: "",
+    card: 0
+  };
+  methods = {
+    inputCampusPassword(e) {
+      this.campusPassword = e.detail.value;
+    },
+    inputCampusNumber(e) {
+      this.campusNumber = e.detail.value;
+    },
+    inputCampusDescription(e) {
+      this.campusDescription = e.detail.value;
+    },
+    showModal(e) {
+      this.info = e.target.dataset.tips === null ? "无" : e.target.dataset.tips;
+      this.card = e.target.dataset.card;
+      this.$invoke("QyModal", "open");
+    },
+    async submitInformation() {
+      if (this.cardIndex === 0) {
+        let psd = this.campusPassword;
+        let des = this.campusDescription;
+        const res = await wepy.request({
+          url: `${
+            this.$parent.globalData.requestUrl
+          }crawl/ykt/lost?password=${psd}&remark=${des}`,
+          method: "POST"
+        });
+        if (res.data.success) {
+          await wepy.showModal({
+            content: res.data.data,
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+        this.campusPassword = "";
+        this.campusDescription = "";
+        this.campusNumber = "";
+      } else if (this.cardIndex === 1) {
+        let num = this.campusNumber;
+        let des = this.campusDescription;
+        const res = await wepy.request({
+          url: `${this.$parent.globalData.requestUrl}crawl/ykt/find`,
+          data: {
+            cardNo: num,
+            remark: des
+          },
+          method: "POST"
+        });
+        this.campusPassword = "";
+        this.campusDescription = "";
+        this.campusNumber = "";
+        if (res.data.success) {
+          await wepy.showToast({
+            title: "提交成功",
+            icon: "success",
+            duration: 1500
+          });
+        } else {
+          switch (res.data.errCode) {
+            case 29:
+              await wepy.showToast({
+                title: "单个用户一天最多找到4张卡",
+                icon: "none",
+                duration: 1500
+              });
+              break;
+            case 30:
+              await wepy.showToast({
+                title: "非常遗憾，您输入的卡号没有使用小程序",
+                icon: "none",
+                duration: 1500
+              });
+              break;
+            default:
+              await wepy.showToast({
+                title: "未知错误",
+                icon: "none",
+                duration: 1500
+              });
+          }
+        }
+        this.$invoke("UpLoadModal", "close");
+      } else if (this.cardIndex === 4) {
+        let psd = this.campusPassword;
+        const res = await wepy.request({
+          url: `${
+            this.$parent.globalData.requestUrl
+          }crawl/ykt/unlost?password=${psd}`,
+          method: "POST"
+        });
+        if (res.data.success) {
+          await wepy.showModal({
+            content: res.data.data,
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+        this.campusPassword = "";
+        this.campusDescription = "";
+        this.campusNumber = "";
+      }
+    }
+  };
+  async getLossInfoList(page) {
+    // 获取挂失信息
+    page = page || this.lossInfoPage;
+    wepy.showLoading({
+      title: "正在加载"
+    });
+    if (page === 1) {
+      this.lossInfoData = [];
+      // 初次请求的时候请求20条
+      const resArr = ["1", "2"].map(page =>
+        wepy.request({
+          url: `${
+            this.$parent.globalData.requestUrl
+          }crawl/ykt/lost/list?page=${page}`,
+          method: "POST"
+        })
+      );
+      await Promise.all(resArr).then(resDatas => {
+        for (let res of resDatas) {
+          if (res.data.success && res.data.data.length > 0) {
+            this.lossInfoData = [...this.lossInfoData, ...res.data.data];
+          }
+        }
+      });
+      this.lossInfoPage = 3;
+      wepy.hideLoading();
+    } else {
+      // 非初始状态
+      const res = await wepy.request({
+        url: `${
+          this.$parent.globalData.requestUrl
+        }crawl/ykt/lost/list?page=${page}`,
+        method: "POST"
+      });
+      if (res.data.success && res.data.data.length > 0) {
+        this.lossInfoData = [...this.lossInfoData, ...res.data.data];
+        this.lossInfoPage = this.lossInfoPage + 1;
+        wepy.hideLoading();
+      } else {
+        wepy.hideLoading();
+        wepy.showToast({
+          title: "无更多数据",
+          icon: "success",
+          duration: 1000
+        });
+      }
+    }
+    this.lossInfoLoading = false;
+    this.$apply();
+  }
+  async getLossObjectList(page) {
+    // 获取失物招领列表
+    page = page || this.lossObjectPage;
+    wepy.showLoading({
+      title: "正在加载"
+    });
+    if (page === 1) {
+      this.lossObjectData = [];
+
+      const resArr = ["1", "2"].map(page =>
+        wepy.request({
+          url: `${
+            this.$parent.globalData.requestUrl
+          }crawl/ykt/find/list?page=${page}`,
+          method: "POST"
+        })
+      );
+      await Promise.all(resArr).then(resDatas => {
+        for (let res of resDatas) {
+          if (res.data.success && res.data.data.length > 0) {
+            this.lossObjectData = [
+              ...this.lossObjectData,
+              ...res.data.data.map(_ => {
+                return _.card
+                  ? {
+                      ..._,
+                      card: _.card.slice(-4)
+                    }
+                  : _;
+              })
+            ];
+          }
+        }
+      });
+      this.lossObjectPage = 3;
+      wepy.hideLoading();
+    } else {
+      const res = await wepy.request({
+        url: `${
+          this.$parent.globalData.requestUrl
+        }crawl/ykt/find/list?page=${page}`,
+        method: "POST"
+      });
+      if (res.data.success && res.data.data.length > 0) {
+        this.lossObjectData = [
+          ...this.lossObjectData,
+          ...res.data.data.map(_ => {
+            return _.card
+              ? {
+                  ..._,
+                  card: _.card.slice(-4)
+                }
+              : _;
+          })
+        ];
+        this.lossObjectPage = this.lossObjectPage + 1;
+        wepy.hideLoading();
+      } else {
+        wepy.hideLoading();
+        wepy.showToast({
+          title: "无更多数据",
+          icon: "success",
+          duration: 1000
+        });
+      }
+    }
+    this.lossObjectLoading = false;
+    this.$apply();
+  }
+  loadMoreLossInfoList() {
+    console.log(123);
+    if (!this.lossInfoLoading) {
+      this.lossInfoLoading = true;
+      this.getLossInfoList();
+    }
+  }
+  loadMoreLossObjectList() {
+    if (!this.lossObjectLoading) {
+      this.lossObjectLoading = true;
+      this.getLossObjectList();
+    }
+  }
+  onLoad(options) {
+    let cardIndex = Number(options.index);
+    this.cardUrl =
+      "https://static.airbob.org/loss/card" + Number(cardIndex + 1) + ".png";
+    this.cardIndex = cardIndex;
+    if (cardIndex === 2) {
+      this.getLossInfoList(1);
+    } else if (cardIndex === 3) {
+      this.getLossObjectList(1);
+    }
+
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  font-family PingFangSC-Regular
+  font-size 32rpx
+  color #353535
+  .loss-header
+    display flex
+    flex-direction row
+    align-items center
+    height 100rpx
+    margin 30rpx 0 40rpx 0
+    .card-pic
+      width 50rpx
+      height 50rpx
+      margin 0 56rpx 0 40rpx
+    .card-text
+      font-family PingFangSC-Medium
+  .loss-content
+    display flex
+    flex-direction column
+    align-items center
+    margin 0 34rpx
+    .input-container
+      width 100%
+      display flex
+      flex-direction row
+      align-items center
+      height 100rpx
+      border-bottom solid 2rpx #e3e3e3
+      .input-text
+        white-space nowrap
+        width 240rpx
+      input
+        width 100%
+    .table-container
+      display flex
+      flex-direction column
+      width 100%
+      height calc(100vh - 100rpx)
+      .tr
+        min-height 76rpx
+        padding 10rpx 0
+        display flex
+        flex-direction row
+        align-items center
+        border-bottom solid 2rpx #e0e0e0
+        color #353535
+        .th, .td
+          display inline-block
+          font-family PingFangSC-Medium
+          line-height 32rpx
+          min-width 128rpx
+          max-width 164rpx
+          margin 0 30rpx
+      .tr:first-child
+        color #fff
+        border none
+        border-radius 12rpx
+        white-space nowrap
+      .tr:last-child
+        margin-bottom 30rpx
+  .submitBtn
+    position absolute
+    bottom 64rpx
+    right 0
+    left 0
+    color #fff
+    border-radius 50rpx
+    margin 0 34rpx
+button:after
+  border none
+.info-container
+  display flex
+  flex-direction column
+  align-items center
+  justify-content space-around
+  height 329rpx
+  .info-title
+    font-size 24rpx
+    color rgb(156, 153, 153)
+  .info-content
+    font-size 36rpx
+  .info-button
+    width 204rpx
+    height 51rpx
+    border-radius 10rpx
+    text-align center
+    line-height 51rpx
+    border 2rpx solid black
+    font-size 26rpx
+</style>

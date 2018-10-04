@@ -1,0 +1,343 @@
+<template>
+  <view class="container">
+    <qy-tip :on.sync="isWrong" :content="tip"/>
+    <view class="top-scroll-container">
+      <scroll-view class="top-scroll" scroll-x="true">
+        <repeat for="{{HeadScroll}}" index="index" key="key" item="item">
+          <view style="display:inline-block">
+            <view data-index="{{index}}" @tap="changeClass" class="scroll-item" style="background-image:url({{item.background}});opacity:{{chosenIndex === index ?'1':'0.6'}};margin-right:{{index === 5? '20rpx' : '0rpx'}}">
+            </view>
+          </view>
+        </repeat>
+      </scroll-view>
+    </view>
+    <block wx:if="{{chosenIndex === 0}}">
+      <qy-swiper :imgUrls.sync="imgUrls"></qy-swiper>
+    </block>
+    <repeat for="{{newsItem[chosenIndex]}}" index="index" key="key" item="item">
+      <navigator url="../others-page/pages/news?title={{item.title}}&&newsId={{item.newsId}}">
+        <view wx:if="{{item.adContent !== undefined && item.isCarousel !== 1}}" class="adItem" catchtap="goToAds({{item.id}})">
+          <view class="adLeft">
+            <view class="ads-title">
+              {{item.adTitle}}
+            </view>
+            <view class="ads-time">
+              {{item.gmtCreate}}
+              <view class="ads-tip" wx:if="{{item.adType === 1}}">推广资讯</view>
+            </view>
+          </view>
+          <image src="{{item.adPicUrl}}" mode="aspectFill" class="adPic"/>
+        </view>
+        <view wx:else class="item" data-id="{{index}}">
+          <view class="item-title">
+            {{item.title}}
+          </view>
+          <view class="item-time">
+            {{item.createTime}}
+          </view>
+        </view>
+      </navigator>
+    </repeat>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import QyTip from "@/components/qy-tip";
+import QySwiper from "@/components/qy-swiper";
+// import { connect } from "wepy-redux";
+
+// @connect({})
+export default class NewsList extends wepy.page {
+  config = {
+    navigationBarTitleText: "资讯"
+  };
+
+  data = {
+    isWrong: false,
+    tip: "请求有误！",
+    chosenIndex: 0,
+    pageNum: 1,
+    isEnd: false,
+    HeadScroll: [
+      {
+        id: "0",
+        text: "活动资讯",
+        background: "https://static.airbob.org/under-graduate/ad/news_pic_1.png"
+      },
+      {
+        id: "1",
+        text: "教务通知",
+        background: "https://static.airbob.org/under-graduate/ad/news_pic_2.png"
+      },
+      {
+        id: "2",
+        text: "南邮要闻",
+        background: "https://static.airbob.org/under-graduate/ad/news_pic_3.png"
+      },
+      {
+        id: "3",
+        text: "通知公告",
+        background: "https://static.airbob.org/under-graduate/ad/news_pic_4.png"
+      },
+      {
+        id: "4",
+        text: "学术文化",
+        background: "https://static.airbob.org/under-graduate/ad/news_pic_5.png"
+      },
+      {
+        id: "5",
+        text: "招聘公告",
+        background: "https://static.airbob.org/under-graduate/ad/news_pic_6.png"
+      }
+    ],
+    newsItem: [[], [], [], [], [], []],
+    adsTitle: "",
+    adsCreateTime: "",
+    imgUrls: []
+  };
+
+  methods = {
+    changeClass(e) {
+      if (this.chosenIndex !== e.currentTarget.dataset.index) {
+        this.chosenIndex = e.currentTarget.dataset.index;
+        this.isEnd = false;
+        // 判断对应数组的长度
+        let pageNum = this.newsItem[this.chosenIndex].length / 10;
+        if (pageNum === Math.floor(pageNum)) {
+          this.pageNum = pageNum + 1;
+          if (this.chosenIndex === 0) {
+            this.getAds(this.pageNum, 10);
+          } else {
+            this.getNewsList(this.chosenIndex, this.pageNum);
+          }
+        }
+      }
+    },
+
+    goToAds(adId) {
+      wepy.navigateTo({
+        url: "../others-page/pages/advertisement?adId=" + adId
+      });
+    }
+  };
+
+  components = {
+    "qy-tip": QyTip,
+    "qy-swiper": QySwiper
+  };
+
+  onLoad() {
+    this.getNewsList();
+    this.getAds();
+    this.getCarouselAds();
+  }
+
+  async getCarouselAds() {
+    let that = this;
+    const res = await wepy.request({
+      url: `${that.$parent.globalData.requestUrl +
+        that.$parent.globalData.config.getCarouselAds}`
+    });
+
+    if (res.data.success) {
+      let i = 0;
+      res.data.data.map(item => {
+        this.imgUrls.push({
+          on: "dot",
+          id: i++,
+          url: this.formatImageUrl(item.adPicUrl),
+          adId: item.id
+        });
+      });
+      this.imgUrls[0].on = "activeDot";
+      this.$apply();
+    }
+  }
+
+  async getAds(pageNum = 1, pageSize = 10) {
+    let that = this;
+    if (this.totalAdCount < pageNum * pageSize) {
+      return;
+    }
+    const {
+      data: { data: { adnewsModelList: adList, totalAdCount }, success, ...err }
+    } = await wepy.request({
+      url: `${that.$parent.globalData.requestUrl +
+        that.$parent.globalData.config.getPromotionInformation}`,
+      data: {
+        pageNum,
+        pageSize
+      }
+    });
+
+    if (success) {
+      this.totalAdCount = totalAdCount;
+      if (adList.length === 0) {
+        this.isEnd = true;
+      } else {
+        this.newsItem[0] = [...this.newsItem[0], ...adList];
+        this.newsItem[0].forEach(({ gmtCreate, adPicUrl }, i) => {
+          this.newsItem[0][i].gmtCreate = this.$parent.timeToDate(gmtCreate);
+          this.newsItem[0][i].adPicUrl = this.formatImageUrl(adPicUrl);
+        });
+      }
+      this.$apply();
+    } else {
+      this.doWrong && this.doWrong(err);
+    }
+  }
+
+  async getNewsList(type = 1, pageNum = 1, pageSize = 10) {
+    let that = this;
+    if (!this.isEnd) {
+      const res = await wepy.request({
+        url: `${that.$parent.globalData.requestUrl +
+          that.$parent.globalData.config.getNewsInformationTopic}`,
+        data: {
+          newsTypeCode: type,
+          pageNum,
+          pageSize
+        }
+      });
+
+      if (res.data.success) {
+        if (res.data.data.length === 0) {
+          this.isEnd = true;
+        } else {
+          if (pageNum === 1) {
+            this.newsItem[type] = res.data.data;
+          } else {
+            this.newsItem[type] = [...this.newsItem[type], ...res.data.data];
+          }
+        }
+        this.$apply();
+      } else {
+        this.doWrong && this.doWrong(res.data.errMsg);
+      }
+    }
+  }
+
+  // TODO: 后端要记得改 url，前端之后要么删除这个方法要么把 http:// 改成 https://
+  formatImageUrl(url) {
+    return /https?:\/\//.test(url) ? url : `http://${url}`;
+  }
+
+  onReachBottom() {
+    this.pageNum++;
+    if (this.chosenIndex === 0) {
+      this.getAds(this.pageNum, 10);
+    } else {
+      this.getNewsList(this.chosenIndex, this.pageNum, 10);
+    }
+  }
+  doWrong(err) {
+    this.isWrong = true;
+    this.$apply();
+    console.error(err);
+  }
+}
+</script>
+<style lang="stylus">
+.container
+  color #353535
+  font-family 'SimHei'
+
+.top-scroll-container
+  position relative
+  width 750rpx
+  height 110rpx
+  border-bottom 20rpx solid #F5F5F5
+  .top-scroll
+    width 100%
+    height 100%
+    white-space nowrap
+  .scroll-item
+    display flex
+    justify-content flex-end
+    align-items flex-end
+    height 50rpx
+    width 100rpx
+    padding 30rpx 20rpx 20rpx 52rpx
+    margin 0rpx 0rpx 17rpx 20rpx
+    font-size 34rpx
+    padding-right 20rpx
+    color #fff
+    background-size contain
+    background-repeat no-repeat
+    background-position center
+
+.item
+  position relative
+  padding 30rpx 60rpx 0 60rpx
+  border-bottom 1rpx solid #E3E3E3
+  &:after
+    clear both
+    content '.'
+    display block
+    width 0
+    height 0
+    visibility hidden
+  .item-title
+    font-family PingFangSC-Regular
+    font-size 30rpx
+    color #353535
+  .item-time
+    float right
+    font-size 24rpx
+    color #999CA0
+    margin 10rpx 0
+  .ads-title
+    font-weight bold
+  .ads-tip
+    display inline-block
+    color #00b8ec
+    border 1rpx solid #00b8ec
+    border-radius 10px
+    padding 4rpx 8rpx
+    margin-right 6rpx
+
+.adItem
+  display flex
+  justify-content space-between
+  width 704rpx
+  height 180rpx
+  margin 30rpx 20rpx 0 26rpx
+  padding 0 0 30rpx 0
+  border-bottom 1rpx solid #E3E3E3
+  .adPic
+    width 180rpx
+    height 180rpx
+    border-radius: 40rpx
+  .adLeft
+    display flex
+    flex-direction column
+    justify-content space-between
+    align-items flex-start
+    width 460rpx
+    .ads-title
+      font-family PingFangSC-Regular
+      font-size 30rpx
+      color #353535
+      letter-spacing 0.24rpx
+      display: -webkit-box
+      -webkit-box-orient vertical
+      -webkit-line-clamp 3
+      overflow hidden
+    .ads-time
+      font-size 24rpx;
+      color #888888;
+      letter-spacing 0.12px
+      display flex
+      height 44rpx
+      line-height 44rpx
+      .ads-tip
+        width 120rpx
+        height 40rpx
+        text-align center
+        line-height 40rpx
+        border 2rpx solid #47CFF5
+        border-radius 40rpx
+        color #47CFF5
+        margin-left 8rpx
+</style>

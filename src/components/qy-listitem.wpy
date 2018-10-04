@@ -1,0 +1,59 @@
+<template>
+	<view class="item-container" @tap.stop="navigate">
+		<image class="iconx" src="{{item.thumb}}" mode="widthFix" />
+		<view class="content">
+			<text>{{item.text}}</text>
+			<view class="iconright"></view>
+		</view>
+	</view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class extends wepy.component {
+  methods = {
+    navigate() {
+      wepy.navigateTo({
+        url: this.item.navigateURL
+      });
+    }
+  };
+  props = {
+    item: Object
+  };
+  onLoad() {}
+}
+</script>
+
+<style lang="stylus" scoped>
+.item-container
+	display flex
+	height 98rpx
+	background-color rgb(255,255,255)
+	position relative
+	align-items center
+	&:last-child > .content
+		border-style none!important
+	.iconx
+		width 38rpx
+		margin 0 45rpx 0 25rpx
+	.iconright
+		width 35rpx
+		height 35rpx
+		background-image url("https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png")
+		background-position center
+		background-repeat no-repeat
+		background-size contain
+		position absolute
+		left 685rpx
+	.content
+		width 100%
+		height 96rpx
+		display flex
+		align-items center
+		margin-right 20rpx
+		border-bottom 2rpx solid #E3E3E3
+	.text
+		font-size 32rpx
+		color #353535
+</style>

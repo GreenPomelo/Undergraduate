@@ -1,0 +1,120 @@
+<!-- closable 点击蒙层是否允许关闭
+width Modal宽度
+height Modal高度
+zIndex
+visible Modal是否可见。通过触发组件内的open 和 close方法切换
+backgroundColor 蒙层背景颜色 只支持rgba
+top Modal距离顶部的距离
+containerClass 应用到Modal外部的class
+slot 提供head和content，一般建议使用content -->
+<template>
+  <view class="mask" style="position:{{position}};background-color: {{backgroundColor}};z-index:{{zIndex}};visibility:{{visible?'visible':'hidden'}}" @touchmove.stop="prevent" @tap.stop="clickMask">
+    <view class="modal-container {{containerClass}}" style="width:{{width}};height:{{height}};top:{{top}}" @tap.stop="prevent">
+      <slot name="head"></slot>
+      <view class="cancel" wx:if="{{closable}}" @tap.stop="cancelEvent" />
+      <slot name="content"></slot>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  // 有的通用性没有考虑到，之后慢慢补充
+  export default class QyModal extends wepy.component {
+    props = {
+      closable: {
+        default: false,
+        type: Boolean
+      }, // 是否有右上角的关闭按钮
+      maskClosable: {
+        type: Boolean,
+        default: true
+      }, // 点击蒙层是否允许关闭
+      // onCancel: { //关闭Modal的回调
+      //   type: Function,
+      // },
+      position: {
+        default: "fixed",
+        type: String
+      },
+      containerClass: {
+        type: String,
+        default: ""
+      },
+      width: {
+        type: String,
+        default: "600rpx"
+      },
+      height: {
+        type: String, // Modal内容体高度
+        default: "auto"
+      },
+      zIndex: {
+        type: Number,
+        default: 30000
+      },
+      visible: {
+        type: Boolean, // Modal是否可见
+        default: false,
+        twoWay: true
+      },
+      backgroundColor: {
+        type: String, // 蒙层颜色 暂时只支持rgba没做转换。。。
+        default: "rgba(0,0,0,0.6)"
+      },
+      top: {
+        // Modal离顶部的距离
+        type: String,
+        default: "370rpx"
+      }
+    };
+    data = {};
+    events = {};
+    methods = {
+      clickMask() {
+        if (this.maskClosable) {
+          this.visible = false;
+          this.$apply();
+        }
+      },
+      prevent() {},
+      cancelEvent() {
+        this.visible = false;
+      }
+    };
+    open() {
+      // 调用该方法打开modal
+      this.visible = true;
+      this.$apply();
+    }
+    close() {
+      // 关闭
+      this.visible = false;
+      this.$apply();
+    }
+    onLoad() {}
+  }
+</script>
+
+<style lang="stylus" scoped>
+.mask
+  position fixed
+  width 100vw
+  height 100vh
+  .modal-container
+    left 50%
+    transform translateX(-50%)
+    position absolute
+    min-height 270rpx
+    background-color rgb(255, 255, 255)
+    border-radius 30rpx
+    .cancel
+       background-image url("https://static.airbob.org/under-graduate/grade/%E5%88%A0%E9%99%A4.png")
+       width 34rpx
+       height 35rpx
+       cursor pointer
+       float right
+       background-size contain
+       margin 33rpx 29rpx 0 0
+</style>
+

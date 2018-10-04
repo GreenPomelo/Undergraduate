@@ -1,0 +1,491 @@
+<template>
+  <view>
+    <qy-modal width="500rpx">
+			<view slot="content" class="bind-container">
+				<input class="bind-input" placeholder="正方密码" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+			</view>
+		</qy-modal>
+    <view class="cover" hidden="{{!showModal}}" animation="{{coverAnimation}}">
+    </view>
+    <view class="cover-modal" hidden="{{!showModal}}">
+      <view>排名根据使用小程序用户产生</view>
+      <view>仅供参考，具体请通过辅导员查询</view>
+      <view style="color:#47CFF5;margin-top:30rpx" @tap="getRankRule">知道了</view>
+    </view>
+    <view slot="qy-content" class="container">
+      <view class="top-container">
+        <view class="performance-point">{{GPA}}
+          <view class="average-point">平 均 绩 点</view>
+        </view>
+        <view class="rank-thing" @tap="rankQuestion">
+          <view class="ranking">当前排名：{{rank}}/{{collegeNumber}}</view><view class="rank-question"></view>
+        </view>
+      </view>
+      <view class="credit-column">
+        <view class="credit-item"><view>总学分</view><view class="credit-item-score">{{creditSelected}}</view></view>
+        <view class="credit-item"><view>已修学分</view><view class="credit-item-score">{{creditGained}}</view></view>
+        <view class="credit-item" style="border:none"><view>重修学分</view><view class="credit-item-score">{{creditRetake}}</view></view>
+      </view>
+      <view class="divide"></view>
+      <view style="position:relative;">
+        <view hidden="{{loadHide}}" class="hide-container">
+          <view class="boxLoading"></view>
+        </view>
+        <repeat for="{{terms}}" index="index" key="key" item="item">
+          <view class="term-card" data-index="{{index}}" @tap="{{hide[index] ? 'showDetails' : 'hideDetails'}}"><view class="term-card-item">{{item.term}}</view>
+            <image data-index="{{index}}" hidden = "{{Loading[index]}}" src="{{hide[index] ? 'https://static.airbob.org/under-graduate/image/score/button_down.png' : 'https://static.airbob.org/under-graduate/image/score/button_up.png'}}" mode="aspectFill"/>
+            <i class="weui-loading" wx:if="{{Loading[index]}}"/>
+            <view class="detail-cover" id="detail{{index}}" animation="{{animationData[index]}}">
+              <repeat for="{{item.course}}" index="INDEX" key="KEY" item="ITEM">
+                <view class="detail-information" id="detailCourse{{INDEX}}">
+                  <view class="main-info">
+                    <view class="detail-name">{{ITEM.courseName}}</view>
+                    <view class="detail-info">编号：{{ITEM.courseCode}} 学分{{ITEM.credit}}</view>
+                    <view class="detail-info">成绩：{{ITEM.score}}（正考）
+                      <span wx:if="{{ITEM.resitScore !== ''}}">{{ITEM.resitScore}}（补考）</span>
+                      <span wx:if="{{ITEM.retakeScore !== ''}}">{{ITEM.retakeScore}}（重修）</span>
+                      </view>
+                  </view>
+                  <view class="credit-info">{{ITEM.point}}</view>
+                </view>
+              </repeat>
+            </view>
+          </view>
+        </repeat>
+        <view hidden="{{terms[0] || !loadHide}}">
+          <view class="image-container">
+            <image src="https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E9%A1%B5_%E7%A9%BA.png" style="width:400rpx;height:300rpx" mode="aspecfFit"/>
+          </view>
+          <view class="words">大学生活刚刚开始，加油～</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from "wepy";
+import modal from "../../components/qy-modal";
+
+export default class Score extends wepy.page {
+  config = {
+    navigationBarTitleText: "成绩查询"
+  };
+  data = {
+    GPA: "0",
+    creditRetake: "0",
+    creditGained: "0",
+    creditSelected: "0",
+    showModal: false,
+    Loading: [],
+    hide: [],
+    terms: [],
+    animationData: [],
+    coverAnimation: {},
+    alreadyTap: false,
+    screenWidth: "",
+    dealedHeight: 0,
+    collegeNumber: 0,
+    rank: "",
+    loadHide: false
+  };
+  components = {
+    "qy-modal": modal
+  };
+  changeModuleStatus(status) {
+    let that = this;
+    return new Promise(resolve => {
+      that.showModal = status;
+      resolve();
+    });
+  }
+  methods = {
+    bindCardPassword(e) {
+      this.bindInputPassword = e.detail.value;
+    },
+    async bindHandle() {
+      await wepy
+        .request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.changeSecretCode}`,
+          method: "POST",
+          data: {
+            domainType: "1",
+            username: wepy.getStorageSync("userInfo").studentId,
+            password: this.bindInputPassword
+          }
+        })
+        .then(res => {
+          if (res.data.success && res.data.data) {
+            // 绑定成功
+            this.bindModalVisible = false;
+            this.$invoke("qy-modal", "close");
+            this.init();
+          } else {
+            wepy.showModal({
+              content: "密码错误",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            });
+          }
+        });
+    },
+    async rankQuestion() {
+      let that = this;
+      await that.changeModuleStatus(true);
+      setTimeout(() => {
+        let coverAnimation = wepy.createAnimation({
+          duration: 500
+        });
+        coverAnimation.opacity(0.5).step();
+        that.coverAnimation = coverAnimation.export();
+        that.$apply();
+      }, 0);
+    },
+    async getRankRule() {
+      let that = this;
+      await that.changeModuleStatus(false);
+      setTimeout(() => {
+        let coverAnimation = wepy.createAnimation({
+          duration: 500
+        });
+        coverAnimation.opacity(0).step();
+        that.coverAnimation = coverAnimation.export();
+        that.$apply();
+      }, 0);
+    },
+    async showDetails(e) {
+      let that = this;
+      let index = e.currentTarget.dataset.index;
+      that.hide[index] = false;
+      that.alreadyTap = true;
+      that.Loading[index] = true;
+      await that.Fold(that.terms[index]);
+      that.$apply();
+      that.Loading[index] = false;
+      that.dealedHeight = 0;
+      that.dealHeight(index).then(() => {
+        let query = wepy.createSelectorQuery();
+        let Ind = "#" + "detail" + index.toString();
+        query.select(Ind).boundingClientRect();
+        query.exec(function(res) {
+          let transHeight = that.dealedHeight / that.screenWidth;
+          let showOff = wepy.createAnimation({
+            duration: 1000,
+            timingFunction: "ease"
+          });
+          setTimeout(() => {
+            showOff.height(transHeight + "rpx").step();
+            that.animationData[index] = showOff.export();
+            that.$apply();
+          }, 0);
+        });
+      });
+    },
+    hideDetails(e) {
+      let index = e.currentTarget.dataset.index;
+      this.hide[index] = true;
+      this.terms[index].unfold = true;
+      let showAnimation = wepy.createAnimation({
+        duration: 500,
+        timingFunction: "ease-out"
+      });
+      showAnimation.height(0 + "rpx").step();
+      this.animationData[index] = showAnimation.export();
+      this.$apply();
+      this.animationData = [];
+    }
+  };
+  Fold(e) {
+    return new Promise(resolve => {
+      e.unfold = false;
+      resolve();
+    });
+  }
+  dealHeight(ind) {
+    let that = this;
+    return new Promise(resolve => {
+      setTimeout(() => {
+        for (let i in that.terms[ind].course) {
+          let newquery = wepy.createSelectorQuery();
+          let index = "#" + "detailCourse" + i.toString();
+          newquery.select(index).boundingClientRect();
+          newquery.exec(function(res) {
+            if (!res[0]) {
+              that.dealedHeight = 0;
+              return that.dealHeight(ind);
+            }
+            that.dealedHeight += res[0].height;
+          });
+        }
+        that.$apply();
+        resolve(that.dealedHeight);
+      }, 0);
+    });
+  }
+  forEachTerm(ITEM) {
+    let that = this;
+    return new Promise(resolve => {
+      ITEM.forEach((item, index) => {
+        let detailTerm =
+          item.year +
+          " " +
+          `第${(item.term === 1 || item.term) === "1" ? "一" : "二"}学期`;
+        let judge = that.terms.find(course => course.term === detailTerm);
+        if (judge === undefined || judge === "undefined") {
+          that.terms.unshift({
+            term: detailTerm,
+            course: [item],
+            unfold: true
+          });
+        } else {
+          judge.course.push(item);
+        }
+      });
+      resolve();
+    });
+  }
+  async init() {
+    let that = this;
+    await wepy.getSystemInfo().then(res => {
+      that.screenWidth = parseFloat(res.screenWidth / 750);
+    });
+    let res = await wepy.request({
+      url:
+        this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.getUserGrade
+    });
+    if (!res.data.data || !res.data.success) {
+      wepy.showModal({
+        content: "密码已经更新请重新绑定",
+        confirmText: "知道了",
+        showCancel: false,
+        confirmColor: "#353535"
+      });
+      this.$invoke("qy-modal", "open");
+    }
+    if (res.data.success) {
+      that.loadHide = true;
+      let data = res.data.data;
+      let allScore = data.score;
+      await that.forEachTerm(allScore);
+      that.GPA = data.gpa;
+      that.creditGained = data.creditGained;
+      that.creditRetake = data.creditRetake === "" ? "0" : data.creditRetake;
+      that.creditSelected = data.creditSelected;
+    }
+    const rankRes = await wepy.request({
+      url:
+        this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.rankingSelf
+    });
+    this.rank = rankRes.data.data.rank;
+    this.collegeNumber = rankRes.data.data.total;
+    if (this.terms.length === 0) {
+      this.GPA = "-.--";
+      that.ranl = "-";
+    } else {
+      for (let i = 0; i < this.terms.length; i++) {
+        this.Loading.push(false);
+        this.hide.push(true);
+      }
+    }
+    this.$apply();
+  }
+  async onLoad() {
+    this.init();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+vendors = official
+
+@import '../../css/loading'
+
+.hide-container
+  margin 200rpx auto
+
+.cover
+  position fixed
+  width 100vw
+  height 100vh
+  background rgb(0, 0, 0)
+  opacity 0
+  z-index 100000
+
+.cover-modal
+  position absolute
+  margin 0 auto
+  width 500rpx
+  left 125rpx
+  padding 20rpx
+  top 40vh
+  background #fff
+  z-index 100000
+  border-radius 10rpx
+  font-size 28rpx
+  text-align center
+
+.weui-loading
+  margin 0 5px
+  width 20px
+  height 20px
+  display inline-block
+  vertical-align middle
+  animation spin 1s steps(12) infinite
+  background transparent url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHBhdGggZmlsbD0ibm9uZSIgZD0iTTAgMGgxMDB2MTAwSDB6Ii8+PHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMjAiIHg9IjQ2LjUiIHk9IjQwIiBmaWxsPSIjRTlFOUU5IiByeD0iNSIgcnk9IjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgLTMwKSIvPjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjIwIiB4PSI0Ni41IiB5PSI0MCIgZmlsbD0iIzk4OTY5NyIgcng9IjUiIHJ5PSI1IiB0cmFuc2Zvcm09InJvdGF0ZSgzMCAxMDUuOTggNjUpIi8+PHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMjAiIHg9IjQ2LjUiIHk9IjQwIiBmaWxsPSIjOUI5OTlBIiByeD0iNSIgcnk9IjUiIHRyYW5zZm9ybT0icm90YXRlKDYwIDc1Ljk4IDY1KSIvPjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjIwIiB4PSI0Ni41IiB5PSI0MCIgZmlsbD0iI0EzQTFBMiIgcng9IjUiIHJ5PSI1IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCA2NSA2NSkiLz48cmVjdCB3aWR0aD0iNyIgaGVpZ2h0PSIyMCIgeD0iNDYuNSIgeT0iNDAiIGZpbGw9IiNBQkE5QUEiIHJ4PSI1IiByeT0iNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTIwIDU4LjY2IDY1KSIvPjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjIwIiB4PSI0Ni41IiB5PSI0MCIgZmlsbD0iI0IyQjJCMiIgcng9IjUiIHJ5PSI1IiB0cmFuc2Zvcm09InJvdGF0ZSgxNTAgNTQuMDIgNjUpIi8+PHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMjAiIHg9IjQ2LjUiIHk9IjQwIiBmaWxsPSIjQkFCOEI5IiByeD0iNSIgcnk9IjUiIHRyYW5zZm9ybT0icm90YXRlKDE4MCA1MCA2NSkiLz48cmVjdCB3aWR0aD0iNyIgaGVpZ2h0PSIyMCIgeD0iNDYuNSIgeT0iNDAiIGZpbGw9IiNDMkMwQzEiIHJ4PSI1IiByeT0iNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1MCA0NS45OCA2NSkiLz48cmVjdCB3aWR0aD0iNyIgaGVpZ2h0PSIyMCIgeD0iNDYuNSIgeT0iNDAiIGZpbGw9IiNDQkNCQ0IiIHJ4PSI1IiByeT0iNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTEyMCA0MS4zNCA2NSkiLz48cmVjdCB3aWR0aD0iNyIgaGVpZ2h0PSIyMCIgeD0iNDYuNSIgeT0iNDAiIGZpbGw9IiNEMkQyRDIiIHJ4PSI1IiByeT0iNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTkwIDM1IDY1KSIvPjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjIwIiB4PSI0Ni41IiB5PSI0MCIgZmlsbD0iI0RBREFEQSIgcng9IjUiIHJ5PSI1IiB0cmFuc2Zvcm09InJvdGF0ZSgtNjAgMjQuMDIgNjUpIi8+PHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMjAiIHg9IjQ2LjUiIHk9IjQwIiBmaWxsPSIjRTJFMkUyIiByeD0iNSIgcnk9IjUiIHRyYW5zZm9ybT0icm90YXRlKC0zMCAtNS45OCA2NSkiLz48L3N2Zz4=') no-repeat
+  background-size 100%
+  @keyframes spin
+    0%
+      transform rotate(0deg)
+    to
+      transform rotate(1turn)
+
+.top-container
+  width 750rpx
+  height 350rpx
+  text-align center
+  background-image url('https://static.airbob.org/under-graduate/image/score/score_pic_card.png')
+  background-position center
+  background-repeat no-repeat
+  background-size contain
+  color #fff
+  .performance-point
+    font-size 120rpx
+    padding-top 40rpx
+    .average-point
+      font-size 30rpx
+      margin-bottom 20rpx
+      margin-top -20rpx
+  .rank-thing
+    display flex
+    width 400rpx
+    align-items center
+    justify-content center
+    margin 0 auto
+    .ranking
+      font-size 30rpx
+      width 300rpx
+      padding 0 20rpx
+      background #5ED6F7
+      border-radius 40rpx
+    .rank-question
+      width 30rpx
+      height 30rpx
+      background-image url('https://static.airbob.org/under-graduate/image/score/pic_why.png')
+      background-position center
+      background-repeat no-repeat
+      background-size contain
+
+.rank-question-modal
+  text-align center
+  margin 0 auto
+
+.credit-column
+  padding 24rpx 60rpx
+  display flex
+  justify-content space-around
+  align-items center
+  font-size 30rpx
+  color #888888
+  text-align center
+  .credit-item
+    width 33%
+    border-right 1rpx solid #E3F3E3
+    .credit-item-score
+      color #353535
+      font-size 36rpx
+
+.divide
+  height 25rpx
+  width 750rpx
+  background #F5F5F5
+
+.term-card
+  position relative
+  background #FFFFFF
+  box-shadow 0 0 20rpx 0 rgba(0, 0, 0, 0.05)
+  border-radius 20rpx
+  margin-top 30rpx
+  margin-left 42rpx
+  width 665rpx
+  line-height 90rpx
+  font-size 28rpx
+  color #353535
+  .term-card-item
+    display inline-block
+    width 570rpx
+    padding-left 30rpx
+  .detail-cover
+    position relative
+    width 665rpx
+    height 0rpx
+    border-bottom-left-radius 20rpx
+    border-bottom-right-radius 20rpx
+    box-shadow 0 0 20rpx 0 rgba(0, 0, 0, 0.05)
+    overflow hidden
+    .detail-information
+      position relative
+      display flex
+      margin-left 30rpx
+      margin-right 30rpx
+      border-top 1rpx solid #E3E3E3
+      align-items center
+      .main-info
+        width 550rpx
+        margin 30rpx 0rpx
+        .detail-name
+          line-height 50rpx
+          margin 10rpx 0rpx
+          font-size 35rpx
+        .detail-info
+          line-height 40rpx
+          font-size 24rpx
+          margin 10rpx 0rpx
+  .credit-info
+    font-size 50rpx
+    font-weight bold
+  image
+    width 30rpx
+    height 30rpx
+
+.image-container
+  padding-top 120rpx
+  width 400rpx
+  height 300rpx
+  margin 0 auto
+
+.words
+  margin-top 50rpx
+  text-align center
+  font-family PingFangSC-Regular
+  font-size 28rpx
+  color #999CA0
+  letter-spacing 0.11rpx
+
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
+</style>

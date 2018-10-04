@@ -1,0 +1,260 @@
+<template>
+  <view class="container">
+    <view class="head">
+      <image class="icon" src="https://static.airbob.org/under-graduate/grade/%E7%AD%89%E7%BA%A7.png" mode="widthFix" />
+    </view>
+    <repeat for="{{gradeExam}}" key="index" index="index" item="item">
+      <GradeCard :result.sync="item" :show.sync="shows[index]" />
+    </repeat>
+    <view class="foot">
+      <text class="tips">没有查到考试成绩？试试</text>
+      <button class="button-enter" hover-class="button-enter-en" @tap.stop="enter">手动输入准考证号&姓名</button>
+    </view>
+    <QyModal1>
+      <view slot="content" class="enter-container">
+        <view class="section1">
+          <input placeholder="在此输入四六级准考证号" type="number" class="input" placeholder-class="placeholder" @input="updateNumber" />
+        </view>
+        <view class="section2">
+          <input placeholder="在此输入姓名" class="input" placeholder-class="placeholder" @input="updateName" />
+        </view>
+        <button class="result-button" hover-class="result-button-enter" @tap.stop="checkResult">查询成绩</button>
+        <text class="tips">目前仅支持CET46</text>
+      </view>
+    </QyModal1>
+    <QyModal2 :closable.sync="close">
+      <view slot="head" class="head-container">
+        <image class="shadow shadow-left" src="https://static.airbob.org/under-graduate/grade/%E5%B7%A6%E9%98%B4%E5%BD%B1.png" mode="widthFix" />
+        <view class="title-list">
+          <text class="title-1">{{manualSearchResult.rank}}</text>
+          <text class="title-2">考 试 成 绩</text>
+        </view>
+        <image class="shadow shadow-right" src="https://static.airbob.org/under-graduate/grade/%E5%8F%B3%E9%98%B4%E5%BD%B1.png" mode="widthFix" />
+      </view>
+      <view slot="content">
+        <view class="result-container">
+          <view class="result-list">
+            <text>姓名:{{manualSearchResult.name}}</text>
+            <text>准考证号：{{manualSearchResult.number}}</text>
+            <text>考试级别：{{manualSearchResult.rank}}</text>
+            <text>总分：{{manualSearchResult.total}}</text>
+            <view>
+              <text>听力：{{manualSearchResult.listen}}</text><text>阅读：{{manualSearchResult.reading}}</text>
+            </view>
+            <text>翻译与写作：{{manualSearchResult.write}}</text>
+            <text>口试准考证号：{{manualSearchResult.speakNumber}}</text>
+            <text>口试等级：{{manualSearchResult.speakRank}}</text>
+          </view>
+        </view>
+      </view>
+    </QyModal2>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  import GradeCard from "../components/grade-card";
+  import QyModal from "../../components/qy-modal";
+  // import QyNav from "@/components/qy-navigation";
+  // import QyContainer from "@/components/qy-container";
+  export default class CheckGrade extends wepy.page {
+    // todo 关闭Modal后清除data中的输入状态
+    config = {
+      backgroundColor: "#E5F4FB",
+      navigationBarTitleText: "等级考试"
+    };
+    data = {
+      gradeExam: [],
+      shows: [],
+      number: "",
+      name: "",
+      manualSearchResult: {
+        name: "小程序",
+        number: "1201201201023131",
+        rank: "英语六级",
+        total: 456,
+        listen: 120,
+        reading: 200,
+        write: 136,
+        speakNumber: "--",
+        speakRank: "--"
+      },
+      close: true
+    };
+    components = {
+      GradeCard,
+      QyModal1: QyModal,
+      QyModal2: QyModal
+      // QyNav,
+      // QyContainer
+    };
+    config = {
+      navigationBarTitleText: "等级考试"
+    };
+    events = {
+      showGradeChange: index => {
+        this.shows[index] = !this.shows[index];
+      }
+    };
+    methods = {
+      enter() {
+        this.$invoke("QyModal1", "open");
+      },
+      updateName(e) {
+        this.name = e.detail.value;
+      },
+      updateNumber(e) {
+        this.number = e.detail.value;
+      },
+      checkResult() {
+        // this.$invoke("QyModal1", "close");
+        // this.$invoke("QyModal2", "open");
+      }
+    };
+    async onLoad() {
+      const res = await wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getUserGradeTest}`
+      });
+      // const examData = await res.json();
+      if (res.data.success) {
+        const examData = res.data.data.gradeExam;
+        this.shows = new Array(examData.length).fill(false);
+        this.gradeExam = examData.map(item => {
+          return {
+            title: item.name,
+            year: item.year,
+            term: item.term,
+            number: item.certno,
+            result: item.score
+          };
+        });
+      }
+      this.$apply();
+    }
+  }
+</script>
+
+<style lang="stylus" scoped>
+@import '../../css/normal-input';
+.container
+	background-color rgb(229, 244, 251)
+	display flex
+	align-items center
+	flex-direction column
+	width 100%
+	min-height calc(100vh - 66px)
+	.head
+		background-image url('https://static.airbob.org/under-graduate/grade/%E6%B3%A2%E6%B5%AA.png')
+		background-size contain
+		height 320rpx
+		width 100%
+		display flex
+		justify-content center
+		.icon
+			width 195rpx
+			margin-top 33rpx
+	.foot
+		margin-top 112rpx
+		width 520rpx
+		padding-bottom 50rpx
+		display flex
+		flex-direction column
+		align-items center
+		.tips
+			font-size 24rpx
+			font-family "SimHei"
+			color rgb(136, 135, 139)
+		.button-enter
+			margin-top 34rpx
+			font-size 30rpx
+			font-family "SimHei"
+			color rgb(255, 255, 255)
+			line-height 62rpx
+			text-align center
+			border-radius 30rpx
+			background-color rgb(52, 177, 244)
+			width 465rpx
+			height 62rpx
+      &:after
+        border none
+		.button-enter-en
+			background-color rgba(52, 177, 244,0.6)
+	.head-container
+		position absolute
+		top -125rpx
+		width 605rpx
+		overflow hidden
+		.shadow
+			width 132rpx
+			z-index -10
+		.shadow-left
+			position absolute
+			top 77rpx
+		.shadow-right
+			position absolute
+			top 77rpx
+			left 470rpx
+		.title-list
+			font-family: "SimHei"
+			color rgb(255, 255, 255)
+			margin 0 auto
+			width 521rpx
+			height 127rpx
+			width 521rpx
+			background-color rgb(65,160,249)
+			display flex
+			flex-direction column
+			align-items center
+			justify-content space-around
+			background-color rgb(65,160,249)
+			.title1
+				font-size 18rpx
+			.title2
+				font-size 24rpx
+	.enter-container
+		background-color rgb(255,255,255)
+		width 605rpx
+		height 426rpx
+		display flex
+		border-radius 30rpx
+		flex-direction column
+		align-items center
+		.section1
+			margin-top 52rpx
+		.section2
+			margin 28rpx 0 69rpx
+		.tips
+			font-size 24rpx
+			font-family "SimHei"
+			color rgb(131, 128, 128)
+			margin-top 24rpx
+		.result-button
+			background-color rgb(134, 222, 243)
+			width 466rpx
+			height 57rpx
+			line-height 57rpx
+			text-align center
+			font-size 30rpx
+			font-family "SimHei"
+			border-radius 45rpx
+			color rgb(255, 255, 255)
+		.result-button-enter
+			background-color rgba(134, 222, 243,0.6)
+	.result-container
+		height 515rpx
+		display flex
+		flex-direction column
+		align-items center
+		justify-content center
+		.result-list
+			font-size 30rpx
+			font-family "SimHei"
+			color rgb(0, 0, 0)
+			display flex
+			flex-direction column
+			width 487rpx
+			margin-left 61rpx
+			height 426rpx
+			justify-content space-between
+</style>

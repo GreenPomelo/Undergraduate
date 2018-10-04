@@ -1,0 +1,628 @@
+<template>
+  <view>
+    <qy-tip :on.sync="tipsOn" :content.sync="tipsContent"/>
+    <view style="position:relative;">
+      <view class="index-application">
+        <view class="application">首页应用</view>
+        <view hidden="{{showEdit}}">
+          <repeat for="{{indexIcon}}" key="key" index="index" item="item">
+            <view class="application-image" style="background-image:url('{{item.src}}');width:{{IconWidth}}rpx;height:90rpx;"></view>
+          </repeat>
+        </view>
+          <view hidden="{{!showEdit}}" class="edit-index">（首页需放置7个功能入口）</view>
+        <view class="edit" @tap="toEdit">{{!showEdit ? '编辑' : '完成'}}</view>
+      </view>
+      <view class="classification" id="show-index" animation="{{showDetailAnimation}}">
+        <view class="classification-detail">
+          <repeat for="{{indexIcon}}" index="index" key="key" item="item">
+            <view class="detail-info">
+              <view class="detail-info-container" style="background:#F5F5F5;" animation="{{deleteAnimation[index]}}">
+                <view class="detail-image" style="position:relative;">
+                  <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                  <view class="add-or-delete" style="background-image:url('https://static.airbob.org/under-graduate/more/delete.png')" @tap.stop="deleteIcon" data-index="{{index}}" data-item="{{item}}"></view>
+                </view>
+                <view class="detail-name">{{item.name}}</view>
+              </view>
+            </view>
+          </repeat>
+        </view>
+      </view>
+      <view style="width:750rpx;height:20rpx;background:#F5F5F5;"></view>
+      <view class="classification">
+        <view class="classification-title">图书馆</view>
+        <view class="classification-detail">
+          <repeat for="{{details.library}}" index="index" key="key" item="item">
+            <view class="detail-info">
+              <view animation="{{deleteIconAnimation[item.id]}}">
+                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                  <view class="detail-image" style="position:relative;">
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                  </view>
+                  <view class="detail-name">{{item.name}}</view>
+                </view>
+              </view>
+            </view>
+          </repeat>
+        </view>
+      </view>
+      <view class="classification">
+        <view class="classification-title">一卡通</view>
+        <view class="classification-detail">
+          <repeat for="{{details.card}}" index="index" key="key" item="item">
+            <view class="detail-info">
+              <view animation="{{deleteIconAnimation[item.id]}}">
+                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                  <view class="detail-image" style="position:relative;">
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                  </view>
+                  <view class="detail-name">{{item.name}}</view>
+                </view>
+              </view>
+            </view>
+          </repeat>
+        </view>
+      </view>
+      <view class="classification">
+        <view class="classification-title">学业相关</view>
+        <view class="classification-detail">
+          <repeat for="{{details.course}}" index="index" key="key" item="item">
+            <view class="detail-info">
+              <view animation="{{deleteIconAnimation[item.id]}}">
+                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                  <view class="detail-image" style="position:relative;">
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                  </view>
+                  <view class="detail-name">{{item.name}}</view>
+                </view>
+              </view>
+            </view>
+          </repeat>
+        </view>
+      </view>
+      <view class="classification">
+        <view class="classification-title">校园生活</view>
+        <view class="classification-detail">
+          <repeat for="{{details.campus}}" index="index" key="key" item="item">
+            <view class="detail-info">
+              <view animation="{{deleteIconAnimation[item.id]}}">
+                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                  <view class="detail-image" style="position:relative;">
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                  </view>
+                  <view class="detail-name">{{item.name}}</view>
+                </view>
+              </view>
+            </view>
+          </repeat>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+import tip from "@/components/qy-tip";
+
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "更多"
+  };
+  data = {
+    IconWidth: 0,
+    showEdit: false,
+    tipsOn: false,
+    tipsContent: "",
+    showDetailAnimation: {},
+    deleteIconAnimation: [],
+    deleteAnimation: [],
+    details: {
+      library: [
+        {
+          name: "图书馆",
+          src: "https://static.airbob.org/under-graduate/more/library.png",
+          isIndex: true,
+          id: 0,
+          path: "../others-page/pages/library",
+          module: "图书馆",
+          isOpen: true
+        },
+        {
+          name: "已借书目",
+          src: "https://static.airbob.org/under-graduate/more/borrow.png",
+          isIndex: false,
+          id: 1,
+          path: "../others-page/pages/library",
+          module: "图书馆",
+          isOpen: true
+        },
+        {
+          name: "检索书目",
+          src: "https://static.airbob.org/under-graduate/more/retrieval.png",
+          isIndex: false,
+          id: 2,
+          path: "../others-page/pages/library",
+          module: "图书馆",
+          isOpen: true
+        },
+        {
+          name: "座位查询",
+          src: "https://static.airbob.org/under-graduate/more/seat inquiry.png",
+          isIndex: false,
+          id: 3,
+          path: "../others-page/pages/library",
+          module: "图书馆",
+          isOpen: true
+        }
+      ],
+      card: [
+        {
+          name: "一卡通",
+          src: "https://static.airbob.org/under-graduate/more/card.png",
+          isIndex: true,
+          id: 4,
+          path: "../campus-card-page/pages/campus-card-index",
+          module: "一卡通",
+          isOpen: true
+        },
+        {
+          name: "校园卡充值",
+          src: "https://static.airbob.org/under-graduate/more/recharge.png",
+          isIndex: false,
+          id: 5,
+          path: "../campus-card-page/pages/campus-card-charge",
+          module: "一卡通",
+          isOpen: true
+        },
+        {
+          name: "电费充值",
+          src: "https://static.airbob.org/under-graduate/more/electricity.png",
+          isIndex: false,
+          id: 6,
+          path: "../campus-card-page/pages/electric-charge",
+          module: "一卡通",
+          isOpen: true
+        },
+        {
+          name: "校园网充值",
+          src:
+            "https://static.airbob.org/under-graduate/more/ campus network.png",
+          isIndex: false,
+          id: 7,
+          path: "../campus-card-page/pages/net-charge",
+          module: "一卡通",
+          isOpen: true
+        },
+        {
+          name: "校园卡挂失",
+          src:
+            "https://static.airbob.org/under-graduate/more/report the loss.png",
+          isIndex: false,
+          id: 8,
+          path: "../campus-card-page/pages/campus-card-loss",
+          module: "一卡通",
+          isOpen: true
+        }
+      ],
+      course: [
+        {
+          name: "成绩查询",
+          src:
+            "https://static.airbob.org/under-graduate/more/results query.png",
+          isIndex: true,
+          id: 9,
+          path: "../edu-admin-page/pages/score-inquire",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "体育部",
+          src: "https://static.airbob.org/under-graduate/more/sport.png",
+          isIndex: true,
+          id: 10,
+          path: "../others-edu-page/pages/pe-score",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "考试倒计时",
+          src: "https://static.airbob.org/under-graduate/more/exam.png",
+          isIndex: false,
+          id: 11,
+          path: "../edu-admin-page/pages/cut-down",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "等级考试",
+          src:
+            "https://static.airbob.org/under-graduate/more/rank examination.png",
+          isIndex: false,
+          id: 12,
+          path: "../edu-admin-page/pages/check-grade",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "补考查询",
+          src:
+            "https://static.airbob.org/under-graduate/more/resit.png?title=supplements",
+          isIndex: true,
+          id: 13,
+          path: "../edu-admin-page/pages/supplement-and-tutorials",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "辅导课查询",
+          src:
+            "https://static.airbob.org/under-graduate/more/prenatal class.png",
+          isIndex: false,
+          id: 14,
+          path:
+            "../edu-admin-page/pages/supplement-and-tutorials?title=tutorials",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "GPA计算器",
+          src: "https://static.airbob.org/under-graduate/more/gpa.png",
+          isIndex: false,
+          id: 15,
+          path: "../others-edu-page/pages/GpaCalculator",
+          module: "一卡通",
+          isOpen: true
+        }
+      ],
+      campus: [
+        {
+          name: "课表",
+          src: "https://static.airbob.org/under-graduate/more/timetable.png",
+          isIndex: true,
+          id: 16,
+          path: "../edu-admin-page/pages/course",
+          module: "一卡通",
+          isOpen: true
+        },
+        {
+          name: "校历",
+          src: "https://static.airbob.org/under-graduate/more/calendar.png",
+          isIndex: true,
+          id: 17,
+          path: "../others-edu-page/pages/calendar",
+          module: "校历",
+          isOpen: true
+        },
+        {
+          name: "自主学分",
+          src: "https://static.airbob.org/under-graduate/more/credit.png",
+          isIndex: false,
+          id: 18,
+          path: "../edu-admin-page/pages/credit",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "晨跑",
+          src: "https://static.airbob.org/under-graduate/more/run.png",
+          isIndex: true,
+          id: 19,
+          path: "../others-page/pages/run",
+          module: "跑操",
+          isOpen: true
+        },
+        {
+          name: "学费查询",
+          src: "https://static.airbob.org/under-graduate/more/tuition.png",
+          isIndex: false,
+          id: 20,
+          path: "../others-page/pages/tuition",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "社团招新",
+          src: "https://static.airbob.org/under-graduate/more/club.png",
+          isIndex: false,
+          id: 21,
+          path: "../others-page/pages/association",
+          module: "正方",
+          isOpen: true
+        },
+        {
+          name: "问卷",
+          src:
+            "https://static.airbob.org/under-graduate/more/questionnaire.png",
+          isIndex: false,
+          id: 22,
+          path: "../others-page/pages/questionnaire-homepage",
+          module: "正方",
+          isOpen: true
+        }
+        // {
+        //   name: "认证",
+        //   src: "https://static.airbob.org/under-graduate/more/club.png",
+        //   isIndex: false,
+        //   id: 23,
+        //   path: "../others-page/pages/auth",
+        //   module: "正方",
+        //   isOpen: true
+        // }
+      ]
+    },
+    animationData: {},
+    indexIcon: [],
+    moreFunc: {}
+  };
+  computed = {
+    functionalList() {
+      let length = wepy.getStorageSync("indexIcon").length;
+      return wepy.getStorageSync("indexIcon").slice(0, parseInt(length - 1));
+    }
+  };
+  components = {
+    "qy-tip": tip
+  };
+  methods = {
+    nav(e) {
+      if (!this.showEdit) {
+        let item = e.currentTarget.dataset.item;
+        if (!item.isOpen) {
+          item.path = "../others-page/pages/close";
+        }
+        if (item.name === "检索书目") {
+          this.$navigate({
+            url: "../" + item.path + "?page=search"
+          });
+        } else if (item.name === "座位查询") {
+          this.$navigate({
+            url: "../" + item.path + "?page=seats"
+          });
+        } else {
+          this.$navigate({
+            url: "../" + item.path
+          });
+        }
+      }
+    },
+    toEdit() {
+      if (this.indexIcon.length < 7) {
+        this.tipsOn = true;
+        this.tipsContent = "首页应用必须为7个！";
+        return 0;
+      } else {
+        this.showEdit = !this.showEdit;
+        let animation = wepy.createAnimation({
+          duration: 300,
+          delay: 300
+        });
+        animation
+          .backgroundColor(!this.showEdit ? "#FFFFFF" : "#F5F5F5")
+          .step();
+        this.animationData = animation.export();
+        let showDetailAnimation = wepy.createAnimation({
+          duration: 300
+        });
+        let ceil = Math.ceil(parseFloat(this.indexIcon.length / 4));
+        let moveHeight = 187 * ceil;
+        showDetailAnimation
+          .height(this.showEdit ? moveHeight + "rpx" : "0rpx")
+          .step();
+        this.showDetailAnimation = showDetailAnimation.export();
+        this.$apply();
+        let indexIcon = this.indexIcon;
+        wepy.setStorageSync("indexIcon", indexIcon);
+        if (!this.showEdit) {
+          let nowIndexIcon = wepy.getStorageSync("indexIcon");
+          nowIndexIcon.push(this.moreFunc);
+          wepy.setStorageSync("indexIcon", nowIndexIcon);
+        }
+        return 0;
+      }
+    },
+    deleteIcon(e) {
+      let item = e.currentTarget.dataset.item;
+      for (let i in this.details) {
+        let detailItem = this.details[i].find(e => e.id === item.id);
+        if (detailItem !== undefined) {
+          detailItem.isIndex = !detailItem.isIndex;
+          break;
+        }
+      }
+      let indexIcon = this.indexIcon;
+      let index = e.currentTarget.dataset.index;
+      let deleteAnimation = wepy.createAnimation({
+        duration: 300
+      });
+      deleteAnimation.opacity(0).step();
+      this.deleteAnimation[index] = deleteAnimation.export();
+      this.$apply();
+      setTimeout(() => {
+        indexIcon.splice(index, 1);
+        this.indexIcon = indexIcon;
+        let deleteAnimation = wepy.createAnimation({
+          duration: 0
+        });
+        deleteAnimation.opacity(1).step();
+        this.deleteAnimation[index] = deleteAnimation.export();
+        this.$apply();
+      }, 300);
+    },
+    changeStatus(e) {
+      let item = e.currentTarget.dataset.item;
+      if (this.indexIcon.length < 7) {
+        for (let i in this.details) {
+          let detailItem = this.details[i].find(event => event.id === item.id);
+          if (detailItem !== undefined) {
+            for (let things of this.indexIcon) {
+              if (things.id === detailItem.id) {
+                if (detailItem.isIndex) {
+                  this.tipsOn = true;
+                  this.tipsContent = "首页已有此应用";
+                }
+                this.$apply();
+                return 0;
+              }
+            }
+            detailItem.isIndex = !detailItem.isIndex;
+            let indexIcon = this.indexIcon;
+            indexIcon.splice(parseInt(indexIcon.length), 0, item);
+            this.indexIcon = indexIcon;
+            break;
+          }
+        }
+      } else {
+        return 0;
+      }
+    }
+  };
+  async onShow() {
+    let that = this;
+    const module = await wepy.request({
+      url:
+        this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.getModStatus
+    });
+    let cantUse = [];
+    for (let i of module.data.data) {
+      if (!i.open) {
+        cantUse.push(i);
+      }
+    }
+    if (cantUse.length !== 0) {
+      for (let i in that.details) {
+        for (let j of that.details[i]) {
+          for (let m of cantUse) {
+            if (j.module === m.moduleName) {
+              j.isOpen = false;
+            }
+          }
+        }
+      }
+    }
+    if (wepy.getStorageSync("indexIcon").length !== 8) {
+      wepy.setStorageSync(
+        "indexIcon",
+        this.$parent.globalData.modules.slice(0, 8)
+      );
+    }
+    this.indexIcon = wepy
+      .getStorageSync("indexIcon")
+      .splice(0, wepy.getStorageSync("indexIcon").length - 1);
+    this.moreFunc = wepy.getStorageSync("indexIcon")[7];
+    this.IconWidth = parseInt(71 - 20);
+    let indexIcon = this.indexIcon;
+    for (let i in this.details) {
+      this.details[i].forEach((item, index) => {
+        indexIcon.forEach(indexIcon => {
+          if (indexIcon.name === item.name) {
+            item.isIndex = true;
+          }
+        });
+      });
+    }
+    that.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.index-application
+  width 750rpx
+  height 90rpx
+  border-top 1rpx solid #E3E3E3
+  display flex
+  .application
+    display inline-block
+    font-size 28rpx
+    width 150rpx
+    line-height 90rpx
+    top 0
+    font-weight bold
+    text-align center
+  .edit-index
+    width 500rpx
+    color #888888
+    font-size 28rpx
+    height 90rpx
+    line-height 90rpx
+  .edit
+    display inline-block
+    width 100rpx
+    font-size 28rpx
+    color #47CFF5
+    border 1rpx solid #47CFF5
+    border-radius 30rpx
+    text-align center
+    height 50rpx
+    line-height 50rpx
+    margin-top 20rpx
+  .application-image
+    display inline-block
+    margin 0 10rpx
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+
+.now-index-course
+  width 750rpx
+  height 300rpx
+
+.classification
+  width 750rpx
+  border-bottom 1rpx solid #E3E3E3
+  padding 30rpx 0
+  .classification-title
+    width 500rpx
+    padding-left 10rpx
+    margin-left 20rpx
+    height 40rpx
+    line-height 40rpx
+    font-size 32rpx
+    color #353535
+    border-left 10rpx solid #47CFF5
+  .classification-detail
+    display flex
+    flex-wrap wrap
+    width 750rpx
+    position relative
+    .detail-info
+      display flex
+      justify-content center
+      flex-direction column
+      text-align center
+      width 187rpx
+      height 187rpx
+      .detail-info-container
+        position relative
+        width 150rpx
+        margin 0 auto
+        padding 10rpx
+        .add-or-delete
+          position absolute
+          width 30rpx
+          height 30rpx
+          top -10rpx
+          right -35rpx
+          background-repeat no-repeat
+          background-position center
+          background-size contain
+        .detail-image
+          position relative
+          margin 0 auto
+          height 65rpx
+          width 65rpx
+        .detail-name
+          font-size 28rpx
+          color #353535
+
+#show-index
+  overflow hidden
+  height 0rpx
+  padding 0rpx
+</style>

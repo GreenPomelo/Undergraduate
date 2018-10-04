@@ -1,0 +1,457 @@
+<template>
+  <view>
+    <view class="content">
+      <view hidden="{{initFinish}}" class="toggle-body {{centerBody}}">
+        <view class="content-body">
+          <view class="welcome-container">
+            <view>
+              <view>欢迎使用</view>
+              <view>南邮小程序</view>
+            </view>
+            <view class="welcome-image"></view>
+          </view>
+        </view>
+        <view class="content-body">
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
+            <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+          </view>
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/password.png"/>
+            <input type="{{isShowPassword ? 'text' : 'password'}}" @input="getPassword" class="input" placeholder="请输入初次绑定的正方密码"/>
+            <image mode="widthFix" class="input-image" @tap="togglePassword" src="{{isShowPassword ? 'https://static.airbob.org/under-graduate/image/png/login/showpassword.png' : 'https://static.airbob.org/under-graduate/image/png/login/hidepassword.png'}}"/>
+          </view>
+          <view class="login-btn {{isLogining ? 'btn-disabled' : ''}}" @tap="goLogin">登录</view>
+          <view class="login-toggle" @tap="toggleStep">还没注册？点这里</view>
+        </view>
+        <view class="content-body">
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
+            <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+          </view>
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/verification.png"/>
+            <input type="number" @input="getVertication" class="input" placeholder="请输入验证码" maxlength="6"/>
+            <button open-type="{{flag ? 'getUserInfo' : ''}}" @getuserinfo="onGotUserInfo" class="input-after {{flag ? '' : 'btn-disabled'}}" @tap="fetchVertication">{{verticationMsg}}</button>
+          </view>
+          <view class="login-btn {{isInputing ? 'btn-disabled' : ''}}" @tap="checkPhoneNumber">下一步</view>
+          <view class="login-agreement">
+            <image class="obey" @tap="obeyPro"
+              src="{{!obeyed ? 'https://static.airbob.org/under-graduate/image/png/login/unchoose.png' : 'https://static.airbob.org/under-graduate/image/png/login/chosen.png'}}" mode="aspectFill"/>
+            我已阅读并遵守<view class="agreement-url"><navigator url="./protocol" hover-class="navigator-hover">南邮小程序用户协议</navigator></view>
+          </view>
+          <view class="login-toggle"  @tap="toggleStep">已经注册？直接登录</view>
+        </view>
+        <view class="content-body">
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/%E6%AD%A3%E6%96%B9%E8%B4%A6%E5%8F%B7.png"/>
+            <input type="text" @input="getZfAccount" class="input" placeholder="请输入学号"/>
+          </view>
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/%E5%AF%86%E7%A0%81.png"/>
+            <input type="{{isShowPassword ? 'text' : 'password'}}" @input="getPassword" class="input" placeholder="请输入正方密码"/>
+            <image mode="widthFix" class="input-image" @tap="togglePassword" src="{{isShowPassword ? 'https://static.airbob.org/under-graduate/image/png/login/showpassword.png' : 'https://static.airbob.org/under-graduate/image/png/login/hidepassword.png'}}"/>
+          </view>
+          <view class="login-btn {{isBinding ? 'btn-disabled' : ''}}" @tap="goBind">绑定</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import Input from "@/components/qy-input";
+
+export default class Login extends wepy.page {
+  config = {
+    navigationBarTitleText: "",
+    navigationBarBackgroundColor: "#95EDFF"
+  };
+  components = {
+    "qy-input": Input
+  };
+
+  data = {
+    userInfo: {},
+    userId: "",
+    token: "",
+    isRegister: true,
+    obeyed: true,
+    verticationMsg: "获取验证码",
+    phoneNumber: "",
+    vertication: "",
+    password: "",
+    zfAccount: "",
+    flag: true,
+    isShowPassword: false,
+    step: 0,
+    initFinish: true
+  };
+
+  methods = {
+    onGotUserInfo(e) {
+      this.userInfo = e.detail.userInfo;
+      wepy.setStorageSync("userInfo", e.detail.userInfo);
+    },
+    getNumber(e) {
+      this.phoneNumber = e.detail.value;
+    },
+    getPassword(e) {
+      this.password = e.detail.value;
+    },
+    getZfAccount(e) {
+      this.zfAccount = e.detail.value;
+    },
+    getVertication(e) {
+      this.vertication = e.detail.value;
+    },
+    togglePassword() {
+      this.isShowPassword = !this.isShowPassword;
+    },
+    obeyPro() {
+      this.obeyed = !this.obeyed;
+    },
+    fetchVertication() {
+      if (this.phoneNumber.trim().length === 0) {
+        this.$parent.showTip("手机号不能为空");
+      } else {
+        // 60s
+        if (this.flag) {
+          this.flag = false;
+          let count = 60;
+          let t = setInterval(() => {
+            this.verticationMsg = `${count--}s`;
+            if (count === 0) {
+              clearInterval(t);
+              this.verticationMsg = "获取验证码";
+              this.flag = true;
+            }
+            this.$apply();
+          }, 1000);
+          wepy
+            .request({
+              url: `${this.$parent.globalData.requestUrl +
+                this.$parent.globalData.config.sendVerification}`,
+              method: "POST",
+              data: {
+                phoneNumber: this.phoneNumber
+              }
+            })
+            .then(res => {
+              if (!res.data.data) {
+                this.$parent.showTip(res.data.errMsg);
+              }
+            });
+        }
+      }
+    },
+    checkPhoneNumber() {
+      if (!this.isInputing) {
+        wepy
+          .request({
+            url: `${this.$parent.globalData.requestUrl +
+              this.$parent.globalData.config.checkVerification}`,
+            method: "GET",
+            data: {
+              code: this.vertication
+            }
+          })
+          .then(res => {
+            if (res.data.data) {
+              // 验证码正确
+              if (this.obeyed) {
+                // 如果遵守协议, 跳转到绑定正方账号密码
+                this.step = 3;
+                this.$apply();
+              } else {
+                this.$parent.showTip("您还没有同意用户协议呢");
+              }
+            } else {
+              this.$parent.showTip("验证码错误");
+            }
+          });
+      }
+    },
+    async goLogin() {
+      if (!this.isLogining) {
+        const res = await this.login({
+          phoneNumber: this.phoneNumber,
+          password: this.password
+        });
+        if (res.data.data) {
+          wepy.reLaunch({
+            url: "../../pages/index"
+          });
+        } else if (res.data.errCode === 501) {
+          this.$parent.showTip("请输入首次注册小程序时的密码");
+        } else if (res.data.errCode === 27) {
+          this.$parent.showTip("请输入手机号登录！");
+        }
+      }
+    },
+    goBind() {
+      if (!this.isBinding) {
+        wepy.showLoading("加载中");
+        wepy
+          .request({
+            url: `${this.$parent.globalData.requestUrl +
+              this.$parent.globalData.config.addUser}`,
+            method: "POST",
+            data: {
+              phoneNumber: this.phoneNumber,
+              studentId: this.zfAccount,
+              password: this.password,
+              avatarUrl: this.userInfo.avatarUrl,
+              gender: this.userInfo.gender,
+              nickName: this.userInfo.nickName
+            }
+          })
+          .then(res => {
+            wepy.hideLoading();
+            if (res.data.data) {
+              this.login({
+                phoneNumber: this.phoneNumber,
+                password: this.password
+              }).then(response => {
+                console.log(response);
+                if (response.data.data) {
+                  wepy.reLaunch({
+                    url: "../../pages/index"
+                  });
+                } else {
+                  this.$parent.showTip("登录失败");
+                }
+              });
+            } else {
+              this.$parent.showTip("学号或正方教务系统密码错误，请核对重试");
+              this.$apply();
+            }
+          });
+      }
+    },
+    toggleStep() {
+      if (this.step === 1) {
+        this.step = 2;
+      } else if (this.step === 2) {
+        this.step = 1;
+      }
+      this.$apply();
+    }
+  };
+
+  events = {
+    TapFunc: (e, tap) => {}
+  };
+
+  computed = {
+    isLogining() {
+      return (
+        this.phoneNumber.trim().length !== 11 ||
+        this.password.trim().length === 0
+      );
+    },
+    isInputing() {
+      return (
+        this.phoneNumber.trim().length !== 11 ||
+        this.vertication.trim().length !== 6
+      );
+    },
+    isBinding() {
+      return (
+        this.zfAccount.trim().length === 0 || this.password.trim().length === 0
+      );
+    },
+    centerBody() {
+      switch (this.step) {
+        case 0:
+          return "welcome-step";
+        case 1:
+          return "login-step";
+        case 2:
+          return "sms-step";
+        case 3:
+          return "bind-step";
+        default:
+          return "login-step";
+      }
+    }
+  };
+  welcomePage() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, 2800);
+    });
+  }
+  async onLoad(e) {
+    if (e.step) {
+      this.step = Number(e.step);
+    }
+    const { code } = await wepy.login();
+    const getTokenResponse = await wepy.request({
+      url: `${this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.authenticate}`,
+      method: "GET",
+      data: {
+        wxCode: code
+      }
+    });
+    if (getTokenResponse.data.success) {
+      this.token = getTokenResponse.data.data;
+      wepy.setStorageSync("token", this.token);
+      if (!wepy.getStorageSync("User")) {
+        wepy
+          .request({
+            url: `${this.$parent.globalData.requestUrl +
+              this.$parent.globalData.config.userInformation}`,
+            method: "GET"
+          })
+          .then(res => {
+            wepy.setStorageSync("User", res.data.data);
+          });
+      }
+    } else {
+      this.$parent.showTip();
+    }
+  }
+  async onReady() {
+    // this.initFinish = true;
+    await this.welcomePage();
+    this.step = 1;
+    this.$apply();
+  }
+  login(data) {
+    return wepy.request({
+      url: `${this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.addUserIn}`,
+      method: "POST",
+      data
+    });
+  }
+}
+</script>
+<style lang="stylus" scoped>
+vendors = official
+animation-time = 2.5s
+
+@import '../../css/global-style'
+
+.content
+  position absolute
+  top 0
+  left 0
+  width 100vw
+  height 100vh
+  z-index 0
+  background url('https://static.airbob.org/under-graduate/image/png/login/background.png') no-repeat
+  background-size cover
+  overflow hidden
+
+.toggle-body
+  display flex
+  position absolute
+  top 43%
+  height 57%
+  width 400vw
+  transition all 0.5s
+
+.welcome-step
+  transform translateX(0vw)
+
+.login-step
+  transform translateX(-100vw)
+
+.sms-step
+  transform translateX(-200vw)
+
+.bind-step
+  transform translateX(-300vw)
+
+.content-body
+  width 100vw
+
+.welcome-container
+  height 100%
+  display flex
+  font-family PingFangSC-Light
+  font-size 90rpx
+  line-height 108rpx
+  color #9b9b9b
+  flex-direction column
+  justify-content space-between
+  align-items center
+  .welcome-image
+    background-image url('https://static.airbob.org/under-graduate/welcome-borad.png')
+    background-repeat no-repeat
+    background-position bottom
+    background-size contain
+    width 450rpx
+    height 388rpx
+
+.input-container
+  display flex
+  width 586rpx
+  margin 30rpx auto 0
+  padding-bottom 6rpx
+  border-bottom 1rpx solid #F2F2F2
+  align-items center
+  .input-image
+    width 26rpx
+    height 40rpx
+    margin-right 20rpx
+  .input
+    font-size 28rpx
+    flex 1
+  .input-after
+    width 160rpx
+    height 45rpx
+    margin-left 20rpx
+    padding 0
+    background linear-gradient(-225deg, #ABDCFF 0%, #6AE4FF 100%)
+    color #fff
+    font-size 24rpx
+    line-height 45rpx
+    text-align center
+    border-radius 30rpx
+    &:after
+      border 0
+
+.input-placeholder
+  color #888
+
+.login-btn
+  height 74rpx
+  width 586rpx
+  margin 90rpx auto 40rpx
+  line-height 74rpx
+  color #fff
+  font-size 32rpx
+  text-align center
+  border-radius 30rpx
+  background linear-gradient(-225deg, #ABDCFF 0%, #6AE4FF 100%)
+
+.login-agreement
+  display flex
+  justify-content center
+  font-size 20rpx
+  .obey
+    width 30rpx
+    height 30rpx
+    margin-right 20rpx
+    color #353535
+
+.agreement-url
+  text-decoration underline
+  color #47CFF5
+
+.login-toggle
+  margin-top 40rpx
+  font-size 20rpx
+  text-decoration underline
+  color #47CFF5
+  text-align center
+
+.btn-disabled
+  background #D0F5FF !important
+</style>

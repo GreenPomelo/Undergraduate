@@ -1,0 +1,253 @@
+<template>
+<view>
+  <qy-tip :content.sync="tipContent" :on.sync="tipOn"/>
+  <view class="container">
+    <picker range="{{campusArray}}"  @change="changeCampus">
+      <view class="room-information">
+        <view class="arrow"></view>
+        <view class="information-name">校区</view>
+          <view class="information-item">{{campusArray[campusIndex]}}</view>
+      </view>
+    </picker>
+    <picker range="{{campusIndex == 1 ? ['三牌楼'] : buildingArray}}" value="0" @change="changeArea">
+      <view class="room-information">
+        <view class="arrow"></view>
+        <view class="information-name">苑区</view>
+        <view class="information-item">{{campusIndex == 1 ? '三牌楼' : buildingArray[areaIndex]}}</view>
+      </view>
+    </picker>
+    <picker range="{{roomArray[areaIndex]}}" value="0" @change="changeBuilding">
+      <view class="room-information">
+        <view class="arrow"></view>
+        <view class="information-name">楼栋</view>
+        <view class="information-item">{{roomArray[areaIndex][buildingIndex]}}栋</view>
+      </view>
+    </picker>
+    <view class="room-information">
+      <view class="information-name">大寝号</view>
+      <input placeholder="请输入大寝号，格式如101" value="{{bigRoom}}" @input="getBigRoom"/>
+    </view>
+    <view class="room-information">
+      <view class="information-name">小寝号</view>
+      <input placeholder="请输入小寝号，格式如1（三牌楼不填）" value="{{smallRoom}}" @input="getSmallRoom"/>
+    </view>
+    <view class="save {{(campusIndex == 0 && bigRoom !== '' && smallRoom !== '') || (campusIndex == 1 && bigRoom !== '') ? 'active' : ''}}" @tap="queryRoom">
+      保存
+    </view>
+  </view>
+</view>
+
+</template>
+
+<script>
+import wepy from "wepy";
+import QyTip from "../../components/qy-tip";
+export default class addRoom extends wepy.page {
+  data = {
+    campusArray: ["仙林", "三牌楼"],
+    buildingArray: [
+      "梅苑",
+      "兰苑",
+      "竹苑",
+      "菊苑",
+      "桃苑",
+      "李苑",
+      "柳苑",
+      "桂苑",
+      "荷苑",
+      "青教"
+    ],
+    roomArray: [
+      [1, 2, 3, 4, 5, 6],
+      [7, 8, 9, 10, 11, 12],
+      [13, 14, 15],
+      [16, 17, 18, 19, 20, 21],
+      [22, 23, 24, 25, 26, 27],
+      [28, 29, 30, 31, 32, 33],
+      [34, 35, 36, 37, 38, 39],
+      [40, 41, 42, 43, 44, 45],
+      [46, 47, 48, 49],
+      [7, 8, 9, 10, 11, 12]
+    ],
+    campusIndex: 0,
+    areaIndex: 0,
+    buildingIndex: 0,
+    youngTeacher: false,
+    bigRoom: "",
+    smallRoom: "",
+    tipOn: false,
+    tipContent: "",
+    storageIndex: -1
+  };
+  components = {
+    "qy-tip": QyTip
+  };
+  config = {
+    navigationBarTitleText: "新增宿舍地址"
+  };
+  methods = {
+    changeCampus(e) {
+      this.campusIndex = e.detail.value;
+    },
+    changeArea(e) {
+      this.areaIndex = e.detail.value;
+    },
+    changeBuilding(e) {
+      this.buildingIndex = e.detail.value;
+    },
+    getBigRoom(e) {
+      this.bigRoom = e.detail.value;
+    },
+    getSmallRoom(e) {
+      this.smallRoom = e.detail.value;
+    },
+    async queryRoom() {
+      if (
+        ((this.campusIndex === 0 || this.campusIndex === "0") &&
+          this.bigRoom !== "" &&
+          this.smallRoom !== "") ||
+        ((this.campusIndex === 1 || this.campusIndex === "1") &&
+          this.bigRoom !== "")
+      ) {
+        wepy.showLoading();
+        const roomId =
+          this.campusIndex === 1 || this.campusIndex === "1"
+            ? "0" + this.bigRoom
+            : this.bigRoom + this.smallRoom;
+        const building =
+          this.areaIndex === 9 || this.areaIndex === "9"
+            ? Number(
+                this.roomArray[this.areaIndex][this.buildingIndex] + 48
+              ).toString()
+            : this.roomArray[this.areaIndex][this.buildingIndex].toString();
+        const buildingId =
+          new Array(Number(4 - building.length)).fill(0).join("") + building;
+        const res = await wepy.request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.getYourDorm}?campus=${
+            this.campusIndex
+          }&roomId=${roomId}&buildingId=${buildingId}`,
+          method: "POST"
+        });
+        if (
+          JSON.parse(res.data.data).query_elec_roominfo.retcode === 0 ||
+          JSON.parse(res.data.data).query_elec_roominfo.retcode === "0"
+        ) {
+          wepy.showToast({
+            title: "成功",
+            icon: "success",
+            duration: 2000
+          });
+          setTimeout(() => {
+            wepy.hideLoading();
+            wepy.navigateBack({
+              delta: 1
+            });
+          }, 2000);
+          let item = {
+            campus: this.campusIndex,
+            roomId: roomId,
+            buildingId: buildingId,
+            campusName: this.campusArray[this.campusIndex],
+            areaName:
+              this.campusIndex === 1 || this.campusIndex === "1"
+                ? "三牌楼"
+                : this.buildingArray[this.areaIndex],
+            buildingName: this.roomArray[this.areaIndex][this.buildingIndex],
+            bigRoom: this.bigRoom,
+            smallRoom: this.smallRoom,
+            buildingIndex: this.buildingIndex,
+            default: false,
+            thisTime: false
+          };
+          if (this.storageIndex !== -1) {
+            let storage = wepy.getStorageSync("selectRoom");
+            storage[this.storageIndex] = item;
+            wepy.setStorageSync("selectRoom", storage);
+          } else {
+            if (!wepy.getStorageSync("selectRoom")) {
+              wepy.setStorageSync("selectRoom", [item]);
+            } else {
+              let rooms = wepy.getStorageSync("selectRoom");
+              rooms.push(item);
+              wepy.setStorageSync("selectRoom", rooms);
+            }
+          }
+        } else {
+          this.tipOn = true;
+          this.tipContent = JSON.parse(
+            res.data.data
+          ).query_elec_roominfo.errmsg;
+          this.$apply();
+        }
+      } else {
+        this.tipOn = true;
+        this.tipContent = "信息未填全哦！";
+      }
+    }
+  };
+  onLoad(e) {
+    if (e.item) {
+      e.item = JSON.parse(e.item);
+      this.campusIndex = e.item.campus;
+      let area = this.buildingArray
+        .map((item, index) => (item = { name: item, index: index }))
+        .filter((item, index) => item.name === e.item.areaName);
+      if (this.campusIndex === 1 || this.campusIndex === "1") {
+        area = [
+          {
+            name: "三牌楼",
+            index: 0
+          }
+        ];
+      }
+      this.areaIndex = area[0].index;
+      this.buildingIndex = e.item.buildingIndex;
+      this.bigRoom = e.item.bigRoom;
+      this.smallRoom = e.item.smallRoom;
+      this.storageIndex = Number(e.index);
+    }
+  }
+}
+</script>
+<style lang="stylus" scoped>
+.container
+  width 680rpx
+  margin 0 auto
+  min-height 100vh
+  font-family PingFangSC-Regular
+  font-size 30rpx
+  color #353535
+  .room-information
+    position relative
+    display flex
+    align-items center
+    height 102rpx
+    line-height 102rpx
+    border-bottom 1rpx solid #e3e3e3
+    .information-name
+      width 177rpx
+    input
+      width 500rpx
+      height 30rpx
+      line-height 30rpx
+    .arrow
+      position absolute
+      right 0
+      background-image url('https://static.airbob.org/under-graduate/button_right.png')
+      background-size contain
+      background-repeat no-repeat
+      background-position center
+      width 30rpx
+      height 30rpx
+  .save
+    height 85rpx
+    line-height 85rpx
+    text-align center
+    color #ffffff
+    border-radius 50rpx
+    background-image linear-gradient(45deg, #abdcff 0%, #6ae4ff 100%)
+    margin-top 60rpx
+    &.active
+      background #47cff5
+</style>

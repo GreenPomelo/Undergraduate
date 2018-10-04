@@ -1,0 +1,682 @@
+<template>
+  <view class="container" style="{{perfectInfoStatus === false ? 'height:100vh;overflow:hidden;' : ''}}">
+    <view class="perfect-info" wx:if="{{perfectInfoStatus === false}}">
+      <view class="perfect-info-body">
+        <view class="perfect-img">
+          <image src="https://static.airbob.org/under-graduate/tip.png" />
+        </view>
+        <view class="perfect-info-card">
+          <view class="perfect-info-tip">请先完善个人基本信息再进行报名哦</view>
+          <view class="submission" style="width: 202px;height:49px;margin-bottom:0" @tap="navigateToPersonal">
+            <view>完善基本信息</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="header">
+      <view class="header-container">
+        <view class="association-avatar">
+        <image src="{{associationAvatar}}" />
+      </view>
+      <view class="association-info">
+        <view class="association-name">{{associationInfo.fullname}}</view>
+        <view class="association-hot">
+          <image class="heat-icon" src="https://static.airbob.org/under-graduate/hot.png" />
+          <view class="heat-degree">校谈热度{{associationInfo.heat}}>></view>
+        </view>
+      </view>
+      </view>
+    </view>
+    <view class="body">
+      <view class="info-container">
+        <view class="body-slogan">你想要加入什么部门？</view>
+        <view class="apartment-selection">
+          <picker mode = "selector" value="{{apartFirstIndex}}" range="{{apartmentFirst}}" range-key="departmentName" @change="firstSelection">
+            <view class="picker-container">
+              <view>
+                <text class="picker-content">{{firstPicker}}</text>
+              </view>
+              <view class="picker-img">
+                <image src="{{firstArrow}}" />
+              </view>
+            </view>
+          </picker>
+          <picker mode = "selector" value="{{apartSecondIndex}}" range="{{apartmentSecond}}" range-key="departmentName" @change="secondSelection">
+            <view class="picker-container">
+              <view>
+                <text class="picker-content">{{secondPicker}}</text>
+              </view>
+              <view class="picker-img">
+                <image src="{{secondArrow}}" />
+              </view>
+            </view>
+          </picker>
+        </view>
+        <view class="body-slogan">让我们更深入地了解你：</view>
+        <view class="question-container">
+          <view class="question" wx:for="{{registerInfo}}" wx:key="index">
+            <view class="question-title">{{index+1}}. {{item.question}}</view>
+            <view class="question-input">
+              <view wx:if="{{perfectInfoStatus}}">
+                <textarea placeholder="请输入内容" data-idx="{{index}}" bindinput="quesInput" value="{{item.answer}}" />
+              </view>
+              <view class="instead" wx:else>
+                {{item.answer}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="submission" @tap="{{modifyStatus === true ? 'registerAssociation' : 'modifyAssociation'}}">
+        <view>{{modifyOrSubmit}}</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import QyModal from "@/components/qy-modal";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "社团报名"
+  };
+  data = {
+    associationAvatar: ``,
+    apartmentFirst: [],
+    apartmentSecond: [],
+    apartFirstIndex: 0,
+    apartFirstStatus: false,
+    apartSecondIndex: 0,
+    apartSecondStatus: false,
+    registerInfo: [
+      {
+        question: ``,
+        answer: ``
+      },
+      {
+        question: ``,
+        answer: ``
+      },
+      {
+        question: ``,
+        answer: ``
+      }
+    ],
+    // 是否完善信息
+    associationInfo: {},
+    firstApartment: ``,
+    firstApartmentId: 0,
+    secondApartment: ``,
+    secondApartmentId: 0,
+    answerPostData: [``, ``, ``],
+    // 标记是不是从个人中心页面跳转过来
+    clubPersonalStatus: false,
+    modifyStatus: false,
+    formId: 0,
+    // 之前的申请表数据 => 检测
+    originData: [],
+    // 留到注册成功的页面用
+    tagId: 0
+  };
+  components = {
+    QyModal: QyModal
+  };
+  computed = {
+    perfectInfoStatus() {
+      return !wepy.getStorageSync("associationInfo")
+        ? false
+        : Object.entries(wepy.getStorageSync("associationInfo")).filter(
+            item => item[1] === ""
+          ).length === 0;
+    },
+    firstPicker() {
+      if (this.clubPersonalStatus) {
+        return this.firstApartment;
+      } else {
+        return this.apartFirstStatus
+          ? this.apartmentFirst[this.apartFirstIndex].departmentName
+          : `选择第一部门志愿`;
+      }
+    },
+    secondPicker() {
+      if (this.clubPersonalStatus) {
+        return this.secondApartment;
+      } else {
+        return this.apartSecondStatus
+          ? this.apartmentSecond[this.apartSecondIndex].departmentName
+          : `选择第二部门志愿`;
+      }
+    },
+    firstArrow() {
+      return this.apartFirstStatus
+        ? `https://static.airbob.org/under-graduate/up.png`
+        : `https://static.airbob.org/under-graduate/down.png`;
+    },
+    secondArrow() {
+      return this.apartSecondStatus
+        ? `https://static.airbob.org/under-graduate/up.png`
+        : `https://static.airbob.org/under-graduate/down.png`;
+    },
+    modifyOrSubmit() {
+      return this.modifyStatus === true ? `提交报名表` : `修改`;
+    }
+  };
+  methods = {
+    firstSelection(e) {
+      this.apartFirstIndex = e.detail.value;
+      this.apartFirstStatus = true;
+      if (this.apartFirstStatus) {
+        this.firstApartment = this.apartmentFirst[
+          this.apartFirstIndex
+        ].departmentName;
+        this.firstApartmentId = this.apartmentFirst[this.apartFirstIndex].id;
+      }
+    },
+    secondSelection(e) {
+      this.apartSecondIndex = e.detail.value;
+      this.apartSecondStatus = true;
+      if (this.apartSecondStatus) {
+        this.secondApartment = this.apartmentSecond[
+          this.apartSecondIndex
+        ].departmentName;
+        this.secondApartmentId = this.apartmentSecond[this.apartSecondIndex].id;
+      }
+    },
+    quesInput(e) {
+      const index = e.currentTarget.dataset.idx;
+      this.answerPostData[index] = e.detail.value;
+      // if()
+    },
+    navigateToPersonal() {
+      wepy.navigateTo({
+        url: `./club-personal?showPage=1`
+      });
+    },
+    registerAssociation() {
+      if (this.firstApartmentId === this.secondApartmentId) {
+        wepy.showModal({
+          content: "两个志愿的部门不能相同哦~",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#47CFF5"
+        });
+      } else if (
+        this.apartFirstStatus === false ||
+        this.apartSecondStatus === false
+      ) {
+        wepy.showModal({
+          content: "要填两个部门哦~",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#47CFF5"
+        });
+      } else {
+        if (this.answerPostData.some(x => x === null || x === "")) {
+          wepy.showModal({
+            content: "问题回答不能为空~",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#47CFF5"
+          });
+        } else {
+          wepy
+            .request({
+              url: `${this.$parent.globalData.requestUrl +
+                this.$parent.globalData.config.AssociationAccept}`,
+              method: `POST`,
+              data: {
+                xh: `${wepy.getStorageSync("userInfo").studentId ||
+                  wepy.getStorageSync("User").studentId}`,
+                associationName: `${this.associationInfo.fullname}`,
+                department1: `${Number(this.firstApartmentId)}`,
+                department2: `${Number(this.secondApartmentId)}`,
+                answer1: `${this.answerPostData[0]}`,
+                answer2: `${this.answerPostData[1]}`,
+                answer3: `${this.answerPostData[2]}`
+              }
+            })
+            .then(res => {
+              if (res.data.success) {
+                wepy.navigateTo({
+                  url: `./register-success?modify=false&tagId=${this.tagId}`
+                });
+              } else {
+                wepy.showModal({
+                  content: "回答中不能有emoji表情🙄",
+                  confirmText: "知道了",
+                  showCancel: false,
+                  confirmColor: "#47CFF5"
+                });
+              }
+            });
+        }
+      }
+    },
+    modifyAssociation() {
+      if (
+        this.firstApartmentId !== this.originData[0] ||
+        this.secondApartmentId !== this.originData[1] ||
+        this.answerPostData[0] !== this.originData[2] ||
+        this.answerPostData[1] !== this.originData[3] ||
+        this.answerPostData[2] !== this.originData[4]
+      ) {
+        if (this.firstApartmentId === this.secondApartmentId) {
+          wepy.showModal({
+            content: "两个志愿的部门不能相同哦~",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#47CFF5"
+          });
+        } else if (this.answerPostData.some(x => x === null || x === "")) {
+          wepy.showModal({
+            content: "问题回答不能为空~",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#47CFF5"
+          });
+        } else {
+          wepy
+            .request({
+              url: `${this.$parent.globalData.requestUrl +
+                this.$parent.globalData.config.changeAssociationAccept}`,
+              method: `PUT`,
+              data: {
+                form_id: `${this.formId}`,
+                xh: `${wepy.getStorageSync("userInfo").studentId ||
+                  wepy.getStorageSync("User").studentId}`,
+                associationName: `${this.associationInfo.description}`,
+                department1: `${this.firstApartmentId}`,
+                department2: `${this.secondApartmentId}`,
+                answer1: `${this.answerPostData[0]}`,
+                answer2: `${this.answerPostData[1]}`,
+                answer3: `${this.answerPostData[2]}`
+              }
+            })
+            .then(res => {
+              if (res.data.errCode === null) {
+                wepy.navigateTo({
+                  url: `./register-success?modify=true&tagId=${this.tagId}`
+                });
+              } else {
+                if (res.data.errCode === 54) {
+                  wepy.showModal({
+                    content: "未做修改",
+                    confirmText: "知道了",
+                    showCancel: false,
+                    confirmColor: "#47CFF5"
+                  });
+                }
+              }
+            });
+        }
+      } else {
+        wepy.showModal({
+          content: "未做修改",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#47CFF5"
+        });
+      }
+    }
+  };
+  schoolTalkHeat(requestData) {
+    const schoolTalkUrl = this.$parent.globalData.config.schoolTalkUrl;
+    this.commandData = requestData.assoInfo;
+    wepy
+      .request({
+        url: `${schoolTalkUrl +
+          this.$parent.globalData.config.schoolTaklAssociation}/${
+          requestData.tagId
+        }`,
+        method: "GET"
+      })
+      .then(res => {
+        if (res.statusCode === 200 || res.code === 200) {
+          const requestData = res.data.data;
+          this.topicArray = requestData.topics;
+          this.associationInfo.heat =
+            requestData.heat === null ? 0 : requestData.heat;
+          this.topicLength = requestData.topics_count;
+          this.$apply();
+        }
+      });
+  }
+  onLoad(option) {
+    let associationStatus = this.$parent.globalData.associationStatus.data;
+    const associationInfo = this.$parent.globalData.associationUserTableInfo;
+    this.associationInfo = associationInfo;
+    if (associationInfo.associationName !== undefined) {
+      this.associationInfo.description = associationInfo.associationName;
+    }
+    this.associationAvatar = decodeURIComponent(option.avatar);
+    if (option.clubPersonalStatus) {
+      this.associationInfo.associationName = associationInfo.associationName;
+      this.apartFirstStatus = true;
+      this.apartSecondStatus = true;
+      this.apartmentFirst = associationInfo.departmentModelList;
+      this.apartmentSecond = associationInfo.departmentModelList;
+      this.associationAvatar = associationInfo.logo;
+      this.$apply();
+    }
+    if (associationStatus.success) {
+      const filterAssociationStatus = associationStatus.data.filter(
+        item => item.associationName === associationInfo.description
+      )[0];
+      if (filterAssociationStatus !== undefined) {
+        if (filterAssociationStatus.status !== 0) {
+          if (filterAssociationStatus.status === -1) {
+            // 第一志愿已拒绝
+            wepy
+              .showModal({
+                content: `报名信息已经开始处理，无法修改`,
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#47CFF5"
+              })
+              .then(res => {
+                if (res.confirm) {
+                  wepy.navigateBack();
+                }
+              });
+          } else if (filterAssociationStatus.status > 0) {
+            wepy
+              .showModal({
+                content: `报名信息已经处理完毕，无法修改！`,
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#47CFF5"
+              })
+              .then(res => {
+                if (res.confirm) {
+                  wepy.navigateBack();
+                }
+              });
+          } else if (filterAssociationStatus.status === -2) {
+            // 全部拒绝 || 第二志愿录取
+            wepy
+              .showModal({
+                content: `报名表已经处理完毕，无法修改`,
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#47CFF5"
+              })
+              .then(res => {
+                if (res.confirm) {
+                  wepy.navigateBack();
+                }
+              });
+          }
+        }
+      }
+    }
+    wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getAssociationAccept}`,
+        method: `GET`,
+        data: {
+          sid: `${wepy.getStorageSync("userInfo").studentId ||
+            wepy.getStorageSync("User").studentId}`,
+          assoName: `${this.associationInfo.description}`
+        }
+      })
+      .then(res => {
+        // 错误提示
+        if (res.data.errCode === 55) {
+          wepy
+            .showModal({
+              content: `该社团没有录入信息,暂时无法报名`,
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#47CFF5"
+            })
+            .then(res => {
+              if (res.confirm) {
+                wepy.navigateBack();
+              }
+            });
+        }
+        const requestData = res.data.data;
+        // 获取校谈热度
+        this.schoolTalkHeat(requestData);
+        this.tagId = requestData.tagId;
+        this.formId = requestData.applicationFormId;
+        let selectArr = [];
+        requestData.zxdepartmentModelSelected.forEach((item, index) => {
+          if (item.departmentName === requestData.first) {
+            selectArr[0] = index;
+          }
+          if (item.departmentName === requestData.second) {
+            selectArr[1] = index;
+          }
+        });
+        // 判断是修改申请表还是提交申请表
+        if (
+          requestData.answer1 === null ||
+          requestData.answer2 === null ||
+          requestData.answer3 === null
+        ) {
+          this.apartFirstStatus = false;
+          this.apartSecondStatus = false;
+          this.modifyStatus = true;
+        } else {
+          this.apartFirstIndex = selectArr[0];
+          this.apartSecondIndex = selectArr[1];
+          this.firstApartmentId =
+            requestData.zxdepartmentModelSelected[this.apartFirstIndex].id;
+          this.secondApartmentId =
+            requestData.zxdepartmentModelSelected[this.apartSecondIndex].id;
+          this.apartFirstStatus = true;
+          this.apartSecondStatus = true;
+          this.modifyStatus = false;
+        }
+        for (let i = 1; i <= 3; i++) {
+          this.registerInfo[i - 1].question = requestData[`quest${i}`];
+          this.registerInfo[i - 1].answer = requestData[`answer${i}`];
+          this.answerPostData[i - 1] = requestData[`answer${i}`];
+        }
+        this.apartmentFirst = requestData.zxdepartmentModelSelected;
+        this.apartmentSecond = requestData.zxdepartmentModelSelected;
+        this.originData = [
+          this.apartmentFirst[this.apartFirstIndex].id,
+          this.apartmentSecond[this.apartSecondIndex].id,
+          this.answerPostData[0],
+          this.answerPostData[1],
+          this.answerPostData[2]
+        ];
+        this.$apply();
+      });
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.instead
+  width 572rpx
+  height 162rpx
+  padding 28rpx
+  font-family 'PingFangSC-Regular'
+  font-size 28rpx
+  line-height 28rpx
+  color #909399
+.container-hidden
+  width 100%
+  height 100vh
+  overflow hidden
+.container
+  width 100%
+  .submission
+    width 350px
+    height 49px
+    background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+    box-shadow 0px 0px 25px 0px rgba(168, 168, 168, 0.5)
+    border-radius 14px
+    display flex
+    justify-content center
+    align-items center
+    margin-bottom 55px
+    view
+      font-family 'PingFangSC-Semibold'
+      font-size 18px
+      color #ffffff
+  .perfect-info
+    position absolute
+    z-index 999
+    width 100%
+    height 100%
+    background rgba(0, 0, 0, 0.5)
+    display flex
+    justify-content center
+    .perfect-info-body
+      margin-top 118px
+      height 300px
+      .perfect-img
+        display flex
+        justify-content center
+        margin-bottom -18px
+        image
+          width 158px
+          height 140px
+      .perfect-info-card
+        width 250px
+        height 188px
+        background #ffffff
+        border-radius 9px
+        display flex
+        align-items center
+        flex-direction column
+        .perfect-info-tip
+          font-size 14px
+          color #606266
+          font-family 'PingFangSC-Regular'
+          width 158px
+          height 40px
+          text-align center
+          padding 43px 0 34px 0
+  .header
+    width 100%
+    height 136px
+    background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)
+    background-blend-mode normal, normal
+    position fixed
+    top 0
+    z-index -1
+    .header-container
+      width 100%
+      height 136px
+      margin-left 31px
+      display flex
+      align-items center
+      .association-avatar
+        margin-right 15px
+        image
+          width 50px
+          height 49px
+          border 3px solid rgb(255, 255, 255)
+          border-radius 50%
+      .association-info
+        display flex
+        flex-direction column
+        .association-name
+          width 202px
+          height 28px
+          font-size 20px
+          font-family 'PingFangSC-Semibold'
+          font-weight 700
+          color rgb(53, 53, 53)
+        .association-hot
+          display flex
+          align-items center
+          .heat-icon
+            width 9px
+            height 12px
+            padding-right 2px
+          .heat-degree
+            margin-left 1px
+            font-family 'PingFangSC-Regular'
+            font-size 12px
+            color rgb(192, 196, 204)
+  .body
+    display flex
+    justify-content center
+    flex-direction column
+    align-items center
+    .info-container
+      width 350px
+      background-color #ffffff
+      box-shadow 0px 0px 12px 0px rgba(168, 168, 168, 0.5)
+      border-radius 14px
+      margin-top 119px
+      // height 661px
+      margin-bottom 15px
+      .body-slogan
+        margin 21px 0 10px 19px
+        height 22px
+        font-family 'PingFangSC-Semibold'
+        font-size 16px
+        font-weight 700
+        color #353535
+        font-weight normal
+        font-stretch normal
+        letter-spacing 0px
+      .apartment-selection
+        display flex
+        justify-content center
+        align-items center
+        flex-direction column
+        height 90px
+        picker:first-child
+          margin-bottom 10px
+        picker
+          width 312px
+          height 40px
+          background-color #ffffff
+          border-radius 4px
+          border solid 1px #d7dce5
+          .picker-container
+            width 312px
+            height 40px
+            display flex
+            align-items center
+            justify-content space-between
+            .picker-content
+              padding-left 15px
+              font-family 'PingFangSC-Regular'
+              font-size 14px
+              color #909399
+              line-height 14px
+              width 112px
+              height 14px
+            .picker-img
+              margin-right 18rpx
+              image
+                width 16rpx
+                height 12rpx
+      .question-container
+        width 100%
+        .question
+          width 100%
+          margin-bottom 10px
+          .question-title
+            margin 0 19px 10px 19px
+            font-family 'PingFangSC-Medium'
+            font-size 14px
+            color rgb(155, 155, 155)
+          .question-input
+            display flex
+            justify-content center
+            view
+              width 312px
+              height 109px
+              border-radius 4px
+              border solid 1px #dcdfe5
+              textarea
+                width 286px
+                height 81px
+                padding 14px
+                font-family 'PingFangSC-Regular'
+                font-size 14px
+                line-height 14px
+                color #909399
+</style>

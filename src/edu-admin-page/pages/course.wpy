@@ -1,0 +1,788 @@
+<template>
+  <view>
+    <qy-modal width="500rpx">
+			<view slot="content" class="bind-container">
+				<input class="bind-input" placeholder="正方密码" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+			</view>
+		</qy-modal>
+    <view slot="qy-content">
+      <view class="course">
+        <view class="hide-page" @tap.stop="hideDetailCourse" hidden="{{swiperHide}}" @touchmove.stop="stopDrag">
+        <scroll-view scroll-x="{{detailCourseScroll}}" style="width:100%;z-index:-10;">              
+            <view class="swiper-thing">
+                <view class="swiper-item" style="background:{{swiperCourse[0].bgc}};" @tap.stop="errorBind" @touchstart="startTouching" @touchend="endTouching" animation="{{firstCourseAnimation}}">
+                  <view class="course-container">
+                    <view class="course-name">{{swiperCourse[0].name}}</view>
+                    <view class="course-info">
+                      <view class="detail-info"><span>教师：</span>{{swiperCourse[0].teacher}}</view>              
+                      <view class="detail-info"><span>教室：</span>{{swiperCourse[0].locale}}</view>
+                      <view class="detail-info"><span>周数：</span>{{swiperCourse[0].week}}</view>
+                    </view>    
+                  </view>
+                </view>
+                <repeat for="{{swiperCourse}}" index="index" key="key" item="item"> 
+                  <view wx:if="{{index !== 0}}" class="swiper-behind" @tap.stop="errorBind" style="left:{{90 * index}}rpx;background:{{item.bgc}};z-index:{{-index}};" @touchstart="startTouching" @touchend="endTouching" animation="{{otherCourseAnimation[index-1]}}"> 
+                    <view class="course-container">
+                      <view class="course-name">{{item.name}}</view>
+                      <view class="course-info">
+                        <view class="detail-info"><span>教师：</span>{{item.teacher}}</view>              
+                        <view class="detail-info"><span>教室：</span>{{item.locale}}</view>
+                        <view class="detail-info"><span>周数：</span>{{item.week}}</view>
+                      </view>
+                    </view>
+                  </view>
+                  <view wx:if="{{index === swiperCourse.length - 1}}" class="swiper-behind" style="opacity:0;left:{{90 * index + 90}}rpx;background:{{item.bgc}};z-index:-300;" animation="{{otherCourseAnimation[index-1]}}"> 
+                  </view>     
+                </repeat>
+            </view>
+        </scroll-view>
+        </view>
+       <view class="animation-button" @tap="putAway">
+        <view class="animation-button-image"></view>
+      </view>
+        <view animation="{{animationData}}" class="chooseItem" hidden="{{packup ? true : false}}">
+            <view class="choose-item-container">
+              <view class="change-choose">
+                <view class="change-container">更改学期</view>            
+              </view>
+              <scroll-view class="topScroll" scroll-x="true">
+                <repeat for="{{terms}}" key="key" index="index" item="item">
+                  <view @tap="changeTerm" class="course-choose" data-item="{{item}}" id="{{item}}" style="background-image:url({{chosenTerm === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_term_selected.png' : ''}});border-radius:25rpx;">{{item}}</view>
+                </repeat>
+              </scroll-view>
+            </view>
+            <view class="choose-item-container" style="border:none;">
+              <view class="change-choose">
+                <view class="change-container">更改周次</view>            
+              </view>
+              <scroll-view class="topScroll" scroll-x="true">
+                <repeat for="{{weeks}}" key="key" index="index" item="item">
+                  <view @tap="changeWeek" data-index="{{index}}" class="course-choose-circle" id="{{item}}" style="background-image:url({{chosenWeek === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_week_selected.png' : ''}})">{{index + 1}}</view>
+                </repeat>
+              </scroll-view>
+            </view>
+        </view>
+        <view class="main" animation="{{animationData}}">  
+          <scroll-view class="main-scroll" scroll-x="true">
+            <view class="column_1">
+              <repeat for="{{classNumber}}" index="index" key="key" item="item">
+                <view class="left-column">{{item}}</view>
+              </repeat>
+            </view>
+            <view hidden="{{!isExam}}" class="cover-column" style="width:750rpx;left:0rpx;">
+              <view class="is-exam">
+                <image src="{{chooseWeek <= 20 ? 'https://static.airbob.org/under-graduate/image/course/pic_exam.png' :'https://static.airbob.org/under-graduate/image/course/pic_celebrate.png'}}" mode="aspectFit"/>
+                <view class="is-exam-text" wx:if="{{chooseWeek <= 20}}">考试周啦，不如去看看考试倒计时</view>
+                <view class="is-exam-text" wx:else>放假啦也要合理安排时间哦</view>
+                <view class="is-exam-nav" wx:if="{{chooseWeek <= 20}}">前往考试倒计时</view>
+              </view>
+            </view>                
+            <view class="cover-column" hidden="{{isExam}}">
+              <repeat for="{{nowCourse}}" index="index" key="key" item="item">
+                <view class="column">
+                  <repeat for="{{item}}" index="courseIndex" item="dailyCourse">
+                    <view class="course-item" style="top:{{dailyCourse.elementTop}};height:{{dailyCourse.elementHeight}};background:{{dailyCourse.bgc}}" @tap="showCourse" data-index="{{index}}" data-id="{{courseIndex}}">
+                        <view class="class-name">
+                          {{dailyCourse.name}}
+                        </view>
+                        <view class="class-teacher">
+                          {{dailyCourse.locale}}
+                        </view>
+                        <view wx:if="{{dailyCourse.withMoreCourse}}">
+                          <view class="bottom-angel" style="border-top:22rpx solid {{dailyCourse.bgc === '#D8D8D8' ? '#8e8e8e' : dailyCourse.borderColor}}"></view>
+                          <view class="bottom-angel-2"></view>
+                        </view>
+                      </view>
+                  </repeat>              
+                </view>
+              </repeat>
+            </view>
+            <view class="lines_1">
+              <repeat for="{{days}}" index="index" key="key" item="item">
+                <view class="top-line">{{item}}</view>
+              </repeat>
+            </view>
+            <repeat for="{{classNumber}}" index="index" key="key" item="item">
+              <view class="lines" style="border-top:{{index === 0 ? '1rpx solid #E3E3E3' : '1rpx dotted #E3E3E3'}}"></view>
+            </repeat>
+          </scroll-view>
+        </view>
+      </view>
+    </view>
+    </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import ClassMixin from "../../mixins/class.js";
+import navigation from "../../components/qy-navigation";
+import container from "../../components/qy-container";
+import QyModal from "../../components/qy-modal";
+
+export default class Course extends wepy.page {
+  config = {
+    navigationBarTitleText: "课程表",
+    enablePullDownRefresh: true
+  };
+  data = {
+    navBackground: "#fff",
+    isExam: false,
+    weekScorllLeft: 0,
+    swiperHide: true,
+    packup: true,
+    weeks: [],
+    classNumber: [],
+    nowCourse: [],
+    elseCourse: [],
+    unshowCourse: [],
+    swiperCourse: [],
+    chooseWeek: "",
+    chosenWeek: "#",
+    chosenTerm: "",
+    days: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+    terms: [],
+    animationData: {},
+    firstCourseAnimation: {},
+    otherCourseAnimation: [],
+    Day: "",
+    detailCourseScroll: false,
+    trueCourses: [],
+    chosenRequestYear: "",
+    chosenRequestTerm: ""
+  };
+  components = {
+    "qy-navigation": navigation,
+    "qy-container": container,
+    "qy-modal": QyModal
+  };
+  mixins = [ClassMixin];
+  methods = {
+    bindCardPassword(e) {
+      this.bindInputPassword = e.detail.value;
+    },
+    async bindHandle() {
+      await wepy
+        .request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.changeSecretCode}`,
+          method: "POST",
+          data: {
+            domainType: "1",
+            username: wepy.getStorageSync("userInfo").studentId,
+            password: this.bindInputPassword
+          }
+        })
+        .then(res => {
+          if (res.data.success && res.data.data) {
+            // 绑定成功
+            this.bindModalVisible = false;
+            this.$invoke("qy-modal", "close");
+            this.init();
+          } else {
+            wepy.showModal({
+              content: "密码错误",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            });
+          }
+        });
+    },
+    stopDrag() {},
+    putAway() {
+      if (!this.swiperHide) {
+        return;
+      }
+      let that = this;
+      that.chosenWeek = `第${this.chooseWeek}周`;
+      const tap = async function() {
+        let animation = wepy.createAnimation({
+          duration: 100
+        });
+        let screenWidth;
+        if (that.packup === true) {
+          await wepy.getSystemInfo().then(res => {
+            screenWidth = parseInt(res.screenWidth / 750 * 178);
+          });
+          animation.translate(0, screenWidth).step();
+          that.packup = false;
+        } else {
+          animation.translate(0, 0).step();
+          that.packup = true;
+        }
+        that.animationData = animation.export();
+        that.$apply();
+      };
+      tap();
+    },
+    showCourse(e) {
+      let index = e.currentTarget.dataset.index;
+      let id = e.currentTarget.dataset.id;
+      let thisCourse = this.nowCourse[index][id];
+      this.swiperCourse.push(thisCourse);
+      for (let i of this.elseCourse[index]) {
+        if (
+          i.sectionstart === thisCourse.sectionstart &&
+          i.sectionend === thisCourse.sectionend
+        ) {
+          this.swiperCourse.push(i);
+        }
+      }
+      this.swiperHide = false;
+      this.navBackground = "#808080";
+      this.detailCourseScroll = true;
+      this.$apply();
+    },
+    hideDetailCourse() {
+      this.swiperHide = true;
+      let firstCourseAnimation = wepy.createAnimation({
+        duration: 0
+      });
+      firstCourseAnimation.translate(0, 0).step();
+      this.firstCourseAnimation = firstCourseAnimation.export();
+      this.$apply();
+      for (let i = 0; i < this.swiperCourse.length - 1; i++) {
+        let otherCourseAnimation = wepy.createAnimation({
+          duration: 0
+        });
+        otherCourseAnimation.translate(0, 0).step();
+        this.otherCourseAnimation[i] = otherCourseAnimation.export();
+        this.$apply();
+      }
+      this.swiperCourse = [];
+      this.detailCourseScroll = false;
+      this.navBackground = "#fff";
+      this.$apply();
+    },
+    async changeTerm(e) {
+      let that = this;
+      let item = e.currentTarget.dataset.item;
+      let requestYear = item.substr(0, 9);
+      let requestTerm;
+      if (item.indexOf("一") === -1 || item.indexOf("一") === "-1") {
+        requestTerm = 2;
+      } else {
+        requestTerm = 1;
+      }
+      this.chosenRequestYear = requestYear;
+      this.chosenRequestTerm = requestTerm;
+      let changedTermCourse = await wepy.request({
+        url:
+          this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.classSchedule,
+        data: {
+          year: requestYear,
+          term: requestTerm
+        },
+        method: "GET"
+      });
+      if (changedTermCourse.data.success) {
+        that.trueCourses = changedTermCourse.data.data.timetable;
+        let dealedCourse = that.handleCourses(
+          that.trueCourses,
+          that.chooseWeek
+        );
+        that.nowCourse = dealedCourse[0];
+        that.elseCourse = dealedCourse[1];
+        that.unshowCourse = dealedCourse[2];
+        that.chosenTerm = item;
+        that.$apply();
+      }
+    },
+    changeWeek(e) {
+      this.isExam = false;
+      this.chosenWeek = this.weeks[e.currentTarget.dataset.index];
+      this.chooseWeek = parseInt(e.currentTarget.dataset.index + 1);
+      let dealedCourse = this.handleCourses(this.trueCourses, this.chooseWeek);
+      this.nowCourse = dealedCourse[0];
+      this.elseCourse = dealedCourse[1];
+      this.unshowCourse = dealedCourse[2];
+      this.$apply();
+    },
+    errorBind(e) {
+      this.detailCourseScroll = true;
+    }
+  };
+  startTouching(e) {
+    if (e.touches.length === 1) {
+      this.startX = e.touches[0].clientX;
+    }
+  }
+  async endTouching(e) {
+    if (e.changedTouches.length === 1) {
+      this.endX = e.changedTouches[0].clientX;
+      if (
+        parseInt(this.startX - this.endX) >= 10 &&
+        this.swiperCourse.length > 1
+      ) {
+        if (this.otherCourseAnimation.length === 0) {
+          for (let i = 0; i < this.swiperCourse.length - 1; i++) {
+            this.otherCourseAnimation.push({});
+          }
+        }
+        this.detailCourseScroll = true;
+        let screenWidth;
+        await wepy.getSystemInfo().then(res => {
+          screenWidth = parseFloat(res.screenWidth / 750);
+        });
+        this.$apply();
+        let firstCourseAnimation = wepy.createAnimation({
+          duration: 100
+        });
+        let translateLeft = screenWidth * 140;
+        firstCourseAnimation.translate(-translateLeft, 0).step();
+        this.firstCourseAnimation = firstCourseAnimation.export();
+        this.$apply();
+        for (let i = 0; i < this.swiperCourse.length - 1; i++) {
+          let otherCourseAnimation = wepy.createAnimation({
+            duration: 100
+          });
+          let translateRight =
+            (i + 1) * screenWidth * 400 -
+            screenWidth * 140 -
+            (i + 1) * 90 * screenWidth;
+          otherCourseAnimation.translate(translateRight, 0).step();
+          this.otherCourseAnimation[i] = otherCourseAnimation.export();
+          this.$apply();
+        }
+        this.$apply();
+      } else {
+        this.detailCourseScroll = false;
+        this.$apply();
+      }
+    }
+  }
+  getTerms() {
+    let that = this;
+    return new Promise(resolve => {
+      let userInfo = wepy.getStorageSync("userInfo");
+      let nowYear = parseInt(
+        new Date()
+          .getFullYear()
+          .toString()
+          .substr(2, 3)
+      );
+      let enterYear = parseInt(userInfo.studentId.substr(1, 2));
+      let nowTerm = 1;
+      let allTerms = parseInt((nowYear - enterYear) * 2 + nowTerm);
+      for (let i = 0; i < allTerms; i++) {
+        that.terms.unshift(
+          `20${enterYear + parseInt(i / 2)}-20${parseInt(
+            enterYear + parseInt(i / 2) + 1
+          )} 第${i % 2 === 0 ? "一" : "二"}学期`
+        );
+      }
+      resolve();
+    });
+  }
+  async init() {
+    let Day = new Date().getDay() === 0 ? 7 : new Date().getDay();
+    this.Day = parseInt(Day - 1);
+    let common = wepy.getStorageSync("common");
+    if (!common) {
+      common = await wepy.request({
+        url:
+          this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.commonInformation
+      });
+      common = common.data.data;
+    }
+    this.chooseWeek = parseInt(common.week);
+    if (wepy.getStorageSync("timetable")) {
+      let dealedCourse = this.handleCourses(
+        wepy.getStorageSync("timetable"),
+        common.week
+      );
+      this.nowCourse = dealedCourse[0];
+      this.elseCourse = dealedCourse[1];
+      this.unshowCourse = dealedCourse[2];
+      this.$apply();
+    }
+    let that = this;
+    await this.getTerms();
+    if (common.nextTerm) {
+      this.terms.unshift(
+        common.semester.substr(-1) === "1"
+          ? common.year + " 第二学期"
+          : common.semester.substr(0, 4) +
+            "-" +
+            parseInt(Number(common.semester.substr(0, 4)) + 1).toString() +
+            " 第一学期"
+      );
+    }
+    if (this.chooseWeek > 18 || this.chooseWeek < 1) {
+      this.isExam = true;
+      this.$apply();
+    }
+    for (let i = 1; i <= 18; i++) {
+      this.weeks.push(`第${i}周`);
+    }
+    for (let i = 1; i <= 12; i++) {
+      this.classNumber.push(i);
+    }
+    let res = await wepy.request({
+      url:
+        this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.classSchedule
+    });
+    if (!res.data.data || !res.data.success) {
+      wepy.showModal({
+        content: "密码已经更新请重新绑定",
+        confirmText: "知道了",
+        showCancel: false,
+        confirmColor: "#353535"
+      });
+      this.$invoke("qy-modal", "open");
+    } else {
+      that.trueCourses = res.data.data.timetable;
+      if (wepy.getStorageSync("common")) {
+        that.chosenTerm = `${wepy.getStorageSync("common").year} 第${
+          wepy.getStorageSync("common").semester.substr(-1) === "1"
+            ? "一"
+            : "二"
+        }学期`;
+      } else {
+        that.chosenTerm = `2018-2019 第一学期`;
+      }
+      let dealedCourse = this.handleCourses(this.trueCourses, common.week);
+      this.nowCourse = dealedCourse[0];
+      this.elseCourse = dealedCourse[1];
+      this.unshowCourse = dealedCourse[2];
+      this.$apply();
+    }
+  }
+  async onLoad() {
+    this.init();
+  }
+  async onPullDownRefresh() {
+    const data = {
+      type: "jzwzn"
+    };
+    if (this.chosenRequestTerm !== "") {
+      data.year = this.chosenRequestYear;
+      data.term = this.chosenRequestTerm;
+    }
+    let changedTermCourse = await wepy.request({
+      url:
+        this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.classSchedule,
+      data: data,
+      method: "GET"
+    });
+    if (changedTermCourse.data.success) {
+      this.trueCourses = changedTermCourse.data.data.timetable;
+      let dealedCourse = this.handleCourses(this.trueCourses, this.chooseWeek);
+      this.nowCourse = dealedCourse[0];
+      this.elseCourse = dealedCourse[1];
+      this.unshowCourse = dealedCourse[2];
+      this.$apply();
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.nav
+  display flex
+  align-items center
+  justify-content center
+  text-align center
+  height 66rpx
+  .nav-image
+    margin-left 15rpx
+    width 30rpx
+    height 66rpx
+
+.hide-page
+  position fixed
+  width 100%
+  height 100%
+  background rgba(0, 0, 0, 0.5)
+  z-index 200
+  .swiper-thing
+    position relative
+    margin 0 auto
+    width 330rpx
+    height 90vh
+    z-index 205
+    .swiper-item
+      position relative
+      margin 0 auto
+      top 27vh
+      height 30vh
+      width 330rpx
+      margin-right 70rpx
+      border-radius 30rpx
+      box-shadow 5px 0 10px 0 rgba(0, 0, 0, 0.1)
+      z-index 202
+      flex-shrink 0
+      display flex
+      justify-content center
+      .course-container
+        display flex
+        flex-direction column
+        padding 53rpx 30rpx
+        color #fff
+        .course-name
+          height 15vh
+          font-size 30rpx
+          font-weight bold
+        .course-info
+          font-size 28rpx
+          display flex
+          flex-direction column
+    .swiper-behind
+      position absolute
+      height 30vh
+      width 330rpx
+      left 100rpx
+      top 27vh
+      border-radius 30rpx
+      margin-right 70rpx
+      background #fff
+      box-shadow 5px 0 10px 0 rgba(0, 0, 0, 0.1)
+      z-index 201
+      flex-shrink 0
+      display flex
+      justify-content center
+      .course-container
+        display flex
+        flex-direction column
+        padding 53rpx 30rpx
+        color #fff
+        .course-name
+          height 15vh
+          font-size 30rpx
+          font-weight bold
+        .course-info
+          font-size 28rpx
+          display flex
+          flex-direction column
+
+.course
+  position absolute
+  width 750rpx
+  min-height 100vh
+  .animation-button
+    position absolute
+    height 90rpx
+    width 90rpx
+    display flex
+    align-items center
+    z-index 100
+    .animation-button-image
+      width 90rpx
+      height 90rpx
+      background-image url('https://static.airbob.org/under-graduate/timetable_pic_editor.png')
+      background-repeat no-repeat
+      background-position center
+      background-size contain
+  .chooseItem
+    position absolute
+    top -180rpx
+    background #EEEEEE
+    width 750rpx
+    height 180rpx
+    font-size 26rpx
+    .choose-item-container
+      margin-left 80rpx
+      width 670rpx
+      height 90rpx
+      display flex
+      align-items center
+      border-bottom 1rpx solid #E3E3E3
+      .change-choose
+        display flex
+        width 130rpx
+        height 90rpx
+        align-items center
+        justify-content center
+        .change-container
+          text-align center
+          width 110rpx
+          color #353535
+      .topScroll
+        position relative
+        display inline-block
+        width 540rpx
+        white-space nowrap
+        height 90rpx
+        color #fff
+        text-align center
+        .course-choose
+          position relative
+          display inline-block
+          margin-top 20rpx
+          height 50rpx
+          font-family PingFangSC-Light
+          line-height 50rpx
+          padding-left 15rpx
+          padding-right 15rpx
+          background #D8D8D8
+          margin-left 26rpx
+          background-repeat no-repeat
+          background-position center
+          background-size contain
+        .course-choose-circle
+          position relative
+          display inline-block
+          margin-top 10rpx
+          height 70rpx
+          width 70rpx
+          font-family PingFangSC-Light
+          line-height 70rpx
+          background #D8D8D8
+          margin-left 26rpx
+          text-align center
+          background-repeat no-repeat
+          background-position center
+          background-size contain
+          border-radius 50%
+  .main
+    position absolute
+    width 750rpx
+    .main-scroll
+      position relative
+      width 100%
+      font-size 26rpx
+      font-family PingFangSC-Light
+      color rgb(139, 139, 139)
+      .lines
+        width 750rpx
+        height 107rpx
+        border-top 1rpx dotted #E3E3E3
+        display flex
+        align-items center
+    .lines_1
+      width 670rpx
+      padding-left 80rpx
+      height 90rpx
+      display flex
+      align-items center
+      justify-content center
+      text-align center
+      .top-line
+        height 90rpx
+        width 750rpx
+        line-height 90rpx
+    .cover-column
+      position absolute
+      left 80rpx
+      width 670rpx
+      height 1296rpx
+      .is-exam
+        position absolute
+        width 750rpx
+        height 80vh
+        display flex
+        flex-direction column
+        align-items center
+        align-content center
+        justify-content center
+        text-align center
+        .is-exam-text
+          margin-top 30rpx
+          font-size 28rpx
+          color #999CA0
+        .is-exam-nav
+          margin-top 30rpx
+          color #fff
+          font-size 30rpx
+          height 60rpx
+          line-height 60rpx
+          padding-left 30rpx
+          padding-right 30rpx
+          background #6DCDF1
+          border-radius 15rpx
+        image
+          width 500rpx
+          height 500rpx
+      .column
+        display inline-block
+        width 95rpx
+        height 1296rpx
+        .course-item
+          position absolute
+          width 84rpx
+          padding-left 3rpx
+          padding-right 3rpx
+          border-radius 10rpx
+          font-size 22rpx
+          color #fff
+          display flex
+          align-items center
+          justify-content center
+          flex-direction column
+          overflow hidden
+          .class-name
+            text-overflow ellipsis
+            overflow hidden
+            display -webkit-box
+            -webkit-line-clamp 4
+            -webkit-box-orient vertical
+            overflow hidden
+            width 80rpx
+            text-align center
+          .class-teacher
+            text-overflow ellipsis
+            overflow hidden
+            display -webkit-box
+            -webkit-line-clamp 3
+            -webkit-box-orient vertical
+            width 80rpx
+            text-align center
+          .bottom-angel
+            position absolute
+            right 0rpx
+            bottom 0rpx
+            border-right 22rpx solid transparent
+            border-top-left-radius 10rpx
+          .bottom-angel-2
+            position absolute
+            bottom 0rpx
+            right -20rpx
+            border-left 20rpx solid transparent
+            border-right 20rpx solid transparent
+            border-bottom 20rpx solid #D8D8D8
+    .column_1
+      position absolute
+      top 90rpx
+      width 80rpx
+      height 1296rpx
+      display flex
+      flex-direction column
+      justify-content center
+      align-items center
+      align-content center
+      text-align center
+      background #F5F5F5
+      .left-column
+        text-align center
+        height 108rpx
+        line-height 108rpx
+
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
+</style>

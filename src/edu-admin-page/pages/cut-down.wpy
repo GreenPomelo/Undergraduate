@@ -1,0 +1,591 @@
+<template>
+  <view>
+    <QyModal containerClass="cutdown-modal-containerClass" height="510rpx" width="605rpx">
+      <view slot="content" class="slot-content">
+        <input class="input space" value="{{subject}}" placeholder-class="placeholder" placeholder="科目名称" @input="handleInput" data-input="subject" />
+        <QyDatetimeSelect style="margin-bottom:28rpx;" />
+        <input class="input space" value="{{room}}" placeholder-class="placeholder" placeholder="地点" @input="handleInput" data-input="room" />
+        <input class="input space" value="{{teacher}}" placeholder-class="placeholder" placeholder="老师" @input="handleInput" data-input="teacher" />
+        <button class="add-button" @tap.stop="addSubject" data-input="subject">增加课程</button>
+      </view>
+    </QyModal>
+    <QyQuestionModal width="auto">
+      <view slot="content" class="question-container">
+        <view class="bb">
+          <text class="left-container">课程表相关</text>
+          <text class="right-container">由学生个人课表通过课名和老师名过滤一次之后得到的考试安排</text>
+        </view>
+        <view class="bb" style="margin-top:20rpx;margin-bottom:8rpx;">
+          <text class="left-container">专业安排相关</text>
+          <text class="right-container">该专业所有考试安排</text>
+        </view>
+        <view class="button" @tap.stop="hideQuestionModal">知道了</view>
+      </view>
+    </QyQuestionModal>
+    <view class="container">
+      <view class="select-container">
+        <view class="select-title" @tap.stop="toggleDrop">{{current==="timetable"?"课程表相关":"专业相关"}}</view>
+        <!-- <image class="arrow" mode="widthFix" animation="{{arrowAnimation}}" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/arrow2.png" /> -->
+        <!-- <view class="drop" style="{{dropOpen===true?'':'display:none'}}">
+                  <view @tap.stop="changeTimetable" class="drop-text">课程表相关</view>
+                  <view @tap.stop="changeProfession" class="drop-text">专业安排相关</view>
+                </view> -->
+        <view class="question" @tap.stop="showQuestionModal">?</view>
+      </view>
+      <image class="line" mode="widthFix" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E9%A1%B6%E9%83%A8%E6%A8%AA%E7%BA%BF.png" />
+      <view class="head-container">
+        <text class="text" style="{{fetchdata2.length === 0?'display:none':''}}">未结束科目</text>
+        <image class="add" mode="widthFix" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E5%A2%9E%E5%8A%A0.png" @tap.stop="addModal" />
+      </view>
+      <view class="line" />
+      <repeat for="{{unfinishSubject}}" key="index" index="index" item="item">
+        <SubjectCard1 :item.sync="item" :isFinished="false" :bg.sync="unfinishBg[index%3]" />
+      </repeat>
+      <text class="text" style="{{fetchdata1.length === 0?'display:none':''}}">已结束科目</text>
+      <view class="line" />
+      <repeat for="{{finishSubject}}" key="index" index="index">
+        <SubjectCard2 :item.sync="item" :isFinished="true" :show.sync="shows[index]" />
+      </repeat>
+      <view style="{{fetchdata1.length === 0 && fetchdata2.length ===0?'':'display:none'}}">
+        <image class="no-image" mode="widthFix" src="https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E6%8F%92%E7%94%BB.png" />
+        <view class="no-text">考试安排还没出来哦</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import SubjectCard from "../components/subject-card";
+import QyModal from "@/components/qy-modal";
+import QyDatetimeSelect from "@/components/qy-datetime-select";
+export default class CutDown extends wepy.page {
+  components = {
+    SubjectCard1: SubjectCard,
+    SubjectCard2: SubjectCard,
+    QyModal,
+    QyQuestionModal: QyModal,
+    QyDatetimeSelect
+  };
+  config = {
+    enablePullDownRefresh: true
+  };
+  data = {
+    current: "timetable", // or profession
+    // dropOpen: false,
+    subjects: [],
+    shows: [],
+    fetchdata1: [], // 课程表相关
+    fetchdata2: [], // 专业安排相关
+    subject: "",
+    room: "",
+    beginTimestamp: 0,
+    duration: 0,
+    teacher: "",
+    arrowAnimation: {},
+    unfinishBg: [
+      {
+        left:
+          "linear-gradient( 45deg, rgb(96,203,228) 0%, rgb(146,227,249) 100%)",
+        right: "rgb(131,220,242)"
+      },
+      {
+        left:
+          "linear-gradient( 45deg, rgb(239,90,97) 0%, rgb(251,144,149) 100%)",
+        right: "rgb(247,126,132)"
+      },
+      {
+        left:
+          "linear-gradient( 45deg, rgb(253,178,59) 0%, rgb(252,196,107) 100%)",
+        right: "rgb(252,192,97)"
+      }
+    ]
+  };
+  onPullDownRefresh() {
+    this.current = "timetable";
+    this.getSubjects();
+    wepy.stopPullDownRefresh();
+  }
+  events = {
+    showchange: index => {
+      // 切换已完成科目的可见状态
+      this.shows[index] = !this.shows[index];
+    },
+    down: async (originIndex, coursecode, courseteacher) => {
+      // 手动把一个课程移动到下面 删除
+      wepy.showLoading({
+        title: "发起删除课程请求"
+      });
+      const res = await wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config
+            .strikeOutYourExam}?courseCode=${coursecode}&courseTeacher=${encodeURI(
+          courseteacher
+        )}`
+      });
+      wepy.hideLoading();
+      if (res.data.success) {
+        // 删除成功
+        this[`fetchdata${this.current === "timetable" ? "1" : "2"}`][
+          originIndex
+        ].enable = false;
+        this.subjects = this.subjects.map((item, index) => {
+          if (originIndex === index) {
+            return {
+              ...item,
+              handDown: true,
+              handUp: false
+            };
+          }
+          return {
+            ...item
+          };
+        });
+        wepy.showToast({
+          title: "删除课程成功",
+          icon: "none",
+          duration: 2000
+        });
+        this.$apply();
+      } else {
+        wepy.showToast({
+          title: "删除课程失败，请重试",
+          icon: "none",
+          duration: 2000
+        });
+      }
+    },
+    up: async (originIndex, coursecode, courseteacher) => {
+      // 手动把一个课程移到上面 恢复
+      wepy.showLoading({
+        title: "加载中"
+      });
+      const res = await wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config
+            .restoreYourOwnExam}?courseCode=${coursecode}&courseTeacher=${encodeURI(
+          courseteacher
+        )}`
+      });
+      wepy.hideLoading();
+      if (res.data.success) {
+        this[`fetchdata${this.current === "timetable" ? "1" : "2"}`][
+          originIndex
+        ].enable = true;
+        this.subjects = this.subjects.map((item, index) => {
+          if (originIndex === index) {
+            return {
+              ...item,
+              handDown: false,
+              handUp: true
+            };
+          }
+          return {
+            ...item
+          };
+        });
+        wepy.showToast({
+          title: "恢复课程成功",
+          icon: "none",
+          duration: 2000
+        });
+      } else {
+        wepy.showToast({
+          title: "恢复课程失败，请重试",
+          icon: "none",
+          duration: 2000
+        });
+      }
+      this.$apply();
+    },
+    "datetime-select": (date, begintime, endtime) => {
+      date = date.replace(/-/g, "/");
+      const begin = new Date(`${date} ${begintime}`);
+      const end = new Date(`${date} ${endtime}`);
+      this.beginTimestamp = begin.getTime();
+      this.duration = (end.getTime() - begin.getTime()) / 1000 / 60; // 分钟
+    }
+  };
+  methods = {
+    addModal() {
+      // 打开添加课程Moal
+      this.$invoke("QyModal", "open");
+    },
+    handleInput(e) {
+      this[e.target.dataset.input] = e.detail.value;
+    },
+    async toggleDrop() {
+      // this.dropOpen = !this.dropOpen;
+      try {
+        const res = await wepy.showActionSheet({
+          itemList: ["课程表相关", "专业安排相关"]
+        });
+        if (res.tapIndex === 0 && this.current !== "timetable") {
+          this.changeTimetable();
+        } else if (res.tapIndex === 1 && this.current !== "profession") {
+          this.changeProfession();
+        }
+        this.$apply();
+      } catch (e) {}
+    },
+    async addSubject() {
+      // 添加课程请求
+      //       subject: "",
+      // room: "",
+      // beginTimestamp:0,
+      // duration:0,
+      // teacher: "",
+      if (this.duration < 0) {
+        wepy.showToast({
+          title: "考试结束时间必须大于开始时间",
+          icon: "none",
+          duration: 2000
+        });
+      } else {
+        wepy.showLoading({
+          title: "加载中"
+        });
+        const res = await wepy.request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.addYourOwnExam}`,
+          method: "POST",
+          data: {
+            name: this.subject,
+            time: this.beginTimestamp,
+            duration: String(this.duration),
+            teacher: this.teacher,
+            position: this.room
+          }
+        });
+        wepy.hideLoading();
+        if (res.data.success) {
+          wepy.showToast({
+            title: "添加成功",
+            icon: "none",
+            duration: 2000
+          });
+          this.$invoke("QyModal", "close");
+          this.current = "timetable";
+          this.getSubjects();
+          this.$apply();
+        } else {
+          wepy.showToast({
+            title: "添加失败",
+            icon: "none",
+            duration: 2000
+          });
+        }
+      }
+    },
+    showQuestionModal() {
+      this.$invoke("QyQuestionModal", "open");
+    },
+    hideQuestionModal() {
+      this.$invoke("QyQuestionModal", "close");
+    }
+  };
+  onLoad() {
+    const cache = wepy.getStorageSync("cutdown");
+    if (cache) {
+      // 先显示缓存的考试再去加载
+      const { fetchdata1, fetchdata2 } = cache;
+      this.fetchdata1 = fetchdata1;
+      this.fetchdata2 = fetchdata2;
+      this.subjects = fetchdata1.map((item, index) => {
+        return {
+          ...item,
+          originIndex: index,
+          handDown: !item.enable,
+          handUp: false
+        };
+      });
+      this.shows = new Array(fetchdata1.length).fill(false);
+      // this.$apply();
+    }
+    this.getSubjects();
+  }
+  changeTimetable() {
+    if (this.current === "profession") {
+      this.current = "timetable";
+      // this.dropOpen = false;
+      this.subjects = this.formatFetchData1;
+    }
+    this.shows = new Array(this.fetchdata2.length).fill(false);
+  }
+  changeProfession() {
+    if (this.current === "timetable") {
+      this.current = "profession";
+      // this.dropOpen = false;
+      this.subjects = this.formatFetchData2;
+      this.shows = new Array(this.fetchdata2.length).fill(false);
+    }
+  }
+  formatBeginAndEnd(begin, end) {
+    function fillZero(number) {
+      return ("00" + number).slice(-2);
+    }
+    return `${fillZero(begin.getMonth() + 1)}.${fillZero(
+      begin.getDate()
+    )} ${fillZero(begin.getHours())}:${fillZero(begin.getMinutes())}-${fillZero(
+      end.getHours()
+    )}:${fillZero(end.getMinutes())}`;
+  }
+  async getSubjects() {
+    // 个人课表考试查询
+    const p1 = wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.selfExam}`
+      })
+      .then(res => {
+        if (res.data.success) {
+          this.fetchdata1 = res.data.data.map(item => {
+            const beginDate = new Date(item.examDate);
+            const endDate = new Date(
+              item.examDate + Number(item.examDuration * 60 * 1000)
+            );
+            const remain = Math.floor(
+              (item.examDate - Date.now()) / 1000 / 60 / 60 / 24
+            );
+            return {
+              subject: item.courseName,
+              place: item.examPosition,
+              teacher: item.courseTeacher,
+              time: this.formatBeginAndEnd(beginDate, endDate),
+              enable: item.enable,
+              courseCode: item.courseCode,
+              remain
+            };
+          });
+          this.subjects = this.fetchdata1.map((item, index) => {
+            return {
+              ...item,
+              originIndex: index,
+              handDown: !item.enable,
+              handUp: false
+            };
+          });
+          this.shows = new Array(this.fetchdata1.length).fill(false);
+          this.$apply();
+        }
+      });
+    // 专业相关班级考试查询
+    const p2 = wepy
+      .request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.getYourOwnExam}?type=0`
+      })
+      .then(res => {
+        if (res.data.success) {
+          this.fetchdata2 = res.data.data.map(item => {
+            const beginDate = new Date(item.examDate);
+            const endDate = new Date(
+              item.examDate + Number(item.examDuration * 60 * 1000)
+            );
+            const remain = Math.floor(
+              (item.examDate - Date.now()) / 1000 / 60 / 60 / 24
+            );
+            return {
+              subject: item.courseName,
+              place: item.examPosition,
+              teacher: item.courseTeacher,
+              time: this.formatBeginAndEnd(beginDate, endDate),
+              enable: item.enable,
+              courseCode: item.courseCode,
+              remain
+            };
+          });
+          this.$apply();
+        }
+      });
+    // 更新缓存
+    await Promise.all([p1, p2]);
+    this.$apply();
+    wepy.setStorageSync("cutdown", {
+      fetchdata1: this.fetchdata1,
+      fetchdata2: this.fetchdata2
+    });
+  }
+  computed = {
+    unfinishSubject() {
+      return this.subjects.filter(
+        item =>
+          item.handUp === true || (item.handDown === false && item.remain > -1)
+      );
+    },
+    finishSubject() {
+      return this.subjects.filter(
+        item =>
+          item.handDown === true || (item.handUp === false && item.remain <= -1)
+      );
+    },
+    formatFetchData1() {
+      return this.fetchdata1.map((item, index) => {
+        return {
+          ...item,
+          originIndex: index,
+          handDown: !item.enable,
+          handUp: false
+        };
+      });
+    },
+    formatFetchData2() {
+      return this.fetchdata2.map((item, index) => {
+        return {
+          ...item,
+          originIndex: index,
+          handDown: !item.enable,
+          handUp: false
+        };
+      });
+    }
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '../../css/normal-input';
+.container
+  display flex
+  flex-direction column
+  align-items center
+  font-family "SimHei"
+  margin-top 9rpx
+  .select-container
+    position relative
+    // z-index 23
+    .select-title
+      color: rgb(53, 53, 53)
+      text-align: center
+      font-size 30rpx
+      position relative
+      z-index 22
+      border-radius 30rpx
+      box-shadow 0rpx 3rpx 14rpx 0rpx rgba(0, 0, 0, 0.35)
+      width 524rpx
+      height 71rpx
+      line-height 71rpx
+    .drop
+      width 524rpx
+      height 150rpx
+      display flex
+      flex-direction column
+      position absolute
+      align-items center
+      background-color rgb(255,255,255)
+      box-shadow: 0rpx 3rpx 14rpx 0rpx rgba(0, 0, 0, 0.35)
+      top 34rpx;
+      z-index 20
+      .drop-text
+        font-size 30rpx
+        font-family "SimHei"
+        color rgb(53, 53, 53)
+        width 100%
+        text-align center
+        &:first-of-type
+          margin 59rpx 0 4rpx
+    .question
+      border-radius 50%
+      background-color rgb(239, 239, 239)
+      width 40rpx
+      height 40rpx
+      line-height 40rpx
+      position absolute
+      font-size 20rpx
+      text-align center
+      font-family "Microsoft YaHei UI"
+      color rgb(90, 90, 90)
+      top 23rpx
+      left 547rpx
+    .arrow
+      width 45rpx
+      position absolute
+      top 16rpx
+      left 457rpx
+      z-index 30
+  .head-container
+    width 639rpx
+    height 67rpx
+    display flex
+    justify-content space-between
+    .add
+      width 55rpx
+  .text
+    font-size 36rpx
+    color rgb(53, 53, 53)
+    font-weight bold
+  .line
+    width 670rpx
+    max-height 20rpx
+    margin 17rpx 0 29rpx
+    background-image url("https://static.airbob.org/under-graduate/grade/%E5%88%86%E5%89%B2%E7%BA%BF.png")
+    background-size contain
+    background-position-x 32rpx
+  .no-image
+    width 400rpx
+    margin-top 129rpx
+  .no-text
+    color #999CA0
+    font-size 28rpx
+    margin-top 55rpx
+    text-align center
+.slot-content
+  display flex
+  flex-direction column
+  align-items center
+  margin-top 56rpx
+  .add-button
+    background-color rgb(134,222,243)
+    color rgb(255,255,255)
+    font-size 30rpx
+    text-align center
+    height 57rpx
+    line-height 57rpx
+    width 466rpx
+    border-radius 28.5rpx
+    position relative
+    top 28rpx
+  .space
+    margin-bottom 28rpx
+.question-container
+  width 524rpx
+  height 271rpx
+  border-radius 10rpx
+  background-color white
+  font-size 24rpx
+  font-family "SimHei"
+  color rgb(0, 0, 0)
+  display flex
+  flex-direction column
+  .bb
+    display flex
+    justify-content space-between
+    margin 29rpx 42rpx 0
+    .right-container
+       width 290rpx
+    .left-container
+       width 143rpx
+  .line
+    width 100%
+    height 2rpx
+    background-image url("https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E9%A1%B6%E9%83%A8%E6%A8%AA%E7%BA%BF.png")
+    background-size contain
+    margin 39rpx auto 0
+  .button
+    border-top 2rpx solid rgb(246,246,246)
+    text-align center
+    color #39C9FF
+    font-size 30rpx
+    height 85rpx
+    line-height 85rpx
+</style>
+
+<style lang="stylus">
+.cutdown-modal-containerClass
+  display flex
+  align-items center
+  flex-direction column
+</style>
+
+
+

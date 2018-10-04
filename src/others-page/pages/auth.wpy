@@ -1,0 +1,287 @@
+<template lang="pug">
+view.auth
+  view#login-cloak
+    view.left-pane(class="{{ isOthersOpen ? 'open' : '' }}")
+      view.keyhole( @tap="scanCode")
+        view.outer-circle
+          view.inner-circle
+            view.rect(class="{{ isHoleOpen ? 'open' : '' }}")
+    view.middle-pane( @tap="toggle" class="{{ isOthersOpen ? 'open' : '' }}")
+    view.right-pane(class="{{ isOthersOpen ? 'open' : '' }}")
+  view.content
+    p.header WELCOME
+    image(class="pomelo" src="https://static.airbob.org/report-2018-06/logo-min.png")
+</template>
+
+
+<script>
+import wepy from "wepy";
+import Crypto from "../../utils/Crypto.js";
+
+const KEY = Crypto.utf8Encode("75564012e1db214d");
+const IV = Crypto.utf8Encode("ee3e54c80a55628d");
+const crypto = new Crypto(KEY, IV);
+
+export default class Auth extends wepy.page {
+  config = {
+    navigationBarTitleText: "认证",
+    navigationBarBackgroundColor: "#45D3FB"
+  };
+
+  data = {
+    open: false,
+    isHoleOpen: false,
+    isOthersOpen: false
+  };
+
+  handleCodeRes(path) {
+    const params = path
+      .split("?")[1]
+      .split("&")
+      .map(item => ({
+        key: item.split("=")[0],
+        value: item.split("=")[1]
+      }));
+    this.handleScene(params.find(({ key }) => key === `scene`).value);
+  }
+
+  async handleScene(authid) {
+    if (authid === `undefined`) {
+      return;
+    }
+    const requestUrl = this.$parent.globalData.requestUrl;
+    const sessionid = wepy.getStorageSync("token");
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const { data: { data, success, ...err } } = await wepy.request({
+      url: `${requestUrl + this.$parent.globalData.config.ME}`,
+      data: {
+        encrypted: crypto.jsonEncrypt({
+          sessionid,
+          timestamp,
+          authid
+        })
+      },
+      method: `POST`
+    });
+    if (success) {
+      const status = crypto.jsonDecrypt(data.encrypted).status;
+      if (status) {
+        this.handleOpen();
+      }
+    } else {
+      console.error(err);
+    }
+  }
+
+  methods = {
+    scanCode() {
+      wepy
+        .scanCode()
+        .then(res => {
+          console.log(res);
+          this.handleCodeRes(res.path);
+        })
+        .catch(err => console.error(err));
+    },
+    toggle() {
+      if (!this.open) {
+        this.handleOpen();
+      } else {
+        this.handleClose();
+      }
+    }
+  };
+
+  handleOpen() {
+    this.open = true;
+    this.isHoleOpen = true;
+    setTimeout(() => {
+      this.isOthersOpen = true;
+      this.$apply();
+    }, 1000);
+  }
+
+  handleClose() {
+    this.open = false;
+    setTimeout(() => {
+      this.isHoleOpen = false;
+      this.$apply();
+    }, 1000);
+    this.isOthersOpen = false;
+  }
+
+  onLoad(options) {
+    const scene = decodeURIComponent(options.scene);
+    this.handleScene(scene);
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+vendors = official
+
+flexbox()
+  display flex
+
+flex($values)
+  flex $values
+
+flexdiretion($direction = 'column')
+  flex-direction $direction
+
+order($val)
+  order $val
+
+#login-cloak
+  position absolute
+  top 0
+  bottom 0
+  left 0
+  right 0
+  z-index 100
+  flexbox()
+  .left-pane
+    position relative
+    background rgb(246, 246, 246)
+    border-right 15px solid rgb(250, 250, 250)
+    width 50%
+    // min-width 300px
+    flex(1 auto)
+    order(0)
+    transition-duration 700ms
+    &.open
+      width 0
+      transition-duration 700ms
+      min-width 0
+      margin-left -200px
+    &:after
+      position absolute
+      content ' '
+      top 0
+      bottom 0
+      right 0
+      width 1px
+      background rgb(178, 178, 178)
+    .keyhole
+      width 150px
+      height 150px
+      border 1px solid rgb(178, 178, 178)
+      border-radius 50%
+      background #fff
+      position absolute
+      top 40%
+      right -90px
+      z-index 100
+      flexbox()
+      justify-content center
+      .outer-circle
+        flex(1 auto)
+        order(0)
+        max-width 125px
+        height 125px
+        margin auto
+        border 1px solid rgb(178, 178, 178)
+        border-radius 50%
+        flexbox()
+        justify-content center
+        background rgb(40, 215, 255)
+        background linear-gradient(to bottom, rgba(40, 215, 255, 1) 19%, rgba(43, 163, 215, 1) 52%, rgb(60, 139, 194) 90%)
+        .inner-circle
+          flex(1 100%)
+          order(0)
+          max-width 100px
+          height 100px
+          background rgb(246, 246, 246)
+          margin auto
+          border 1px solid rgb(178, 178, 178)
+          border-radius 50%
+          flexbox()
+          justify-content center
+          .rect
+            position relative
+            flex(1 auto)
+            order(0)
+            max-width 20px
+            height 70px
+            background rgb(102, 102, 102)
+            margin auto
+            box-shadow inset 0 0 10px rgba(0, 0, 0, 0.8)
+            &:after
+              content ' '
+              position absolute
+              top 20px
+              left 0
+              width 0
+              height 0
+              border 5px solid rgba(0, 0, 0, 0)
+              border-left-color #F6F6F6
+            &:before
+              content ' '
+              position absolute
+              bottom 25px
+              right 0
+              width 0
+              height 0
+              border 5px solid rgba(0, 0, 0, 0)
+              border-right-color #F6F6F6
+            transition-duration 1s
+            &.open
+              transform rotate(180deg)
+              transition-duration 1s
+  .middle-pane
+    width 0
+    max-width 0
+    background rgba(0, 0, 0, 0)
+    border-left 1px solid rgb(178, 178, 178)
+    border-right 1px solid rgb(178, 178, 178)
+    flex(1 auto)
+    order(1)
+    transition-duration 700ms
+    &.open
+      width 150%
+      max-width 150%
+      transition-duration 700ms
+  .right-pane
+    background rgb(246, 246, 246)
+    border-left 15px solid rgb(250, 250, 250)
+    position relative
+    width 50%
+    flex(1 auto)
+    order(2)
+    transition-duration 700ms
+    &.open
+      transition-duration 700ms
+      width 0
+      margin-right -200px
+    &:before
+      position absolute
+      top 0
+      bottom 0
+      left 0
+      width 1px
+      content ' '
+      background rgb(178, 178, 178)
+
+.content
+  display flex
+  position relative
+  width 100vw
+  height 100vh
+  justify-content center
+  align-items center
+  background #f6f6f6
+  .header
+    position absolute
+    font-size 60rpx
+    top 20vh
+  .pomelo
+    width 150rpx
+    height 150rpx
+    animation rotating 5s linear infinite
+    @keyframes rotating
+      from
+        transform rotate(0deg)
+      to
+        transform rotate(360deg)
+</style>

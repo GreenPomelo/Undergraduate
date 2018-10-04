@@ -1,0 +1,363 @@
+<template>
+  <view class="mask-container" hidden="{{!open}}" animation="{{coverAnimation}}">
+    <view class="pay-container" @top.stop="prevent">
+      <image @tap.stop="closeModal" mode="widthFix" src="https://static.airbob.org/under-graduate//charge/btu_close.png" class="close" />
+      <view class="confirm" style="border-bottom:{{step===2?'0 none':'2rpx solid #E3E3E3'}}">{{step===0?'确认充值':''}}<text>{{step===1?'输入密码':''}}</text></view>
+      <block wx:if="{{step===0}}">
+        <view class="charge-text">￥ {{showCharge}}</view>
+        <view class="small-list">
+          <view class="text1">操作内容</view>
+          <view class="text2">{{operateContent}}</view>
+        </view>
+        <view class="small-list">
+          <view class="text1">充值方式</view>
+          <view class="text2">{{payWay}}</view>
+        </view>
+        <button class="enter-button" hover-class="button-click" @tap.stop="payNow">立即付款</button>
+      </block>
+      <block wx:if="{{step===1}}">
+        <Pw color="black" />
+      </block>
+      <block wx:if="{{step===2}}">
+        <image mode="widthFix" src="https://static.airbob.org/under-graduate//charge/card_pic_success.png" class="success" />
+        <view class="success-text">充值成功！</view>
+      </block>
+    </view>
+  </view>
+</template>
+
+<script>
+  // 支付流程
+  import wepy from "wepy";
+  import Pw from "./pwdfield";
+  export default class PayFlow extends wepy.component {
+    props = {
+      charge: {
+        default: 0,
+        type: [Number, String],
+        twoWay: true
+      },
+      payWay: String,
+      operateContent: String,
+      open: {
+        default: false,
+        type: Boolean,
+        twoWay: true
+      },
+      electricURL: {
+        type: String,
+        twoWay: true,
+        default: "" // 只有电费才用这个
+      },
+      type: String // 充值的类型 card net electric
+    };
+    components = {
+      Pw
+    };
+    data = {
+      step: 0, // or 1 2
+      coverAnimation: {},
+      password: "",
+      url: "",
+      showCharge: 0
+    };
+    watch = {
+      open: next => {
+        const coverAnimation = wepy.createAnimation({
+          timingFunction: "ease-in-out"
+        });
+        if (next) {
+          this.coverAnimation = coverAnimation
+            .backgroundColor("rgba(0,0,0,0.5)")
+            .step()
+            .export();
+        } else {
+          this.coverAnimation = coverAnimation
+            .backgroundColor("rgba(0,0,0,0)")
+            .step()
+            .export();
+        }
+        this.$invoke("Pw", "clear");
+        this.$apply();
+      },
+      charge: next => {
+        if (typeof next === "number") {
+          this.showCharge = next.toFixed(2);
+          this.$apply();
+        }
+      }
+    };
+    onLoad() {
+      this.url = this.$parent.$parent.globalData.requestUrl;
+    }
+    events = {
+      value: val => {
+        // 发起支付
+        this.password = val;
+        this.enterPay();
+        this.$apply();
+      }
+    };
+    handleGG() {
+      this.open = false;
+      this.step = 0;
+      this.$invoke("Pw", "clear");
+      this.$apply();
+    }
+    chargeCard() {
+      // 充值校园卡
+      wepy
+        .request({
+          url: `${this.url +
+            this.$parent.globalData.config.yourOwnCampusPay}?amt=${this.charge *
+            100}&password=${this.password}`,
+          method: "POST"
+        })
+        .then(res => {
+          wepy.hideLoading();
+          if (res.data.success) {
+            // 充值成功
+            const resData = JSON.parse(res.data.data);
+            if (resData.transfer.retcode === "0") {
+              this.step = 2;
+              this.$apply();
+            } else {
+              // 余额不足之类的
+              wepy
+                .showModal({
+                  content: resData.transfer.errmsg,
+                  confirmText: "知道了",
+                  showCancel: false,
+                  confirmColor: "#353535"
+                })
+                .then(res => {
+                  this.handleGG();
+                });
+            }
+          } else {
+            // 密码错误
+            wepy
+              .showModal({
+                content: "密码错误",
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#353535"
+              })
+              .then(res => {
+                this.handleGG();
+              });
+          }
+          this.$apply();
+        });
+    }
+    chatgeNet() {
+      // 充值网费
+      wepy
+        .request({
+          url: `${this.url +
+            this.$parent.globalData.config.internetPay}?tran=${this.charge *
+            100}&password=${this.password}`,
+          method: "POST"
+        })
+        .then(res => {
+          wepy.hideLoading();
+          if (res.data.success) {
+            // 密码正确的情况
+            const resData = JSON.parse(res.data.data);
+            if (resData.pay_net_gdc.retcode === "0") {
+              // 充值成功
+              this.step = 2;
+              this.$apply();
+            } else {
+              // 余额不足之类的\
+              wepy
+                .showModal({
+                  content: resData.pay_net_gdc.errmsg,
+                  confirmText: "知道了",
+                  showCancel: false,
+                  confirmColor: "#353535"
+                })
+                .then(res => {
+                  this.handleGG();
+                });
+            }
+          } else {
+            // 密码不正确的
+            wepy
+              .showModal({
+                content: "密码错误",
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#353535"
+              })
+              .then(res => {
+                this.handleGG();
+              });
+          }
+        });
+    }
+    async chargeEle() {
+      // 充值电费
+      wepy
+        .request({
+          url: `${this.url + this.$parent.globalData.config.electricityPay}?${
+            this.electricURL
+          }&tran=${this.charge * 100}&password=${this.password}`,
+          method: "POST"
+        })
+        .then(res => {
+          wepy.hideLoading();
+          if (res.data.success) {
+            // 密码正确的情况
+            const resData = JSON.parse(res.data.data);
+            if (resData.pay_elec_gdc.retcode === "0") {
+              // 充值成功
+              this.step = 2;
+              this.$apply();
+            } else {
+              // 余额不足之类
+              wepy
+                .showModal({
+                  content: resData.pay_elec_gdc.errmsg,
+                  confirmText: "知道了",
+                  showCancel: false,
+                  confirmColor: "#353535"
+                })
+                .then(res => {
+                  this.handleGG();
+                });
+            }
+          } else {
+            // 密码不正确
+            wepy
+              .showModal({
+                content: "密码错误",
+                confirmText: "知道了",
+                showCancel: false,
+                confirmColor: "#353535"
+              })
+              .then(res => {
+                this.handleGG();
+              });
+          }
+        });
+    }
+    methods = {
+      prevent() {},
+      closeModal() {
+        this.handleGG();
+      },
+      payNow() {
+        // 校验
+        if (!isNaN(this.charge) && this.charge > 0) {
+          this.step = 1; // 输入密码
+        } else {
+          wepy
+            .showModal({
+              content: "金额错误",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            })
+            .then(res => {
+              this.charge = "";
+            });
+        }
+      }
+    };
+    enterPay() {
+      wepy.showLoading({
+        title: "正在发起支付"
+      });
+      switch (this.type) {
+        case "card":
+          this.chargeCard();
+          break;
+        case "net":
+          this.chatgeNet();
+          break;
+        case "electric":
+          this.chargeEle();
+          break;
+      }
+    }
+  }
+</script>
+
+
+<style lang="stylus" scoped>
+.mask-container
+  width 100vw
+  height 100vh
+  position fixed
+  bottom 0
+  background-color rgba(0,0,0,0.5)
+  z-index 100
+  .pay-container
+    position absolute
+    bottom 0
+    height 770rpx
+    background-color rgb(255,255,255)
+    display flex
+    flex-direction column
+    align-items center
+    width 100%
+    .close
+      width 35rpx
+      position absolute
+      top 25rpx
+      left 22rpx
+    .charge-text
+      font-size 80rpx
+      color #353535
+      font-weight bold
+      margin 35rpx 0 60rpx
+    .confirm
+      width 100%
+      height 82rpx
+      line-height 82rpx
+      // text-align center
+      justify-content center
+      display flex
+    .success
+      width 355rpx
+      margin 45rpx 0 -24rpx
+    .success-text
+      font-size 34rpx
+      color #353535
+      border-bottom 1rpx solid black
+    .input-password
+      font-size 27rpx
+      border-bottom 2rpx solid black
+      width 438rpx
+      text-align center
+      margin-top 84rpx
+    .small-list
+      display flex
+      justify-content space-between
+      width 90%
+      border-bottom 2rpx solid #E3E3E3
+      height 60rpx
+      line-height 60rpx
+      .text1
+        font-size 30rpx
+        color #888888
+      .text2
+        font-size 30rpx
+        color #353535
+    .enter-button
+      background #47cff5
+      border-radius 120rpx
+      height 74rpx
+      line-height 74rpx
+      font-size 32rpx
+      width 96%
+      color rgb(255,255,255)
+      margin-top 100rpx
+      &:after
+        border none
+    .button-click
+      background-image none
+      background-color #D0F5FF
+</style>
+

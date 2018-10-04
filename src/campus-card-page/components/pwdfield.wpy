@@ -1,0 +1,86 @@
+<template>
+  <view class="band-pwdfield" style="border-color:{{color}};">
+    <input focus="{{focus}}" type="number" class="band-pwdfield-input" maxlength="6" password="{{!display}}" @input="handleInput" selection-start="-100" selection-end="-100" />
+    <repeat for="{{6}}" item="i">
+      <view class="band-pwdfield-item">
+        {{display ? currentValue[i] : secret[i]}}
+      </view>
+    </repeat>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class PwdField extends wepy.component {
+  props = {
+    display: {
+      type: Boolean,
+      default: false
+    },
+    color: String
+  };
+  data = {
+    currentValue: "",
+    secret: "",
+    focus: true
+  };
+  watch = {
+    currentValue: val => {
+      // 6位触发支付
+      if (val.length === 0) return (this.secret = "");
+      const l = val => (val === 1 ? "●" : "●" + l(val - 1));
+      this.secret = l(val.length);
+      if (val.length === 6) {
+        this.$emit("value", val);
+      }
+    }
+  };
+  onLoad() {}
+  methods = {
+    handleInput(e) {
+      if (e.detail.value.length <= 6) {
+        this.currentValue = e.detail.value;
+      }
+    }
+  };
+  clear() {
+    this.currentValue = "";
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.band-pwdfield
+  position relative
+  display flex
+  flex-direction row
+  align-items center
+  margin-top 76rpx
+  .band-pwdfield-input
+    z-index: 0
+    position: absolute
+    top 0
+    left -100%
+    width 200%
+    height 100%
+    opacity 0
+    font-size 1rpx
+    color transparent
+    caret-color transparent
+    text-align left
+ .band-pwdfield-item
+    flex 1
+    display flex
+    align-items center
+    justify-content center 
+    border-radius 8rpx
+    margin-right 8rpx
+    border 1rpx solid #999ca0
+    color inherit
+    width 90rpx
+    height 90rpx
+  .band-pwdfield-item:last-child
+    margin-right 0
+</style>
+

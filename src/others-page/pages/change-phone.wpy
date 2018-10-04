@@ -1,0 +1,244 @@
+<template>
+  <view class="container">
+    <view class="toggle-body {{centerBody}}">
+      <view class="content-body">
+        <view class="container-main">
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/%E5%AF%86%E7%A0%81.png"/>
+            <input type="password" @input="getPassword" class="input" placeholder="请输入初次绑定的正方密码" />
+          </view>
+          <view class="login-btn" @tap="getCheck">验证密码</view>
+        </view>
+      </view>
+      <view class="content-body">
+        <view class="container-main">
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
+            <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+          </view>
+          <view class="input-container">
+            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/verification.png"/>
+            <input type="number" @input="getVertication" class="input" placeholder="请输入验证码" maxlength="6"/>
+            <button class="input-after {{flag ? '' : 'btn-disabled'}}" @tap="fetchVertication">{{verticationMsg}}</button>
+          </view>
+          <view class="login-btn" @tap="goLogin">下一步</view>
+        </view>
+      </view>
+      <view class="content-body">
+        <view class="container-main">
+          <view class="success-container">
+            <view class="image-container"></view>
+            <view class="change-success">修改成功^-^</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from "wepy";
+
+export default class ChangePhone extends wepy.page {
+  config = {
+    navigationBarTitleText: "更改绑定手机"
+  };
+  mixins = [];
+
+  data = {
+    step: 0,
+    verticationMsg: "请输入验证码",
+    zfPassword: "",
+    phoneNumber: "",
+    flag: true,
+    vertication: ""
+  };
+
+  methods = {
+    getVertication(e) {
+      this.vertication = e.detail.value;
+    },
+    getCheck() {
+      let that = this;
+      wepy.showLoading("请求中");
+      wepy
+        .request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.changePhone}`,
+          method: "GET",
+          data: {
+            password: this.zfPassword
+          }
+        })
+        .then(res => {
+          wepy.hideLoading();
+          if (!res.data.success || !res.data.data) {
+            that.$parent.showTip("不知道为什么失败了呢～");
+          } else {
+            that.step = 1;
+            that.$apply();
+          }
+        });
+    },
+    async goLogin() {
+      wepy.showLoading("请求中");
+      const res = await wepy.request({
+        url: `${this.$parent.globalData.requestUrl +
+          this.$parent.globalData.config.checkPhone}`,
+        method: "GET",
+        data: {
+          code: this.vertication
+        }
+      });
+      if (res.data.data) {
+        const response = await wepy.request({
+          url: `${this.$parent.globalData.requestUrl +
+            this.$parent.globalData.config.userInformation}`,
+          method: "GET"
+        });
+        wepy.hideLoading();
+        wepy.setStorageSync("User", response.data.data);
+        this.step = 2;
+        this.$apply();
+      }
+    },
+    getPassword(e) {
+      this.zfPassword = e.detail.value;
+    },
+    getNumber(e) {
+      this.phoneNumber = e.detail.value;
+    },
+    fetchVertication() {
+      if (this.phoneNumber.trim().length === 0) {
+        this.$parent.showTip("手机号不能为空");
+      } else {
+        // 60s
+        if (this.flag) {
+          this.flag = false;
+          let count = 60;
+          let t = setInterval(() => {
+            this.verticationMsg = `${--count}s`;
+            if (count === 0) {
+              clearInterval(t);
+              this.verticationMsg = "获取验证码";
+              this.flag = true;
+            }
+            this.$apply();
+          }, 1000);
+          wepy
+            .request({
+              url: `${this.$parent.globalData.requestUrl +
+                this.$parent.globalData.config.changePhoneVerification}`,
+              method: "POST",
+              data: {
+                phoneNumber: this.phoneNumber
+              }
+            })
+            .then(res => {
+              if (!res.data.data) {
+                this.$parent.showTip(res.data.errMsg);
+              }
+            });
+        }
+      }
+    }
+  };
+  computed = {
+    centerBody() {
+      switch (this.step) {
+        case 0:
+          return "zf-step";
+        case 1:
+          return "sms-step";
+        case 2:
+          return "success-step";
+        default:
+          return "zf-step";
+      }
+    }
+  };
+
+  onLoad() {}
+}
+</script>
+<style lang="stylus" scoped>
+.toggle-body
+  display flex
+  width 300vw
+  transition all 0.5s
+
+.zf-step
+  transform translateX(0vw)
+
+.sms-step
+  transform translateX(-100vw)
+
+.success-step
+  transform translateX(-200vw)
+
+.container
+  display flex
+  align-items center
+  min-height 90vh
+  .content-body
+    width 100vw
+    .success-container
+      display flex
+      justify-content center
+      align-items center
+      flex-wrap wrap
+      .image-container
+        width 750rpx
+        height 148rpx
+        background-image url('https://static.airbob.org/under-graduate/%E6%88%90%E5%8A%9F.png')
+        background-size contain
+        background-position center
+        background-repeat no-repeat
+      .change-success
+        width 750rpx
+        text-align center
+        font-family PingFangSC-Regular
+        font-size 36rpx
+        margin-top 32rpx
+        color #888888
+    .login-btn
+      height 74rpx
+      width 586rpx
+      margin 90rpx auto 40rpx
+      line-height 74rpx
+      color #fff
+      font-size 32rpx
+      text-align center
+      border-radius 50rpx
+      background linear-gradient(45deg, #abdcff 0%, #6ae4ff 100%)
+    .input-container
+      display flex
+      width 586rpx
+      margin 30rpx auto 0
+      padding-bottom 6rpx
+      border-bottom 1rpx solid #F2F2F2
+      align-items center
+      .input-image
+        width 26rpx
+        height 40rpx
+        margin-right 20rpx
+      .input
+        font-size 28rpx
+        flex 1
+      .input-after
+        width 160rpx
+        height 45rpx
+        margin-left 20rpx
+        padding 0
+        background linear-gradient(-225deg, #ABDCFF 0%, #6AE4FF 100%)
+        color #fff
+        font-size 24rpx
+        line-height 45rpx
+        text-align center
+        border-radius 30rpx
+        &:after
+          border 0
+
+.btn-disabled
+  background #D0F5FF !important
+</style>
+

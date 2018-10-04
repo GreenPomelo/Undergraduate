@@ -1,0 +1,313 @@
+<template lang="pug">
+view.gpa
+  view.header
+    view.banner-wrapper
+      image.banner(src="https://static.airbob.org/under-graduate/gpa/gpa_pic_blackboard.png")
+    view.info-wrapper
+      text.title GPA:
+      text.gpa-number {{gpa}}
+      text.credit 已修学分：{{credits}}（除任选课）
+
+  view.gap
+
+  view.custom-score-wrapper
+    repeat(for="{{customScores}}" key="key" index="index" item="score")
+      custom-score( :score="score" @modifyCredit.user="handleCreditInput" @modifyCustomScore.user="handleCustomScore" @modifyName.user="handleCourseNameInput" @close.user="closeCustomScore")
+
+
+  view.card-wrapper
+    repeat(for="{{scores}}" key="key" index="index" item="score")
+      card( :termScores.sync="score" :scoreItemHeight.sync="scoreItemHeight" @delete.user="deleteScore" @modifyScore.user="handleScoreInput")
+
+view.footer
+  view.add-btn( @tap="addCouse") 添加课程
+  view.calculate-btn( @tap="calculateGPA") 查看 GPA
+</template>
+
+<script>
+import wepy from "wepy";
+import GpaCard from "../components/GpaCard";
+import GpaCustomScore from "../components/GpaCustomScore";
+import GpaMixin from "../../mixins/Gpa/Gpa.js";
+
+export default class GPACalculator extends wepy.page {
+  config = {
+    navigationBarTitleText: "GPA计算器",
+    navigationBarBackgroundColor: "#ffffff",
+    navigationBarTextStyle: "black"
+  };
+
+  data = {
+    credits: 0, // 总学分
+    sumOfCreditMultiplyPoint: 0, // 总（学分 * 单科绩点）
+    scores: [], // 所有成绩
+    customScores: [], // 自定义成绩
+    scoreItemHeight: null,
+    screenWidth: null
+  };
+
+  components = {
+    card: GpaCard,
+    "custom-score": GpaCustomScore
+  };
+
+  mixins = [GpaMixin];
+
+  computed = {
+    gpa() {
+      const avePoint = this.sumOfCreditMultiplyPoint / this.credits;
+      return Number.isNaN(avePoint) ? `计算中...` : avePoint.toFixed(2);
+    }
+  };
+
+  methods = {
+    // 新增自定义课程
+    addCouse() {
+      this.customScores.unshift({
+        id: Math.floor(Math.random() * 100000), // 用于删除的判断
+        name: ``,
+        credit: 0,
+        point: 0,
+        score: 0
+      });
+      this.scrollToTop();
+    },
+
+    calculateGPA() {
+      this.scrollToTop();
+    },
+
+    // 删课
+    deleteScore(credit, point, isOptionalCourses) {
+      if (isOptionalCourses) {
+        return;
+      }
+      credit = Number(credit);
+      this.handleModifyScore(-credit * point, -credit);
+    },
+
+    // 处理学分输入的逻辑
+    handleCreditInput(i, newCredit) {
+      const scoreItem = this.customScores[i];
+      const { credit: oldCredit, point: oldPoint } = scoreItem;
+      scoreItem.credit = newCredit;
+
+      this.handleModifyScore(
+        (newCredit - oldCredit) * oldPoint,
+        newCredit - oldCredit
+      );
+    },
+
+    // 处理成绩输入的逻辑
+    handleCustomScore(i, score) {
+      const scoreItem = this.customScores[i];
+      const { credit: oldCredit, point: oldPoint } = scoreItem;
+      scoreItem.score = score;
+      const newPoint = score < 60 ? 0 : (Number(score) - 50) / 10;
+      scoreItem.point = newPoint;
+
+      this.handleModifyScore((newPoint - oldPoint) * oldCredit, 0);
+    },
+
+    handleScoreInput(i, name, score, isOptionalCourses) {
+      const item = this.scores[i].scores.find(x => x.name === name);
+      item.score = score;
+      if (isOptionalCourses) return;
+
+      const { point: oldPoint, credit: oldCredit } = item;
+      const newPoint = score < 60 ? 0 : (Number(score) - 50) / 10;
+      item.point = newPoint;
+
+      this.handleModifyScore((newPoint - oldPoint) * oldCredit, 0);
+    },
+
+    // 处理课程名输入的逻辑
+    handleCourseNameInput(i, name) {
+      this.customScores[i].name = name;
+    },
+
+    // 删除自定义成绩
+    closeCustomScore(id) {
+      const scores = this.customScores;
+      for (let i = 0; i < scores.length; i++) {
+        if (scores[i].id === id) {
+          const { credit, point } = scores[i];
+          this.handleModifyScore(-credit * point, -credit);
+          scores.splice(i, 1);
+        }
+      }
+    }
+  };
+
+  // 获取成绩
+  getScore() {
+    return wepy.request({
+      url:
+        this.$parent.globalData.requestUrl +
+        this.$parent.globalData.config.getUserGrade
+    });
+  }
+
+  // 初始化成绩数据
+  async initData() {
+    if (this.hasData()) {
+      const { credits, scores, sumOfCreditMultiplyPoint } = this.handleScores();
+
+      this.handleFirstScores(scores[0]);
+      this.mountData(credits, scores, sumOfCreditMultiplyPoint);
+      this.$apply();
+
+      this.setScoreItemHeight();
+    } else {
+      const { data: res } = await this.getScore();
+
+      if (res.success === true) {
+        const { data } = res;
+        const { credits, scores, sumOfCreditMultiplyPoint } = this.handleScores(
+          data.score
+        );
+
+        this.handleFirstScores(scores[0]);
+        this.mountData(credits, scores, sumOfCreditMultiplyPoint);
+        this.$apply();
+
+        this.setScoreItemHeight();
+      } else {
+        return false;
+      }
+    }
+  }
+
+  mountData(credits, scores, sumOfCreditMultiplyPoint) {
+    this.credits = credits;
+    this.scores = scores;
+    this.sumOfCreditMultiplyPoint = sumOfCreditMultiplyPoint;
+  }
+
+  scrollToTop() {
+    wepy.pageScrollTo({
+      scrollTop: 0,
+      duration: 500
+    });
+  }
+
+  handleFirstScores(score) {
+    score.isFolded = false; // 打开第一张卡片
+    score.showGuide = 1;
+    setTimeout(() => {
+      score.showGuide = 0;
+      this.$apply();
+    }, 4000);
+    setTimeout(() => {
+      score.showGuide = -1;
+      this.$apply();
+    }, 4500);
+  }
+
+  async getScoreItemHeight() {
+    const { screenWidth } = await wepy.getSystemInfo();
+    this.screenWidth = screenWidth;
+
+    wepy
+      .createSelectorQuery()
+      .select(".score-item")
+      .boundingClientRect()
+      .exec(res => {
+        if (res[0] !== null) {
+          this.scoreItemHeight = res[0].height;
+          this.$apply();
+        }
+      });
+  }
+
+  setScoreItemHeight() {
+    let timer = setInterval(() => {
+      this.getScoreItemHeight();
+
+      if (this.scoreItemHeight !== null && this.screenWidth !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }, 100);
+  }
+
+  // 页面加载的时候请求成绩数据
+  onLoad() {
+    this.initData();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.gpa
+  .header
+    position relative
+    padding-top 30rpx
+    .banner-wrapper
+      display flex
+      position relative
+      z-index -1
+      width 100%
+      justify-content center
+      .banner
+        width 680rpx
+        height 250rpx
+        border-radius 24rpx
+        box-shadow 0 3rpx 18rpx rgba(0, 0, 0, 0.117647), 0 3rpx 12rpx rgba(0, 0, 0, 0.117647)
+    .info-wrapper
+      position absolute
+      display flex
+      top 30rpx
+      padding 16rpx 50rpx
+      z-index 1
+      width 100%
+      height calc(100% - 30rpx)
+      box-sizing border-box
+      flex-direction column
+      justify-content space-around
+      text
+        display block
+        text-align center
+        font-weight bold
+        color #fff
+      .title
+        font-size 36rpx
+        line-height 36rpx
+      .gpa-number
+        margin-top -16rpx
+        font-size 100rpx
+        line-height 88rpx
+      .credit
+        font-size 24rpx
+        line-height 24rpx
+  .gap
+    margin 60rpx 0 30rpx 0
+    height 20rpx
+    background #f5f5f5
+  .custom-score-wrapper
+    margin 0 20rpx 0 20rpx
+  .card-wrapper
+    margin 0 20rpx
+    padding-bottom 120rpx
+
+.footer
+  display flex
+  position fixed
+  z-index 4
+  bottom 0
+  width 100%
+  height 100rpx
+  .add-btn,
+  .calculate-btn
+    display flex
+    flex 1
+    font-size 36rpx
+    font-weight bold
+    color #fff
+    justify-content center
+    align-items center
+  .add-btn
+    background linear-gradient(-45deg, #ff9c77, #ffe388)
+  .calculate-btn
+    background linear-gradient(-225deg, #aaee7b, #5ae090)
+</style>

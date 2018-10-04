@@ -1,0 +1,40 @@
+<template>
+  <view class="container">
+    <view>
+      <view class="image-container">
+        <image src="https://static.airbob.org/under-graduate/pic_stop%20service.png" style="width:400rpx;height:244rpx" mode="aspecfFit"/>
+      </view>
+      <view class="words">该功能暂时暂停服务，若有不便请见谅！</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class Course extends wepy.page {
+  config = {
+    navigationBarTitleText: "暂停服务"
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  height 80vh
+  display flex
+  flex-direction center
+  align-items center
+  justify-content center
+  .image-container
+    width 400rpx
+    height 244rpx
+    margin 0 auto
+  .words
+    margin-top 60rpx
+    text-align center
+    font-family PingFangSC-Regular
+    font-size 28rpx
+    color #999CA0
+    letter-spacing: 0.11rpx
+</style>
