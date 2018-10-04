@@ -39,7 +39,7 @@
         <a href="https://github.com/flytam">@flytam</a>
       </td>
       <td align="center" valign="top">
-        <img width="128" height="128" src="https://github.com/niffler-bkkkkk?s=128">
+        <img width="128" height="128" src="https://github.com/niffler-bkkkkk.png?s=128">
         <br>
         <a href="https://github.com/niffler-bkkkkk">@niffler-bkkkkk</a>
       </td>
