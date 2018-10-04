@@ -16,7 +16,7 @@
 本项目使用开源许可证 `License AGPLv3` ，代码开源仅供学习。
 
 ##### 青柚工作室开源计划：
-希望能够将实战中的技术成果回报社区，并且鼓励社区为这个项目做出贡献，大家可以通过 `pr` 的方式帮我们解决目前存在的不足，或者通过 `issure` 告知我们。
+希望能够将实战中的技术成果回报社区，并且鼓励社区为这个项目做出贡献，大家可以通过 `pr` 的方式帮我们解决目前存在的不足，或者通过 `issue` 告知我们。
 
 ## Core Team
 
@@ -42,8 +42,7 @@
         <p>Campus-card-page & Examination</p>
       </td>
       <td align="center" valign="top">
-        <img width="128" height="128" src="https://github.com/
-niffler-bkkkkk.png?s=128">
+        <img width="128" height="128" src="https://github.com/niffler-bkkkkk.png?s=128">
         <br>
         <a href="https://github.com/
 niffler-bkkkkk">@
