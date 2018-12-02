@@ -1,0 +1,347 @@
+<template>
+  <view class="nicp-check-in">
+    <view id="login-cloak">
+      <view class="left-pane {{ isOthersOpen ? 'open' : '' }}">
+        <view class="keyhole" @tap="scanCode">
+          <view class="outer-circle">
+            <view class="inner-circle">
+              <view class="rect {{ isHoleOpen ? 'open' : '' }}"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="middle-pane {{ isOthersOpen ? 'open' : '' }}" @tap="viewMore"></view>
+      <view class="right-pane {{ isOthersOpen ? 'open' : '' }}"></view>
+    </view>
+
+    <view class="content">
+      <view class="logo">
+        <image class="logo-image" src="https://static.airbob.org/nicp/cxb_logo.png"/>
+      </view>
+      <view class="checked">
+        <image class="checked-image" src="https://static.airbob.org/nicp/right.png" mode="widthFix"/>
+      </view>
+      <view class="info">{{ userInfo.studentId }} {{ userInfo.name }}</view>
+      <view class="time">{{ now }}</view>
+      <view class="more">
+        <button @tap="viewMore">查看更多创新杯信息</button>
+      </view>
+      <view class="qy-logo">
+        <image class="pomelo" src="https://static.airbob.org/report-2018-06/logo-min.png"/>
+      </view>
+    </view>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+import qs from "qs";
+
+export default class NicpVote extends wepy.page {
+  config = {
+    navigationBarTitleText: "创新杯签到",
+    navigationBarBackgroundColor: "#ecd6e8"
+  };
+
+  data = {
+    open: false,
+    isHoleOpen: false,
+    isOthersOpen: false,
+    userInfo: null,
+    now: ""
+  };
+
+  ejectParamsFromPath(path) {
+    return path
+      .split("?")[1]
+      .split("&")
+      .map(item => ({
+        key: item.split("=")[0],
+        value: item.split("=")[1]
+      }));
+  }
+
+  handleCodeRes(path) {
+    const params = this.ejectParamsFromPath(path);
+    this.handleScene(params.find(({ key }) => key === "scene").value);
+  }
+
+  checkLogin() {
+    if (wepy.getStorageSync("token") === "") {
+      wepy.redirectTo({ url: "/others-page/pages/login" });
+    }
+  }
+
+  async handleScene(sceneValue) {
+    console.log(sceneValue);
+    if (sceneValue === "undefined") {
+      return;
+    }
+    const type = sceneValue.split("@")[1];
+    if (type !== "1") {
+      console.error("二维码 type 不为 1");
+      return;
+    }
+    const sessionId = wepy.getStorageSync("token");
+    const timestamp = Math.floor(Date.now() / 1000);
+    const params = { type, scene: sceneValue, timestamp };
+    console.log(params);
+
+    try {
+      const {
+        data: { success, ...err }
+      } = await this.$parent.axios.post(
+        "https://wechat.njupt.edu.cn/nicp/addEntry",
+        qs.stringify(params),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        }
+      );
+
+      if (success) {
+        console.log("签到成功");
+        this.handleOpen();
+      } else {
+        if (err.errCode === 8) {
+          wepy.redirectTo({ url: "../../pages/login" });
+        }
+        console.error(err);
+        wepy.showToast({
+          title: err.errMsg,
+          icon: "none",
+          duration: 2000
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  methods = {
+    scanCode() {
+      wepy
+        .scanCode()
+        .then(res => {
+          console.log(res);
+          this.handleCodeRes(res.path);
+        })
+        .catch(err => console.error(err));
+    },
+    viewMore() {
+      wepy.navigateTo({ url: "./nicp-more" });
+    }
+  };
+
+  handleOpen() {
+    this.open = true;
+    this.isHoleOpen = true;
+    setTimeout(() => {
+      this.isOthersOpen = true;
+      this.$apply();
+    }, 1000);
+  }
+
+  onLoad(options) {
+    this.checkLogin();
+    const scene = decodeURIComponent(options.scene);
+    this.handleScene(scene);
+    this.userInfo = wepy.getStorageSync("userInfo");
+    const date = new Date();
+    this.now = date.toLocaleString("zh-CN");
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+vendors = official
+
+flexbox()
+  display flex
+
+flex($values)
+  flex $values
+
+flexdiretion($direction = 'column')
+  flex-direction $direction
+
+order($val)
+  order $val
+
+#login-cloak
+  position absolute
+  top 0
+  bottom 0
+  left 0
+  right 0
+  z-index 100
+  flexbox()
+  .left-pane
+    position relative
+    background rgb(246, 246, 246)
+    border-right 15px solid rgb(250, 250, 250)
+    width 50%
+    // min-width 300px
+    flex(1 auto)
+    order(0)
+    transition-duration 700ms
+    &.open
+      width 0
+      transition-duration 700ms
+      min-width 0
+      margin-left -200px
+    &:after
+      position absolute
+      content ' '
+      top 0
+      bottom 0
+      right 0
+      width 1px
+      background rgb(178, 178, 178)
+    .keyhole
+      width 150px
+      height 150px
+      border 1px solid rgb(178, 178, 178)
+      border-radius 50%
+      background #fff
+      position absolute
+      top 40%
+      right -90px
+      z-index 100
+      flexbox()
+      justify-content center
+      .outer-circle
+        flex(1 auto)
+        order(0)
+        max-width 125px
+        height 125px
+        margin auto
+        border 1px solid rgb(178, 178, 178)
+        border-radius 50%
+        flexbox()
+        justify-content center
+        background rgb(40, 215, 255)
+        background linear-gradient(to bottom, rgba(40, 215, 255, 1) 19%, rgba(43, 163, 215, 1) 52%, rgb(60, 139, 194) 90%)
+        .inner-circle
+          flex(1 100%)
+          order(0)
+          max-width 100px
+          height 100px
+          background rgb(246, 246, 246)
+          margin auto
+          border 1px solid rgb(178, 178, 178)
+          border-radius 50%
+          flexbox()
+          justify-content center
+          .rect
+            position relative
+            flex(1 auto)
+            order(0)
+            max-width 20px
+            height 70px
+            background rgb(102, 102, 102)
+            margin auto
+            box-shadow inset 0 0 10px rgba(0, 0, 0, 0.8)
+            &:after
+              content ' '
+              position absolute
+              top 20px
+              left 0
+              width 0
+              height 0
+              border 5px solid rgba(0, 0, 0, 0)
+              border-left-color #F6F6F6
+            &:before
+              content ' '
+              position absolute
+              bottom 25px
+              right 0
+              width 0
+              height 0
+              border 5px solid rgba(0, 0, 0, 0)
+              border-right-color #F6F6F6
+            transition-duration 1s
+            &.open
+              transform rotate(180deg)
+              transition-duration 1s
+  .middle-pane
+    width 0
+    max-width 0
+    background rgba(0, 0, 0, 0)
+    border-left 1px solid rgb(178, 178, 178)
+    border-right 1px solid rgb(178, 178, 178)
+    flex(1 auto)
+    order(1)
+    transition-duration 700ms
+    &.open
+      width 150%
+      max-width 150%
+      transition-duration 700ms
+  .right-pane
+    background rgb(246, 246, 246)
+    border-left 15px solid rgb(250, 250, 250)
+    position relative
+    width 50%
+    flex(1 auto)
+    order(2)
+    transition-duration 700ms
+    &.open
+      transition-duration 700ms
+      width 0
+      margin-right -200px
+    &:before
+      position absolute
+      top 0
+      bottom 0
+      left 0
+      width 1px
+      content ' '
+      background rgb(178, 178, 178)
+
+.content
+  position relative
+  width 100vw
+  height 100vh
+  background url('https://static.airbob.org/nicp/bg.png')
+  background-size cover
+  background-position bottom
+  .logo,
+  .checked,
+  .info,
+  .time
+    text-align center
+  .logo
+    padding-top 10vh
+    width 100%
+    .logo-image
+      width 24vw
+      height 24vw
+  .checked
+    margin-top 6vh
+    width 100%
+    .checked-image
+      width 40vw
+  .info
+    margin-top 4vh
+  .info, .time
+    line-height 1.5
+  .more
+    margin-top 6vh
+    button
+      width 500rpx
+  .pomelo
+    position absolute
+    right 2vw
+    bottom 2vw
+    width 50rpx
+    height 50rpx
+    animation rotating 5s linear infinite
+    @keyframes rotating
+      from
+        transform rotate(0deg)
+      to
+        transform rotate(360deg)
+</style>

@@ -26,6 +26,7 @@
 <script>
 import wepy from "wepy";
 import card from "../components/card";
+import { getUserGrade, getSupplyment, getYourOwnExam } from "@/api/education";
 // import QyNav from "@/components/qy-navigation";
 // import QyContainer from "@/components/qy-container";
 export default class SupplementAndTutorials extends wepy.page {
@@ -94,77 +95,61 @@ export default class SupplementAndTutorials extends wepy.page {
   };
   getData() {
     // 获取挂了的学分
-    wepy
-      .request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getUserGrade}`
-      })
-      .then(res => {
-        if (res.data.success) {
-          this.credit =
-            Number(res.data.data.creditSelected) -
-            Number(res.data.data.creditGained);
-          this.$apply();
-        }
-      });
+    getUserGrade().then(res => {
+      if (res.data) {
+        this.credit =
+          Number(res.data.data.creditSelected) -
+          Number(res.data.data.creditGained);
+        this.$apply();
+      }
+    });
 
     // 获取辅导课
-    wepy
-      .request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getSupplyment}`
-      })
-      .then(res => {
-        // console.log(res.data.data.courseDate.split(" "));
-        if (res.statusCode === 200) {
-          if (res.data.data != null) {
-            const requestData = res.data.data.map(x => {
-              const year = x.courseDate.split("年")[0];
-              const month = x.courseDate.split("年")[1].split(`月`)[0];
-              const day = x.courseDate
-                .split("年")[1]
-                .split(`月`)[1]
-                .split(`日`)[0];
-              const times = x.courseDate
-                .split("年")[1]
-                .split(`月`)[1]
-                .split(`日`)[1];
-              const time = times.substring(1, times.length - 1);
-              const formatDate = `${year}.${month}.${day}`;
-              x.examDate = formatDate;
-              x.examPosition = x.coursePosition;
-              x.examTime = `${time}`;
-              return x;
-            });
-            this.tutorials = requestData;
-            // 9月3日（8:00-11:00）
-            this.$apply();
-          }
-        }
-      });
-    // 获取补考
-    wepy
-      .request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getYourOwnExam}?type=1`
-      })
-      .then(res => {
-        if (res.statusCode === 200) {
-          const requestData = res.data.data;
-          const formatData = requestData.map(x => {
-            let formatDate = new Date(x.examDate);
-            let minute =
-              formatDate.getMinutes() === 0 ? "00" : formatDate.getMinutes();
-            const examTime = `${formatDate.getHours()}:${minute}`;
-            formatDate = `${formatDate.getFullYear()}年${formatDate.getMonth() +
-              1}月${formatDate.getDate()}日`;
+    getSupplyment().then(res => {
+      if (res.statusCode === 200) {
+        if (res.data.data != null) {
+          const requestData = res.data.data.map(x => {
+            const year = x.courseDate.split("年")[0];
+            const month = x.courseDate.split("年")[1].split(`月`)[0];
+            const day = x.courseDate
+              .split("年")[1]
+              .split(`月`)[1]
+              .split(`日`)[0];
+            const times = x.courseDate
+              .split("年")[1]
+              .split(`月`)[1]
+              .split(`日`)[1];
+            const time = times.substring(1, times.length - 1);
+            const formatDate = `${year}.${month}.${day}`;
             x.examDate = formatDate;
-            x.examTime = examTime;
+            x.examPosition = x.coursePosition;
+            x.examTime = `${time}`;
             return x;
           });
-          this.supplements = formatData;
+          this.tutorials = requestData;
+          // 9月3日（8:00-11:00）
+          this.$apply();
         }
-      });
+      }
+    });
+    // 获取补考
+    getYourOwnExam(1).then(res => {
+      if (res.statusCode === 200) {
+        const requestData = res.data.data;
+        const formatData = requestData.map(x => {
+          let formatDate = new Date(x.examDate);
+          let minute =
+            formatDate.getMinutes() === 0 ? "00" : formatDate.getMinutes();
+          const examTime = `${formatDate.getHours()}:${minute}`;
+          formatDate = `${formatDate.getFullYear()}年${formatDate.getMonth() +
+            1}月${formatDate.getDate()}日`;
+          x.examDate = formatDate;
+          x.examTime = examTime;
+          return x;
+        });
+        this.supplements = formatData;
+      }
+    });
   }
 }
 </script>

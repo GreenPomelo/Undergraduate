@@ -40,7 +40,7 @@
 
 <script>
 import wepy from "wepy";
-
+import { getExercise } from "@/api/common";
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "晨跑"
@@ -56,11 +56,7 @@ export default class extends wepy.page {
   async onLoad() {
     let reg = /[\u4e00-\u9fa5]/;
     let that = this;
-    let runtime = await wepy.request({
-      url:
-        that.$parent.globalData.requestUrl +
-        that.$parent.globalData.config.getExercise
-    });
+    let runtime = await getExercise();
     that.runTimes = runtime.data.data.totalCount;
     that.maxCount = runtime.data.data.maxCount;
     that.Rank = parseInt(runtime.data.data.rankingPercent * 100) + "%";
@@ -88,7 +84,8 @@ export default class extends wepy.page {
           parseInt((start[3] - end[3]) * 60) +
             parseInt(start[4]) -
             parseInt(end[4])
-        ) <= (wepy.getStorageSync("userInfo").gender === "男" ? 10 : 12);
+        ) <=
+        (wepy.getStorageSync("User").nativeInformation.gender === 0 ? 13 : 11);
       that.runDetails.push({
         date: start[0] + "-" + start[1] + "-" + start[2],
         time: time,
@@ -99,8 +96,8 @@ export default class extends wepy.page {
     function CIRCLE() {
       return new Promise(resolve => {
         for (let i = 0; i < 60; i++) {
-          let left = 240 * Math.sin(6 * i / 180 * Math.PI);
-          let top = 240 - 240 * Math.cos(6 * i / 180 * Math.PI);
+          let left = 240 * Math.sin(((6 * i) / 180) * Math.PI);
+          let top = 240 - 240 * Math.cos(((6 * i) / 180) * Math.PI);
           let color = "#D0F5FF";
           let height = 24;
           if (i % 15 === 0) {
@@ -241,7 +238,6 @@ export default class extends wepy.page {
     background-repeat no-repeat
     background-size contain
     justify-content space-around
-
 .no-result
   position relative
   top 66rpx
@@ -252,7 +248,6 @@ export default class extends wepy.page {
   background-repeat no-repeat
   background-size contain
   margin 0 auto
-
 .no-result-content
   position relative
   padding-top 56rpx

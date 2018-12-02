@@ -1,22 +1,30 @@
-<template lang="pug">
-view.auth
-  view#login-cloak
-    view.left-pane(class="{{ isOthersOpen ? 'open' : '' }}")
-      view.keyhole( @tap="scanCode")
-        view.outer-circle
-          view.inner-circle
-            view.rect(class="{{ isHoleOpen ? 'open' : '' }}")
-    view.middle-pane( @tap="toggle" class="{{ isOthersOpen ? 'open' : '' }}")
-    view.right-pane(class="{{ isOthersOpen ? 'open' : '' }}")
-  view.content
-    p.header WELCOME
-    image(class="pomelo" src="https://static.airbob.org/report-2018-06/logo-min.png")
+<template>
+  <view class="auth">
+    <view id="login-cloak">
+      <view class="left-pane {{ isOthersOpen ? 'open' : '' }}">
+        <view class="keyhole" @tap="scanCode">
+          <view class="outer-circle">
+            <view class="inner-circle">
+              <view class="rect {{ isHoleOpen ? 'open' : '' }}"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="middle-pane {{ isOthersOpen ? 'open' : '' }}" @tap="toggle"></view>
+      <view class="right-pane {{ isOthersOpen ? 'open' : '' }}"></view>
+    </view>
+    <view class="content">
+      <p class="header">WELCOME</p>
+      <image class="pomelo" src="https://static.airbob.org/report-2018-06/logo-min.png"/>
+    </view>
+  </view>
 </template>
 
 
 <script>
 import wepy from "wepy";
 import Crypto from "../../utils/Crypto.js";
+import { ME } from "@/api/common";
 
 const KEY = Crypto.utf8Encode("75564012e1db214d");
 const IV = Crypto.utf8Encode("ee3e54c80a55628d");
@@ -49,20 +57,17 @@ export default class Auth extends wepy.page {
     if (authid === `undefined`) {
       return;
     }
-    const requestUrl = this.$parent.globalData.requestUrl;
     const sessionid = wepy.getStorageSync("token");
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const { data: { data, success, ...err } } = await wepy.request({
-      url: `${requestUrl + this.$parent.globalData.config.ME}`,
-      data: {
-        encrypted: crypto.jsonEncrypt({
-          sessionid,
-          timestamp,
-          authid
-        })
-      },
-      method: `POST`
-    });
+    const {
+      data: { data, success, ...err }
+    } = await ME(
+      crypto.jsonEncrypt({
+        sessionid,
+        timestamp,
+        authid
+      })
+    );
     if (success) {
       const status = crypto.jsonDecrypt(data.encrypted).status;
       if (status) {
@@ -120,19 +125,14 @@ export default class Auth extends wepy.page {
 
 <style lang="stylus" scoped>
 vendors = official
-
 flexbox()
   display flex
-
 flex($values)
   flex $values
-
 flexdiretion($direction = 'column')
   flex-direction $direction
-
 order($val)
   order $val
-
 #login-cloak
   position absolute
   top 0
@@ -262,7 +262,6 @@ order($val)
       width 1px
       content ' '
       background rgb(178, 178, 178)
-
 .content
   display flex
   position relative

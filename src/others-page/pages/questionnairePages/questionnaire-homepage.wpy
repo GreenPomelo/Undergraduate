@@ -1,0 +1,214 @@
+<template>
+  <view class="container">
+      <view class="container-header">
+          <view class="header-avatar">
+              <open-data type='userAvatarUrl'></open-data>
+          </view>
+          <view class="header-username">{{ username }}</view>
+      </view>
+      <view class="container-body">
+          <repeat for="{{ questionnaires }}" index="index" key="key" item="item">
+          <view class="questionnaire-card {{ item.status==2?'questionnaire-card-finished':'' }}" style="display:{{ item.status>=0?'flex':'none' }};" @tap="toQuestionnaire" data-id="{{item.questionId}}" data-status="{{item.status}}" data-deadline="{{item.deadline}}" data-assignName="{{item.assignName}}">
+              <view class="card-title">{{ item.title }}(匿名)</view>
+              <view class="card-detail">
+                  <view class="detail-status {{ item.status==1?'detail-status-finished':'detail-status-unfinished' }}">{{ item.status==1?'已填写':'未填写' }}</view>
+                  <view class="detail-deadline">{{ item.deadline }}</view>
+              </view>
+          </view>
+          </repeat>
+      </view>
+      <view class="container-footer">没有更多了</view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import {
+  getAllQuestionnaires,
+  questionnaireWithAuth
+} from "@/api/questionnaire";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "问卷测评"
+  };
+  data = {
+    avatar: "",
+    username: "",
+    questionnaires: [],
+    relativeDeadline: ""
+  };
+  methods = {
+    toQuestionnaire(e) {
+      let id = e.currentTarget.dataset.id;
+      let deadline = e.currentTarget.dataset.deadline;
+      let status = Number(e.currentTarget.dataset.status);
+      let assignName = e.currentTarget.dataset.assignname;
+      if (status === 0) {
+        wepy.navigateTo({
+          url: `./questionnaire?questionnaireId=${id}&&deadline=${deadline}&&assignName=${assignName}`
+        });
+      } else if (status === 1) {
+        wepy.showToast({
+          title: "问卷已填写",
+          icon: "none",
+          duration: 1500
+        });
+      } else if (status === 2) {
+        wepy.showToast({
+          title: "问卷已结束",
+          icon: "none",
+          duration: 1500
+        });
+      }
+    }
+  };
+  async getQuestionnaires() {
+    let that = this;
+    let questionnaires = await getAllQuestionnaires();
+    if (questionnaires.data !== null) {
+      that.questionnaires = this.sortQuestionnaires(questionnaires.data.data);
+    } else {
+      await wepy.showToast({
+        title: "获取问卷信息失败,请重试",
+        icon: "none",
+        duration: 1500
+      });
+    }
+    this.questionnaires.map(item => {
+      item.deadline = this.getRelativeDeadline(item.deadline);
+    });
+    this.$apply();
+  }
+  sortQuestionnaires(qArray) {
+    let arr0 = [];
+    let arr1 = [];
+    let arr2 = [];
+    qArray.map(item => {
+      if (item.status === 0) {
+        arr0.push(item);
+      } else if (item.status === 1) {
+        arr1.push(item);
+      } else if (item.status === 2) {
+        arr2.push(item);
+      }
+    });
+    arr0.sort(this.sortTimeStamp("timestamp"));
+    arr1.sort(this.sortTimeStamp("timestamp"));
+    arr2.sort(this.sortTimeStamp("timestamp")).reverse();
+    return arr0.concat(arr1, arr2);
+  }
+  sortTimeStamp(t) {
+    return (a, b) => a[t] - b[t];
+  }
+  getRelativeDeadline(timestamp) {
+    let currentTimestamp = Date.parse(new Date());
+    let due = !(timestamp - currentTimestamp >= 0);
+    let days = parseInt((timestamp - currentTimestamp) / (1000 * 60 * 60 * 24));
+    if (!due) {
+      if (days === 0) {
+        return "今天截止";
+      } else {
+        return timestamp === 3489458895000 || timestamp === 1356019200000
+          ? "长期有效"
+          : days + "天后截止";
+      }
+    } else {
+      let absDays = Math.abs(days);
+      if (absDays < 7) {
+        return absDays + "天前";
+      } else if (absDays >= 7 && absDays < 30) {
+        return parseInt(absDays / 7) + "周前";
+      } else if (absDays >= 30 && absDays < 365) {
+        return parseInt(absDays / 30) + "月前";
+      } else if (absDays >= 365) {
+        return parseInt(absDays / 365) + "年前";
+      }
+    }
+  }
+  async init() {
+    // let that = this;
+    // let login = await this.$parent.axios({
+    //   url:
+    //     this.$parent.globalData.config.questionnaireWithAuth +
+    //     wepy.getStorageSync("token"),
+    //   method: "GET"
+    // });
+    let login = await questionnaireWithAuth(wepy.getStorageSync("token"));
+    if (login.data) {
+      wepy.setStorageSync("questionnaire_token", login.data.data);
+    }
+    await this.getQuestionnaires();
+  }
+  onLoad() {
+    // this.avatar = wepy.getStorageSync("User").nativeInformation.avatar;
+    this.username = wepy.getStorageSync("User").name;
+    this.init();
+    this.$apply();
+  }
+  onShow() {
+    const getPage = this.getCurrentPages();
+    const nowPage = getPage[getPage.length - 1];
+    this.questionnaires = nowPage.data.questionnaires;
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+.container
+  font-size 24rpx
+  .container-header
+    padding 0 60rpx
+    display flex
+    flex-direction row
+    align-items center
+    height 160rpx
+    .header-avatar
+      height 66rpx
+      width 66rpx
+      border-radius 50%
+      margin-right 28rpx
+      overflow hidden
+      box-shadow 0 0 10rpx 0 rgba(56, 138, 255, 0.15)
+    .header-username
+      font-family PingFangSC-Semibold
+      color #353535
+      font-size 36rpx
+  .container-body
+    padding 0 44rpx
+    .questionnaire-card
+      padding 30rpx
+      min-height 90rpx
+      box-shadow 0rpx 2rpx 12rpx 0rpx rgba(219, 219, 219, 0.5)
+      border-radius 16rpx
+      margin-bottom 20rpx
+      display flex
+      flex-direction column
+      justify-content center
+      background #fff
+      .card-title
+        font-family PingFangSC-Medium
+        font-size 32rpx
+        color #353535
+        margin-bottom 4rpx
+      .card-detail
+        display flex
+        flex-direction row
+        .detail-status
+          margin-right 40rpx
+        .detail-status-unfinished
+          color #d0021b
+        .detail-status-finished
+          color #7ed321
+        .detail-deadline
+          color #9b9b9b
+    .questionnaire-card:last-child
+      margin-bottom 40rpx
+    .questionnaire-card-finished
+      background #f2f2f2
+      box-shadow none
+  .container-footer
+    text-align center
+    font-size 20rpx
+    color #9a9a9a
+</style>

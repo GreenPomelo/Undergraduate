@@ -85,7 +85,6 @@ export default class swiper extends wepy.component {
 
   methods = {
     bindChange(e) {
-      console.log(e.detail);
       this.$emit("change", 0);
     },
     listenChange(event) {

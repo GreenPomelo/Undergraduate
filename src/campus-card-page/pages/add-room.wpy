@@ -42,6 +42,7 @@
 <script>
 import wepy from "wepy";
 import QyTip from "../../components/qy-tip";
+import { getDorm } from "@/api/campusCard";
 export default class addRoom extends wepy.page {
   data = {
     campusArray: ["仙林", "三牌楼"],
@@ -122,13 +123,7 @@ export default class addRoom extends wepy.page {
             : this.roomArray[this.areaIndex][this.buildingIndex].toString();
         const buildingId =
           new Array(Number(4 - building.length)).fill(0).join("") + building;
-        const res = await wepy.request({
-          url: `${this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.getYourDorm}?campus=${
-            this.campusIndex
-          }&roomId=${roomId}&buildingId=${buildingId}`,
-          method: "POST"
-        });
+        const res = await getDorm(this.campusIndex, roomId, buildingId);
         if (
           JSON.parse(res.data.data).query_elec_roominfo.retcode === 0 ||
           JSON.parse(res.data.data).query_elec_roominfo.retcode === "0"

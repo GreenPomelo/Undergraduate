@@ -1,0 +1,521 @@
+<template>
+  <view class="container">
+    <view class="avatar-bubble-container" wx:if="{{bubbleDisplayStatus}}">
+      <view class="avatar-bubble" @tap="toPersonalPage" style="background-image:url({{bubbleColor}})">
+        <text>{{bubbleText}}</text>
+      </view>
+    </view>
+    <view class="animated-header" id="test"></view>
+    <view class="{{headerStatus}}">
+      <image @tap="scanQrcode" class="scan" src="https://static.airbob.org/under-graduate/scan.png" />
+      <image style="{{changeAnimation}}" class="emoji" src="https://static.airbob.org/under-graduate/emoji.png" />
+      <image style="{{changeAnimation}}" class="header-title" src="https://static.airbob.org/under-graduate/title.png" />
+      <view style="{{changeAnimation}}" class="header-slogan">全校{{associationSum}}个社团和学生组织，加入他们，和有意思的人，一起做有意义的事。</view>
+    </view>
+    <view class="info">
+      <view class="avatar-container">
+        <image style="{{displaceAnimation}}" @tap="toPersonalPage" class="{{avatarStatus}}" src="{{userAvatar}}"/>
+      </view>
+      <view>
+        <view style="{{leftAnimation}}" class="{{fixStatus === true ? 'user-name-fixed' : 'user-name'}}" @tap="toPersonalPage">
+          {{name}}
+          <!-- <view class="userinfo-complete {{userInfoCompleted?'userinfo-completed':''}}"><span>{{userInfoCompleted?'已完善':'完善信息'}}</span></view> -->
+        </view>
+        <view style="{{numAnimation}}" class="register-sum" @tap="toPersonalPage">已报名{{registrationNum}}个社团，点击查看</view>
+      </view>
+    </view>
+    <navigator open-type="navigate" hover-class="none" path="/pages/index" target="miniProgram" app-id="wxa16acae9f9d131fb" class="{{fixStatus === true ? 'to-school-talk-fixed' : 'to-school-talk'}}" animation="{{talkAnimation}}" style="{{talkColorStatus}}">去南邮校谈聊聊社团>></navigator>
+    <view class="list" style="{{fixStatus === true ? 'position:absolute;top:90rpx' : ''}}">
+      <view class="list-container">
+        <view class="list-slogan">挑选想要加入
+或了解的社团吧</view>
+        <view class="list-body">
+            <view class="association-info" wx:for="{{associationList}}" wx:key="index">
+              <view class="association-info-name" data-id="{{index}}" @tap="getAssociationDetail">{{item.fullname}}</view>
+              <navigator open-type="navigate" hover-class="none" path="/other-pages/tag?id={{item.id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="association-heat" data-name="{{item}}">
+                <image class="heat-icon" src="https://static.airbob.org/under-graduate/hot.png" />
+                <view class="heat-degree">校谈热度{{item.heat}}</view>
+                <view class="hot-talk">点击进去校谈参与讨论</view>
+              </navigator>
+            </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from "wepy";
+import {
+  associationUsers,
+  schoolTalkUrlRequest,
+  associationStatus
+} from "@/api/recruit";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "社团招新",
+    navigationBarBackgroundColor: "#45D3FB"
+  };
+  data = {
+    associationSum: 0,
+    name: "",
+    registrationNum: 0,
+    associationList: [],
+    sid: "",
+    // 弹窗社团的口令,头像,名称
+    command: {},
+    // 社团口令数组
+    commands: [],
+    commandData: {},
+
+    // 是否完善信息
+    perfectInfoStatus: false,
+
+    // 动画
+    scrollAnimation: {},
+    talkAnimation: {},
+    distance: 0,
+    talkColorIndex: 0,
+    fixStatus: false,
+    userAvatar: "",
+    schoolTalkToken: ``,
+    userInfoCompleted: false,
+    xh: "",
+    bubbleDisplayStatus: true
+  };
+  methods = {
+    getAssociationDetail(e) {
+      const targetId = e.currentTarget.dataset.id;
+      const soloAssociation = this.associationList[targetId];
+      wepy.navigateTo({
+        url: `./association-detail?info=${JSON.stringify(soloAssociation)}`
+      });
+    },
+    // 跳转到个人中心
+    toPersonalPage() {
+      wepy.navigateTo({
+        url: `./club-personal?showPage=${
+          this.perfectInfoStatus === true ? 1 : 2
+        }`
+      });
+    },
+    // 扫描二维码
+    scanQrcode() {
+      wepy.scanCode().then(res => {
+        const postData = res.path.match(/{(.+?)}/g)[0];
+        wepy.navigateTo({
+          url: `./association-detail?info=${postData}`
+        });
+      });
+    }
+  };
+  computed = {
+    numAnimation() {
+      if (this.distance < 348) {
+        return `transform: scale(${1 - this.distance * 0.003});
+              opacity: ${1 - this.distance * 0.003};`;
+      }
+    },
+    leftAnimation() {
+      if (this.distance < 348 && 216 - this.distance * 0.3 >= 54) {
+        return `left: ${216 - this.distance * 0.3}rpx`;
+      }
+    },
+    displaceAnimation() {
+      if (this.distance < 348 && 118 - this.distance * 0.2 >= 54) {
+        return `left:${78 - this.distance * 0.15}rpx;
+                width:${118 - this.distance * 0.2}rpx;
+                height:${118 - this.distance * 0.2}rpx`;
+      }
+    },
+    changeAnimation() {
+      if (this.distance < 348 && 1 - this.distance * 0.002 >= 0) {
+        return `transform: scale(${1 - this.distance * 0.001});
+                opacity:${1 - this.distance * 0.001}`;
+      }
+    },
+    talkColorStatus() {
+      return this.distance < 250
+        ? "color:rgb(34,209,224)"
+        : `color:rgb(255,255,255)`;
+    },
+    avatarStatus() {
+      return this.fixStatus === true ? `avatar-fixed` : `avatar`;
+    },
+    userNameStatus() {
+      return this.fixStatus === true ? `user-name-fixed` : `user-name`;
+    },
+    toSchoolStatus() {
+      return this.fixStatus === true
+        ? `to-school-talk-fixed`
+        : `to-school-talk`;
+    },
+    headerStatus() {
+      return this.fixStatus === true ? `header-img-fixed` : `header-img`;
+    },
+    containerStatus() {
+      return this.fixStatus === true ? `container-fixed` : `container`;
+    },
+    listStatus() {
+      return this.fixStatus === true
+        ? "position:fixed;top:45px;z-index:999;background:white;overflow:scroll;border-radius:14px;box-shadow 0 -6px 11px 0 rgba(218, 218, 218, 0.5)"
+        : "";
+    },
+    userInfoCompleted() {
+      return !wepy.getStorageSync("associationInfo")
+        ? false
+        : Object.entries(wepy.getStorageSync("associationInfo")).filter(
+            item => item[1] === ""
+          ).length === 0;
+    },
+    bubbleText() {
+      return this.userInfoCompleted ? `查看个人信息` : `快去完善信息`;
+    },
+    bubbleColor() {
+      return this.userInfoCompleted
+        ? `https://static.airbob.org/under-graduate/green.png`
+        : `https://static.airbob.org/under-graduate/yellow.png`;
+    }
+  };
+  async onLoad(option) {
+    this.xh =
+      wepy.getStorageSync("userInfo").studentId ||
+      wepy.getStorageSync("User").studentId;
+    const {
+      data: { data: associationUserInfo }
+    } = await associationUsers(this.xh);
+    wepy.setStorageSync("associationInfo", associationUserInfo);
+    this.userAvatar = wepy.getStorageSync("User").nativeInformation.avatar;
+    // const schoolTalkUrl = this.$parent.globalData.config.schoolTalkUrl;
+    this.registrationNum = option.associationNum;
+    const userInfo = wepy.getStorageSync("userInfo");
+    this.name = userInfo.name;
+    wepy.showLoading({
+      title: `加载社团列表中`
+    });
+    // const res = await this.$parent.axios({
+    //   url: `${schoolTalkUrl +
+    //     this.$parent.globalData.config.schoolTalkUrlRequest}`,
+    //   method: "GET"
+    // });
+    // const res = await schoolTalkUrlRequest();
+    // if (res.data.statusCode === 200 || res.data.code === 200) {
+    //   wepy.hideLoading();
+    //   const requestData = res.data.data;
+    //   this.associationList = requestData;
+    //   this.associationList = this.associationList.sort((a, b) => {
+    //     return Number(b.heat) - Number(a.heat);
+    //   });
+    //   this.associationSum = requestData.length;
+    //   this.$apply();
+    // }
+    // this.$apply();
+    // 获取已报名社团的数量
+    associationStatus().then(res => {
+      wepy.hideLoading();
+      this.$parent.globalData.associationStatus = res;
+      if (res.data) {
+        const requestData = res.data.data;
+        this.registrationNum = requestData.length;
+        this.$apply();
+      }
+    });
+    this.schoolTalkToken = wepy.getStorageSync("token");
+    this.$apply();
+  }
+  onPageScroll(e) {
+    this.distance = e.scrollTop;
+    if (this.distance === 0) {
+      this.bubbleDisplayStatus = true;
+      this.$apply();
+    }
+    if (this.distance > 0) {
+      this.bubbleDisplayStatus = false;
+      this.$apply();
+      // 颜色改变
+      if (this.distance >= 348) {
+        this.fixStatus = true;
+      } else {
+        this.fixStatus = false;
+      }
+      this.$apply();
+    }
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+.container
+  .avatar-bubble-container
+    position absolute
+    z-index 100
+    left 63px
+    top 330px
+    .avatar-bubble
+      width 91px
+      height 31px
+      background-repeat no-repeat
+      background-size 100%
+      text-align center
+      text
+        font-size 12px
+        font-family 'PingFangSC-Regular'
+        color #ffffff
+  .perfect-info
+    position absolute
+    z-index 999
+    width 100%
+    height 100%
+    background rgba(0, 0, 0, 0.5)
+    display flex
+    justify-content center
+    .perfect-info-body
+      margin-top 111px
+      height 300px
+      .perfect-img
+        display flex
+        justify-content center
+        margin-bottom -18px
+        image
+          width 186px
+          height 152px
+      .perfect-info-card
+        width 250px
+        height 188px
+        background #ffffff
+        border-radius 9px
+        display flex
+        align-items center
+        flex-direction column
+        position relative
+        .command-avatar
+          position absolute
+          top -20px
+          view
+            background-image url('https://static.airbob.org/under-graduate/face.png')
+            background-size 100%
+            width 50px
+            height 49px
+            display flex
+            justify-content center
+            align-items center
+            .command-avatar-img
+              width 46px
+              height 45px
+              background-color #ffffff
+              border-radius 50%
+        .submission
+          width 202px
+          height 49px
+          margin-bottom 0
+          background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+          box-shadow 0px 0px 25px 0px rgba(168, 168, 168, 0.5)
+          border-radius 14px
+          display flex
+          justify-content center
+          align-items center
+          view
+            font-family 'PingFangSC-Semibold'
+            font-size 18px
+            color #ffffff
+        .command-name
+          height 28px
+          font-family 'PingFangSC-Semibold'
+          font-size 20px
+          color #606266
+          padding-bottom 22px
+        .perfect-info-tip
+          font-size 14px
+          color #606266
+          font-family 'PingFangSC-Regular'
+          height 20px
+          text-align center
+          padding 43px 0 3px 0
+  .header-img-fixed
+    height 45px
+    width 100%
+    background-image url('https://static.airbob.org/under-graduate/bg_wuwu.png')
+    background-size 100%
+    position fixed
+    z-index 10
+    top 0px
+    overflow hidden
+  .header-img
+    height 473px
+    width 100%
+    background-image url('https://static.airbob.org/under-graduate/bg_wuwu.png')
+    background-size 100%
+    position absolute
+    z-index -1
+    top 0px
+  .scan
+    width 20px
+    height 19px
+    position fixed
+    top 13px
+    z-index 100
+    right 27px
+  .emoji
+    width 180px
+    height 330px
+    position absolute
+    right 10px
+    // bottom 104px
+    top 13px
+  .header-title
+    width 145px
+    height 80px
+    position absolute
+    left 31px
+    top 95px
+  .header-slogan
+    width 149px
+    height 65px
+    font-family PingFangSC-Regular
+    font-size 12px
+    color rgb(96, 98, 102)
+    position absolute
+    top 210px
+    left 36px
+    line-height align-self auto
+  .info
+    margin-top 355px
+    margin-left 39px
+    display flex
+    .avatar-container
+      width 118rpx
+      height 118rpx
+      margin-right 20rpx
+      .avatar
+        width 118rpx
+        height 118rpx
+        border-radius 50%
+        box-sizing border-box
+        border 6rpx solid rgb(255, 255, 255)
+        position absolute
+      .avatar-fixed
+        width 118rpx
+        height 118rpx
+        border-radius 50%
+        box-sizing border-box
+        border 6rpx solid rgb(255, 255, 255)
+        position fixed
+        top 16rpx
+        z-index 11
+    .user-name
+      margin-top 4rpx
+      margin-bottom 10rpx
+      height 50rpx
+      font-family PingFangSC-Semibold
+      font-size 36rpx
+      font-weight 700
+      color rgb(53, 53, 53)
+      position absolute
+      left 216rpx
+    .user-name-fixed
+      font-weight 700
+      margin-top 4rpx
+      margin-bottom 10rpx
+      height 50rpx
+      font-family PingFangSC-Semibold
+      font-size 36rpx
+      color rgb(53, 53, 53)
+      position fixed
+      top 16rpx
+      left 216rpx
+      z-index 11
+    .userinfo-complete
+      display inline-block
+      width 124rpx
+      height 50rpx
+      line-height 50rpx
+      text-align center
+      border-radius 18rpx
+      background #f5a523
+      span
+        color #fff
+        font-size 24rpx
+    .userinfo-completed
+      background #7ed321
+    .register-sum
+      position absolute
+      top 389px
+      font-family PingFangSC-Regular
+      font-size 24rpx
+      color rgb(155, 155, 155)
+  .to-school-talk
+    position absolute
+    right 19px
+    top 428px
+    margin 0 19px 1px 0
+    width 144px
+    height 20px
+    font-family 'PingFangSC-Semibold'
+    font-size 14px
+    font-weight 700
+    float right
+  .to-school-talk-fixed
+    position fixed
+    top 24rpx !important
+    right 114rpx
+    margin 0 19px 1px 0
+    width 144px
+    height 20px
+    font-weight 700
+    font-family 'PingFangSC-Semibold'
+    font-size 14px
+    z-index 11 !important
+  .list
+    width 100%
+    border-radius 14px
+    box-shadow 0 -6px 11px 0 rgba(218, 218, 218, 0.5)
+    background-color rgb(255, 255, 255)
+    margin-top -27px
+    z-index -1
+    .list-container
+      width 100%
+      height 100%
+      // position relative
+      .list-slogan
+        width 113px
+        height 44px
+        font-family 'PingFangSC-Semibold'
+        font-size 16px
+        background linear-gradient(to right, rgb(167, 243, 213), rgb(69, 211, 251))
+        -webkit-background-clip text
+        -webkit-text-fill-color transparent
+        padding 66px 0 8px 20px
+      .list-body
+        margin-left 21px
+        .association-info
+          width 337px
+          height 67px
+          box-sizing border-box
+          border-top 1px solid rgba(218, 218, 218, 0.5)
+          position relative
+          .association-info-name
+            font-weight 700
+            margin 10px 0 3px 6px
+            height 25px
+            font-family 'PingFangSC-Semibold'
+            font-size 18px
+            color rgb(53, 53, 53)
+        .association-heat
+          margin-left 8px
+          display flex
+          align-items center
+          .heat-icon
+            width 9px
+            height 12px
+            padding-right 2px
+          .heat-degree
+            width 98px
+            height 17px
+            font-family 'PingFangSC-Regular'
+            font-size 12px
+            color rgb(192, 196, 204)
+          .hot-talk
+            font-family 'PingFangSC-Regular'
+            font-size 12px
+            color rgb(192, 196, 204)
+</style>

@@ -17,6 +17,7 @@
 <script>
 import wepy from "wepy";
 import filterWxs from "../wxs/filter.wxs";
+import { getNewsAdvertisementDetail } from "@/api/common";
 
 export default class extends wepy.page {
   config = {
@@ -40,14 +41,8 @@ export default class extends wepy.page {
 
   onLoad(option) {
     let that = this;
-    wepy
-      .request({
-        url: `${that.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getNewsAdvertisementDetail}?adId=${
-          option.adId
-        }`
-      })
-      .then(({ data: { data, success } }) => {
+    getNewsAdvertisementDetail(option.adId).then(
+      ({ data: { data, success } }) => {
         if (success) {
           this.adDetail = data;
           const weRich = require("we-rich");
@@ -56,7 +51,8 @@ export default class extends wepy.page {
           this.adDetail.adPicUrl = this.formatImageUrl(data.adPicUrl);
           this.$apply();
         }
-      });
+      }
+    );
   }
 }
 </script>

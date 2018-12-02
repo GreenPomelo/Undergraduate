@@ -1,0 +1,537 @@
+<template>
+  <view class="container">
+    <view class="header" animation="{{animation2}}">
+      <view class="header-container">
+        <view class="association-avatar">
+        <image animation="{{animation4}}" src="{{associationAvatar}}" />
+      </view>
+      <view class="association-info">
+        <view animation="{{animation5}}" class="association-name">{{associationInfo.fullname}}</view>
+        <view class="association-hot" animation="{{animation3}}">
+          <image class="heat-icon" src="https://static.airbob.org/under-graduate/hot.png" />
+          <view class="heat-degree">校谈热度{{associationInfo.heat}}>></view>
+        </view>
+      </view>
+      </view>
+    </view>
+    <view animation="{{animation1}}" class="{{buttonStatus}}" @tap="signUp">
+      <view>立即报名</view>
+    </view>
+    <view class="body">
+      <!--校谈中无话题-->
+      <view class="school-talk-title" style="margin:34px 0 10px 23px">校谈在聊</view>
+      <view class="school-talk">
+        <view class="school-talk-card">
+          <view class="card-body card-body-background" wx:if="{{topicLength === 0}}"></view>
+          <view class="card-body" wx:if="{{topicLength < 2}}">
+            <navigator open-type="navigate" hover-class="none" path="/pages/index&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-content" wx:if="{{topicLength === 0}}">
+              <view style="font-weight:700">快去校谈发起第一篇话题吧</view>
+              <view>南邮事，校谈说</view>
+            </navigator>
+            <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{topicArray[0].id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-content" wx:if="{{topicLength === 1}}">
+              <view style="padding-bottom:4px;font-weight:700">{{topicArray[0].name}}</view>
+              <view>{{topicArray[0].visitors}}人查看>></view>
+            </navigator>
+          </view>
+          <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{topicArray[0].id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-body-two" style="z-index:1" wx:if="{{topicLength >= 2}}">
+            <view class="card-content-two">
+              <view style="padding-bottom:4px;font-weight:700">{{topicArray[0].name}}</view>
+              <view>{{topicArray[0].visitors}}人查看>></view>
+            </view>
+          </navigator>
+          <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{topicArray[1].id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-body-two card-body-background-two" style="z-index:0" wx:if="{{topicLength >= 2}}">
+            <view class="card-content-two">
+              <view style="padding-bottom:4px;font-weight:700">{{topicArray[1].name}}</view>
+              <view>{{topicArray[1].visitors}}人查看>></view>
+            </view>
+          </navigator>
+        </view>
+      </view>
+      <navigator open-type="navigate" hover-class="none" path="/other-pages/tag?id={{tagId}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-footer">
+        <view>{{cardFooter}}</view>
+      </navigator>
+      <!--校谈中更多的话题-->
+      <view class="school-talk-more" wx:if="{{false}}"></view>
+      <view class="school-talk-title">社团印象</view>
+      <view class="association-impression">
+        <!--没有图片-->
+        <view class="no-photo" wx:if="{{!photoWallStatus}}">
+         <image src="https://static.airbob.org/under-graduate/notfound.png" />
+        </view>
+        <!--图片scroll-->
+        <scroll-view scroll-x class="photo-wall" wx:if="{{photoWallStatus}}">
+          <image wx:for="{{impressionPhotos}}" wx:key="index" class="scroll-img" src="{{item}}" index="index" data-idx="{{index}}" @tap="previewImpressionImage"/>
+        </scroll-view>
+      </view>
+      <view class="school-talk-title">社团简介</view>
+      <view class="association-intro">
+        <view class="no-photo" wx:if="{{!introductionStatus}}">
+          <image src="https://static.airbob.org/under-graduate/notfound.png" />
+        </view>
+        <view class="description" wx:if="{{introductionStatus}}" wx:for="{{introArray}}" index="index" item="item" wx:key="index">
+          <view>{{item}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import {
+  assoicationDetail,
+  schoolTaklAssociation,
+  associationMembers
+} from "@/api/recruit";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "社团招新"
+  };
+  data = {
+    associationAvatar: ``,
+    associationInfo: {},
+    impressionPhotos: [],
+    topicArray: [],
+    topicLength: 0,
+    distance: 0,
+    animation1: {},
+    animation2: {},
+    animation3: {},
+    animation4: {},
+    animation5: {},
+    fixStatus: false,
+    associationIntro: ``,
+    photoWallStatus: false,
+    introductionStatus: false,
+    introArray: [],
+    tagId: 0,
+    schoolTalkToken: ""
+  };
+  computed = {
+    cardFooter() {
+      return this.topicLength <= 2
+        ? "打开校谈,无需下载"
+        : `还有${this.topicLength - 2}篇帖子，打开校谈查看更多`;
+    },
+    buttonStatus() {
+      return this.fixStatus === true
+        ? `sign-up-button-fixed`
+        : `sign-up-button`;
+    }
+  };
+  methods = {
+    signUp() {
+      this.$parent.globalData.associationUserTableInfo = this.associationInfo;
+      wepy.navigateTo({
+        url: `./association-register?avatar=${encodeURIComponent(
+          this.associationAvatar
+        )}`
+      });
+    },
+    previewImpressionImage(e) {
+      const index = e.currentTarget.dataset.idx;
+      wepy.previewImage({
+        current: this.impressionPhotos[index],
+        urls: this.impressionPhotos
+      });
+    }
+  };
+  schoolTalkTopic(requestData) {
+    this.commandData = requestData.assoInfo;
+    schoolTaklAssociation(requestData.assoInfo.tagId).then(res => {
+      if (res.statusCode === 200 || res.code === 200) {
+        const requestData = res.data.data;
+        this.topicArray = requestData.topics;
+        this.associationInfo.heat =
+          requestData.heat === null ? 0 : requestData.heat;
+        this.topicLength = requestData.topics_count;
+        this.$apply();
+      }
+    });
+  }
+  getAssociationInfo(requestData) {
+    this.commandData = requestData.assoInfo;
+    let impressionPhotos = [];
+    requestData.assoInfoDetails
+      .filter(x => x.type === 2)
+      .forEach(item => {
+        impressionPhotos.push(item.picUrl);
+      });
+    this.impressionPhotos = impressionPhotos;
+    if (this.impressionPhotos.length !== 0) {
+      this.photoWallStatus = true;
+    } else {
+      this.photoWallStatus = false;
+    }
+    // 社团简介
+    this.associationIntro = requestData.assoInfoDetails.filter(
+      x => x.type === 0
+    )[0].message;
+    const associationIntro = this.associationIntro;
+    this.introArray = associationIntro
+      .replace(/^"|"$/g, "")
+      .trim()
+      .split("\n");
+    if (this.associationIntro !== undefined) {
+      this.introductionStatus = true;
+    } else {
+      this.introductionStatus = false;
+    }
+    // 社团头像
+    this.associationAvatar = requestData.assoInfoDetails.filter(
+      x => x.type === 1
+    )[0].picUrl;
+    this.$apply();
+  }
+  onLoad(option) {
+    if (option.clubPersonalStatus) {
+      this.associationInfo.description = JSON.parse(option.info);
+      if (JSON.parse(option.fullname)) {
+        this.associationInfo.fullname = JSON.parse(option.fullname);
+      }
+    } else {
+      this.associationInfo = JSON.parse(option.info);
+    }
+    this.schoolTalkToken = wepy.getStorageSync("token");
+    this.$apply();
+    wepy.showLoading({
+      title: `加载社团信息中`
+    });
+    // 口令获取信息
+    if (Boolean(option.koulingStatus) === true) {
+      // 通过口令获取热度
+      assoicationDetail(option.command).then(res => {
+        if (res.data) {
+          wepy.hideLoading();
+          const requestData = res.data.data;
+          // 校谈的话题
+          this.schoolTalkTopic(requestData);
+          // 社团的信息
+          this.getAssociationInfo(requestData);
+        } else {
+          if (res.data.errCode === 52) {
+            wepy.showModal({
+              content: "学号或密码错误",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#47CFF5"
+            });
+          }
+        }
+      });
+    } else {
+      // 普通的获取信息
+      associationMembers(this.associationInfo.description).then(res => {
+        if (res.data) {
+          wepy.hideLoading();
+          this.associationInfo.fullname = res.data.data.assoInfo.fullname;
+          const requestData = res.data.data;
+          this.tagId = requestData.assoInfo.tagId;
+          // 社团话题
+          this.schoolTalkTopic(requestData);
+          // 社团的信息
+          this.getAssociationInfo(requestData);
+        }
+      });
+    }
+  }
+  onPageScroll(e) {
+    this.distance = e.scrollTop;
+    if (this.distance >= 0) {
+      if (this.distance <= 104) {
+        this.fixStatus = false;
+        // 报名按钮的动画
+        const animation1 = wepy.createAnimation({
+          duration: 0
+        });
+        this.animation1 = animation1
+          .scale(1 - this.distance * 0.0022)
+          .right(`${23 - this.distance * 0.2}px`)
+          .step()
+          .export();
+        // 卡片宽度的动画
+        const animation2 = wepy.createAnimation({
+          duration: 0
+        });
+        this.animation2 = animation2
+          .height(`${136 - this.distance * 0.7}px`)
+          .step()
+          .export();
+        // 热度消失的动画
+        const animation3 = wepy.createAnimation({
+          duration: 0
+        });
+        this.animation3 = animation3
+          .scale(1 - this.distance * 0.01)
+          .opacity(1 - this.distance * 0.01)
+          .step()
+          .export();
+        // 社团头像的动画
+        const animation4 = wepy.createAnimation({
+          duration: 0
+        });
+        this.animation4 = animation4
+          .width(`${50 - this.distance * 0.15}px`)
+          .height(`${49 - this.distance * 0.15}px`)
+          .left(`${31 - this.distance * 0.15}px`)
+          .top(`${42 - this.distance * 0.27}px`)
+          .step()
+          .export();
+        // 社团名称的动画
+        const animation5 = wepy.createAnimation({
+          duration: 0
+        });
+        this.animation5 = animation5
+          .top(`${46 - this.distance * 0.27}px`)
+          .left(`${95 - this.distance * 0.3}px`)
+          .step()
+          .export();
+        this.$apply();
+      } else {
+        this.fixStatus = true;
+        this.$apply();
+      }
+    }
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+.container
+  .header
+    width 100%
+    height 136px
+    background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)
+    background-blend-mode normal, normal
+    position fixed
+    top 0
+    z-index 10
+  .header-container
+    width 100%
+    height 136px
+    margin-left 31px
+    display flex
+    align-items center
+    .association-avatar
+      margin-right 15px
+      image
+        position absolute
+        top 42px
+        width 50px
+        height 49px
+        border 3px solid rgb(255, 255, 255)
+        border-radius 50%
+    .association-info
+      display flex
+      flex-direction column
+      .association-name
+        position absolute
+        top 46px
+        left 95px
+        width 202px
+        height 28px
+        font-size 20px
+        font-family 'PingFangSC-Semibold'
+        font-weight 700
+        color rgb(53, 53, 53)
+      .association-hot
+        padding-top 25px
+        padding-left 50px
+        display flex
+        align-items center
+        .heat-icon
+          width 9px
+          height 12px
+          padding-right 2px
+        .heat-degree
+          margin-left 1px
+          font-family 'PingFangSC-Regular'
+          font-size 12px
+          color rgb(192, 196, 204)
+.sign-up-button-fixed
+  width 141px
+  height 49px
+  background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+  box-shadow 0px 0px 44px 0px rgba(168, 168, 168, 0.5)
+  position fixed
+  top 10px !important
+  right 23px
+  border-radius 14px
+  display flex
+  justify-content center
+  align-items center
+  z-index 11
+  view
+    text-align center
+    font-family 'PingFangSC-Semibold'
+    font-size 18px
+    font-weight 700
+    color rgb(255, 255, 255)
+.sign-up-button
+  width 141px
+  height 49px
+  background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+  box-shadow 0px 0px 44px 0px rgba(168, 168, 168, 0.5)
+  position absolute
+  top 114px
+  right 23px
+  border-radius 14px
+  display flex
+  justify-content center
+  align-items center
+  z-index 11
+  view
+    text-align center
+    font-family 'PingFangSC-Semibold'
+    font-size 18px
+    font-weight 700
+    color rgb(255, 255, 255)
+.body
+  margin-top 170px
+  .no-photo
+    width 329px
+    height 100px
+    display flex
+    flex-direction column
+    justify-content center
+    align-items center
+    background rgb(248, 248, 248)
+    image
+      width 166px
+      height 69px
+  .school-talk-title
+    width 73px
+    height 25px
+    font-family 'PingFangSC-Semibold'
+    font-size 18px
+    margin-left 23px
+    font-weight 700
+    margin-bottom 10px
+    background linear-gradient(135deg, rgb(167, 243, 213), rgb(69, 211, 251))
+    -webkit-background-clip text
+    -webkit-text-fill-color transparent
+  .school-talk
+    width 100%
+    display flex
+    justify-content center
+    align-items center
+    flex-direction column
+    .school-talk-card
+      width 339px
+      height 117px
+      position relative
+      .card-body-background
+        height 105px
+        width 339px
+        top 0 !important
+        z-index -1
+      .card-body-background-two
+        height 67px !important
+        width 339px
+        top 0 !important
+        z-index -1
+      .card-body-two
+        width 100%
+        height 55px
+        position absolute
+        top 58px
+        background-image linear-gradient(135deg, rgba(167, 243, 213, 0.4) 0%, rgba(69, 211, 251, 0.4) 100%), linear-gradient(#ffffff, #ffffff)
+        background-blend-mode normal, normal
+        box-shadow 0 -2px 7px 0 rgba(168, 168, 168, 0.5)
+        border-radius 6px 6px 0 0
+        overflow hidden
+        .card-content-two
+          // width 100%
+          height 100%
+          padding 11px 19px 0 19px
+          view:nth-child(1)
+            height 21px
+            font-size 15px
+            font-family 'PingFangSC-Semibold'
+            width 100%
+            overflow hidden
+            color rgb(96, 98, 102)
+          view:nth-child(2)
+            height 17px
+            font-family 'PingFangSC-Regular'
+            font-size 12px
+            width 100%
+            overflow hidden
+            color rgb(192, 196, 204)
+      .card-body
+        width 100%
+        height 112px
+        position absolute
+        top 7px
+        background-image linear-gradient(135deg, rgba(167, 243, 213, 0.4) 0%, rgba(69, 211, 251, 0.4) 100%), linear-gradient(#ffffff, #ffffff)
+        background-blend-mode normal, normal
+        box-shadow 0 -2px 7px 0 rgba(168, 168, 168, 0.5)
+        border-radius 6px 6px 0 0
+        overflow hidden
+        .card-content
+          width 100%
+          height 100%
+          display flex
+          justify-content center
+          align-items center
+          flex-direction column
+          view:nth-child(1)
+            height 21px
+            font-size 15px
+            font-family 'PingFangSC-Semibold'
+            color rgb(96, 98, 102)
+          view:nth-child(2)
+            height 17px
+            font-family 'PingFangSC-Regular'
+            font-size 12px
+            color rgb(192, 196, 204)
+  .card-footer
+    width 100%
+    height 28px
+    justify-content center
+    align-items center
+    display flex
+    view
+      padding 7px
+      text-align center
+      font-size 12px
+      font-family 'PingFangSC-Regular'
+      color rgb(69, 212, 251)
+  .association-impression
+    width 100%
+    display flex
+    align-items center
+    flex-direction column
+    margin-bottom 20px
+    .photo-wall
+      width 329px
+      height 100px
+      display flex
+      flex-direction column
+      white-space nowrap
+      image
+        display inline-block
+        width 133px
+        height 100px
+        margin-right 9px
+  .association-intro
+    width 100%
+    display flex
+    flex-direction column
+    align-items center
+    padding-bottom 46rpx
+    .description
+      font-family PingFangSC-Regular
+      font-size 14px
+      font-weight normal
+      font-stretch normal
+      letter-spacing 0px
+      color #9b9b9b
+      padding 0 23px 23px 23px
+      word-wrap break-word
+      word-break break-all
+      text-indent 2em
+      text-align justify
+</style>
+

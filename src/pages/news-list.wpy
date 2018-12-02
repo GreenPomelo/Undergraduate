@@ -45,6 +45,11 @@
 import wepy from "wepy";
 import QyTip from "@/components/qy-tip";
 import QySwiper from "@/components/qy-swiper";
+import {
+  getCarousel,
+  getPromotionInformation,
+  getNewsInformationTopic
+} from "@/api/common";
 // import { connect } from "wepy-redux";
 
 // @connect({})
@@ -128,6 +133,7 @@ export default class NewsList extends wepy.page {
   };
 
   onLoad() {
+    wepy.hideTabBarRedDot({ index: 1 });
     this.getNewsList();
     this.getAds();
     this.getCarouselAds();
@@ -135,12 +141,8 @@ export default class NewsList extends wepy.page {
 
   async getCarouselAds() {
     let that = this;
-    const res = await wepy.request({
-      url: `${that.$parent.globalData.requestUrl +
-        that.$parent.globalData.config.getCarouselAds}`
-    });
-
-    if (res.data.success) {
+    const res = await getCarousel();
+    if (res.data) {
       let i = 0;
       res.data.data.map(item => {
         this.imgUrls.push({
@@ -161,17 +163,14 @@ export default class NewsList extends wepy.page {
       return;
     }
     const {
-      data: { data: { adnewsModelList: adList, totalAdCount }, success, ...err }
-    } = await wepy.request({
-      url: `${that.$parent.globalData.requestUrl +
-        that.$parent.globalData.config.getPromotionInformation}`,
       data: {
-        pageNum,
-        pageSize
+        data: { adnewsModelList: adList, totalAdCount },
+        success,
+        ...err
       }
-    });
-
+    } = await getPromotionInformation(pageNum, pageSize);
     if (success) {
+      wepy.setStorageSync("newsListSum", totalAdCount);
       this.totalAdCount = totalAdCount;
       if (adList.length === 0) {
         this.isEnd = true;
@@ -191,17 +190,8 @@ export default class NewsList extends wepy.page {
   async getNewsList(type = 1, pageNum = 1, pageSize = 10) {
     let that = this;
     if (!this.isEnd) {
-      const res = await wepy.request({
-        url: `${that.$parent.globalData.requestUrl +
-          that.$parent.globalData.config.getNewsInformationTopic}`,
-        data: {
-          newsTypeCode: type,
-          pageNum,
-          pageSize
-        }
-      });
-
-      if (res.data.success) {
+      const res = await getNewsInformationTopic(type, pageNum, pageSize);
+      if (res.data) {
         if (res.data.data.length === 0) {
           this.isEnd = true;
         } else {
@@ -234,7 +224,6 @@ export default class NewsList extends wepy.page {
   doWrong(err) {
     this.isWrong = true;
     this.$apply();
-    console.error(err);
   }
 }
 </script>
@@ -242,7 +231,6 @@ export default class NewsList extends wepy.page {
 .container
   color #353535
   font-family 'SimHei'
-
 .top-scroll-container
   position relative
   width 750rpx
@@ -266,7 +254,6 @@ export default class NewsList extends wepy.page {
     background-size contain
     background-repeat no-repeat
     background-position center
-
 .item
   position relative
   padding 30rpx 60rpx 0 60rpx
@@ -296,7 +283,6 @@ export default class NewsList extends wepy.page {
     border-radius 10px
     padding 4rpx 8rpx
     margin-right 6rpx
-
 .adItem
   display flex
   justify-content space-between
@@ -308,7 +294,7 @@ export default class NewsList extends wepy.page {
   .adPic
     width 180rpx
     height 180rpx
-    border-radius: 40rpx
+    border-radius 40rpx
   .adLeft
     display flex
     flex-direction column
@@ -320,13 +306,13 @@ export default class NewsList extends wepy.page {
       font-size 30rpx
       color #353535
       letter-spacing 0.24rpx
-      display: -webkit-box
+      display -webkit-box
       -webkit-box-orient vertical
       -webkit-line-clamp 3
       overflow hidden
     .ads-time
-      font-size 24rpx;
-      color #888888;
+      font-size 24rpx
+      color #888888
       letter-spacing 0.12px
       display flex
       height 44rpx

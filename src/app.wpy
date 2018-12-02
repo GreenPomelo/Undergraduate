@@ -5,13 +5,10 @@
 
 <script>
 import wepy from "wepy";
-import { CONFIG } from "./config/apiConfig.js";
 // 抽离api
 import "wepy-async-function";
-// import { setStore } from "wepy-redux";
-// import configStore from "./store";
-// const store = configStore();
-// setStore(store);
+
+// override showToast
 export default class extends wepy.app {
   config = {
     pages: ["pages/index", "pages/news-list", "pages/profile"],
@@ -23,29 +20,32 @@ export default class extends wepy.app {
           "pages/login",
           "pages/news",
           "pages/information-box",
-          "pages/library",
-          "pages/library-recommened",
+          "pages/libraryPages/library",
+          "pages/libraryPages/library-recommened",
           "pages/run",
-          "pages/feedback",
-          "pages/myfeedback",
-          "pages/historyfeedback",
+          "pages/feedbackPages/feedback",
+          "pages/feedbackPages/myfeedback",
+          "pages/feedbackPages/historyfeedback",
           "pages/more",
-          "pages/changelog",
-          "pages/aboutus",
+          "pages/personalPages/changelog",
+          "pages/personalPages/aboutus",
           "pages/close",
-          "pages/protocol",
+          "pages/personalPages/protocol",
           "pages/advertisement",
-          "pages/wenjuan",
+          "pages/display-webview",
           "pages/tuition",
-          "pages/change-phone",
-          "pages/association",
-          "pages/association-detail",
-          "pages/association-register",
-          "pages/register-success",
-          "pages/club-personal",
+          "pages/personalPages/change-phone",
+          "pages/associationPages/association",
+          "pages/associationPages/association-detail",
+          "pages/associationPages/association-register",
+          "pages/associationPages/register-success",
+          "pages/associationPages/club-personal",
           "pages/auth",
-          "pages/questionnaire-homepage",
-          "pages/questionnaire"
+          "pages/questionnairePages/questionnaire-homepage",
+          "pages/questionnairePages/questionnaire",
+          "pages/nicpPages/nicp-check-in",
+          "pages/nicpPages/nicp-vote",
+          "pages/nicpPages/nicp-more"
         ]
       },
       {
@@ -61,7 +61,12 @@ export default class extends wepy.app {
       },
       {
         root: "others-edu-page/",
-        pages: ["pages/pe-score", "pages/GpaCalculator", "pages/calendar"]
+        pages: [
+          "pages/pe-score",
+          "pages/GpaCalculator",
+          "pages/calendar"
+          // "pages/avatar"
+        ]
       },
       {
         root: "campus-card-page/",
@@ -80,7 +85,7 @@ export default class extends wepy.app {
     ],
     window: {
       backgroundTextStyle: "light",
-      navigationBarBackgroundColor: "#fff",
+      navigationBarBackgroundColor: "#ffffff",
       navigationBarTitleText: "NJUPT",
       navigationBarTextStyle: "black"
     },
@@ -91,28 +96,29 @@ export default class extends wepy.app {
         {
           pagePath: "pages/index",
           text: "首页",
-          iconPath: "assets/icon/char_guo/inactive.png",
-          selectedIconPath: "assets/icon/char_guo/active.png"
+          iconPath: "assets/index.png",
+          selectedIconPath: "assets/index-active.png"
         },
         {
           pagePath: "pages/news-list",
           text: "资讯",
-          iconPath: "assets/icon/char_xin/inactive.png",
-          selectedIconPath: "assets/icon/char_xin/active.png"
+          iconPath: "assets/news-list.png",
+          selectedIconPath: "assets/news-list-active.png"
         },
         {
           pagePath: "pages/profile",
           text: "我的",
-          iconPath: "assets/icon/char_qing/inactive.png",
-          selectedIconPath: "assets/icon/char_qing/active.png"
+          iconPath: "assets/profile.png",
+          selectedIconPath: "assets/profile-active.png"
         }
       ]
     }
   };
   globalData = {
+    cancelTokenData: {
+      name: "123"
+    },
     userInfo: null,
-    requestUrl: CONFIG.REQUEST_URL,
-    config: CONFIG,
     associationUserTableInfo: {},
     associationStatus: [],
     modules: [
@@ -123,6 +129,7 @@ export default class extends wepy.app {
         isIndex: true,
         id: 16,
         isOpen: true,
+        isNew: false,
         module: "正方"
       },
       {
@@ -132,6 +139,7 @@ export default class extends wepy.app {
         isIndex: true,
         id: 9,
         isOpen: true,
+        isNew: false,
         module: "正方"
       },
       {
@@ -141,15 +149,17 @@ export default class extends wepy.app {
         isIndex: true,
         id: 4,
         isOpen: true,
+        isNew: false,
         module: "一卡通"
       },
       {
         name: "图书馆",
-        path: "../others-page/pages/library",
+        path: "../others-page/pages/libraryPages/library",
         src: "https://static.airbob.org/under-graduate/more/library.png",
         isIndex: true,
         id: 0,
         isOpen: true,
+        isNew: false,
         module: "图书馆"
       },
       {
@@ -159,7 +169,8 @@ export default class extends wepy.app {
         isIndex: true,
         id: 19,
         isOpen: true,
-        module: "跑操"
+        isNew: false,
+        module: "晨跑"
       },
       {
         name: "体育部",
@@ -168,6 +179,7 @@ export default class extends wepy.app {
         isIndex: true,
         id: 10,
         isOpen: true,
+        isNew: false,
         module: "体育部"
       },
       {
@@ -177,14 +189,16 @@ export default class extends wepy.app {
         id: 15,
         path: "../others-edu-page/pages/GpaCalculator",
         module: "正方",
-        isOpen: true
+        isOpen: true,
+        isNew: false
       },
       {
         name: "更多",
         path: "../others-page/pages/more",
         src: "https://static.airbob.org/under-graduate/more/more.png",
         isIndex: true,
-        id: -1
+        id: -1,
+        isNew: false
       }
     ]
   };
@@ -192,65 +206,6 @@ export default class extends wepy.app {
     super();
     this.use("requestfix");
     this.use("promisify");
-    this.intercept("request", {
-      // 发出请求时的回调函数
-      config(p) {
-        // 对所有request请求中的OBJECT参数对象统一附加时间戳属性
-        p.timestamp = +new Date();
-        // let currentPage = getCurrentPages()[getCurrentPages().length - 1].route;
-        if (wepy.getStorageSync("token")) {
-          p.header = {
-            cookie: `session_id=${wepy.getStorageSync(
-              "token"
-            )}; token=${wepy.getStorageSync("questionnaire_token")}`
-          };
-        }
-        // 必须返回OBJECT参数对象，否则无法发送请求到服务端
-        return p;
-      },
-      // 请求成功后的回调函数
-      async success(p) {
-        // 可以在这里对收到的响应数据对象进行加工处理
-        if (!p.data.success) {
-          if (p.data.errMsg === "会话过期" || p.data.errMsg === "会话不存在") {
-            // let currentPage = getCurrentPages()[getCurrentPages().length - 1].route
-            wepy.reLaunch({
-              url: "/others-page/pages/login"
-            });
-          } else {
-            switch (Number(p.data.errCode)) {
-              case 406:
-                return this.showTip("无效的密码");
-              case 407:
-                return this.showTip("无当前userId");
-              case 430:
-                return this.showTip("无法验证用户身份");
-              case 431:
-                return this.showTip("验证超时");
-              case 500:
-                return this.showTip("未知错误");
-              case 503:
-                return this.showTip("参数未找到");
-              case 504:
-                return this.showTip("此用户已注册");
-              case 505:
-                return this.showTip("手机号已注册");
-              default:
-                return p;
-            }
-          }
-        }
-        // 必须返回响应数据对象，否则后续无法对响应数据进行处理
-        return p;
-      },
-      // 请求失败后的回调函数
-      fail(p) {
-        // 必须返回响应数据对象，否则后续无法对响应数据进行处理
-        return p;
-      },
-      // 请求完成时的回调函数(请求成功或失败都会被执行)
-      complete(p) {}
-    });
   }
   onLaunch() {}
   showTip(title = "请求发生错误") {

@@ -1,18 +1,710 @@
+<template>
+  <view>
+    <view class="perfect-info" wx:if="{{commandInfoStatus}}" @tap="closeCommandInfo">
+      <view class="perfect-info-body">
+        <view class="perfect-img">
+          <image src="https://static.airbob.org/under-graduate/kl.png" />
+        </view>
+        <view class="perfect-info-card">
+          <view class="command-avatar">
+            <view>
+              <image class="command-avatar-img" src="{{assoInfo.avatar}}" />
+            </view>
+          </view>
+          <view class="perfect-info-tip">发现了社团口令{{assoInfo.command}}</view>
+          <view class="command-name">{{assoInfo.info.fullname}}</view>
+          <view class="submission" @tap.stop="codeToDetail">
+            <view>点击查看</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view
+      @tap.stop="navigateToWebview"
+      class="open-page-container"
+      hidden="{{!openPage}}"
+      style="background-image:url('{{displayPic}}');"
+    >
+      <view class="pass-open-page-container" @tap.stop="passOpenPage">
+        <view class="pass-open-page">跳过{{passTime}}秒</view>
+      </view>
+    </view>
+    <view
+      class="container"
+      hidden="{{openPage}}"
+      style="position: {{commandInfoStatus ? 'fixed' : 'static'}}"
+    >
+      <view class="navbar">
+        <view class="search-bar" @tap="goSearch">
+          <view class="virsual-placeholder">
+            <image
+              src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png"
+              class="search-icon"
+            />
+            <text>{{schoolTalkText}}</text>
+          </view>
+          <input type="text" class="search-input" @focus="focus" />
+        </view>
+        <!-- <image src="{{isNewInfo ? 'https://static.airbob.org/under-graduate/alert-active.png' : 'https://static.airbob.org/under-graduate/alert.png'}}" class="alert-img {{isNewInfo ? 'shake' : ''}}" @tap="goInfobox"/> -->
+      </view>
+      <view class="functional">
+        <repeat for="{{functionalList}}">
+          <view class="functional-item" @tap="moveTo" data-path="{{item.path}}" data-module="{{item.module}}" data-name="{{item.name}}" data-isnew="{{item.isNew}}">
+            <image src="{{item.src}}" class="functional-item-image" /> {{item.name}}
+            <view class="image-red-dot" hidden="{{ !item.isNew }}"></view>
+          </view>
+        </repeat>
+      </view>
+      <view class="splitLine"></view>
+      <view class="notification-container" @tap="goInfobox" wx:if="{{!swiperInfo[0]}}">
+        <view class="notification-image"></view>
+        <view class="notification-content">
+          <view class="swiper-content">你没有新消息哟～</view>
+          <view class="notification-arrow"></view>
+        </view>
+      </view>
+      <view class="notification-container" @tap="goInfobox" wx:else>
+        <view class="notification-image">
+          <view class="notification-oval {{isNewInfo?'move':''}}">
+            <span>{{swiperInfo.length}}</span>
+          </view>
+        </view>
+        <swiper class="notification-content" autoplay="true" vertical="true" circular="true">
+          <repeat for="{{swiperInfo}}" item="item" index="index" key="key">
+            <swiper-item>
+              <view class="swiper-content">{{item.title}}</view>
+            </swiper-item>
+          </repeat>
+        </swiper>
+        <view class="notification-arrow"></view>
+      </view>
+      <!-- <navigator open-type="navigate" target="miniProgram" app-id="wxa16acae9f9d131fb" style="width:750rpx;">
+          <view class="school-talk-container">
+              <image src="https://static.airbob.org/under-graduate/home-bannerbar-chat@3x.png" mode="aspectFit" class="school-talk"/>
+          </view>
+      </navigator>-->
+      <!-- <navigator url="../others-page/pages/association" style="width:750rpx;">
+          <view class="school-talk-container">
+              <image src="https://static.airbob.org/club-enter.png" mode="aspectFill" class="school-talk"/>
+          </view>
+      </navigator>-->
+      <!-- <navigator url="../others-edu-page/pages/avatar" style="width:750rpx;">
+          <view class="school-talk-container">
+              <image src="https://static.airbob.org/under-graduate/wsj_index.png" mode="aspectFit" class="school-talk"/>
+          </view>
+      </navigator>-->
+      <view class="split-line"></view>
+      <view class="course-container">
+        <view class="container-top">
+          <view class="container-top-title">今日课表</view>
+          <span @tap="showAllCourse">完整课表</span>
+          <view class="arrow"></view>
+        </view>
+        <view class="boxLoading" hidden="{{loadHide}}"></view>
+        <view class="nocourse-list" wx:if="{{noCourseItem}}">
+          <view class="nocourse-image"></view>
+          <view class="nocourse-word">今日无课，要合理安排时间哦</view>
+        </view>
+        <scroll-view class="course-list" scroll-x="true" wx:if="{{!noCourseItem}}">
+          <repeat for="{{courses}}" index="index" key="key" item="item">
+            <view class="course-item" style="background-image:url({{item.bgc}})">
+              <view class="course-thing">
+                <view style="font-size:28rpx;">{{item.name}}</view>
+                <view>{{item.time}}</view>
+                <view>
+                  {{item.teacher}}
+                  <span wx:if="{{item.locale}}">| {{item.locale}}</span>
+                </view>
+              </view>
+            </view>
+          </repeat>
+        </scroll-view>
+      </view>
+      <!-- <view class="split-line"></view> -->
+      <!-- <view class="laboratory-container" wx:if="{{showLaboratory}}">
+      <view class="container-top">
+        <view class="container-top-title">新功能实验室</view>
+      </view>
+      <view class="newfunction-container">
+        <repeat for="{{newfunctionalList}}">
+          <view class="functional-item" @tap="moveTo" data-path="{{item.path}}" data-module="{{item.module}}" data-name="{{item.name}}">
+            <image src="{{item.src}}" class="functional-item-image" /> {{item.name}}
+          </view>
+        </repeat>
+      </view>
+      </view>-->
+      <view class="split-line"></view>
+      <view class="card-container">
+        <view class="container-top">
+          <view class="container-top-title">一卡通</view>
+          <span @tap.stop="goYkt">完整记录</span>
+          <view class="arrow"></view>
+        </view>
+        <view class="campus-card">
+          <view class="content">
+            <view wx:if="{{balance !== '暂停服务' && balance !== '密码需要更新' && balance !== '请求失败'}}">
+              <span>余额:</span>
+              <span class="bigger">{{balance}}</span>
+              <span>元</span>
+              <view>截止时间：{{time}}</view>
+            </view>
+            <view wx:else>
+              <span class="bigger">{{balance}}</span>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="split-line"></view>
+      <view class="card-container" style="border:none">
+        <view class="container-top">
+          <view class="container-top-title">晨跑</view>
+          <span @tap="showRuntime">完整记录</span>
+          <view class="arrow"></view>
+        </view>
+        <view class="run-card">
+          <view class="run-detail">
+            <view wx:if="{{runTime !== -1 && runTime !== '-1'}}">
+              <view wx:if="{{runTime !== 0 && runTime !== '0'}}">跑操总数：
+                <span>{{runTime}}</span>次
+              </view>
+            </view>
+            <view wx:else>抱歉,查询失败了呢。。。</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import { assoicationDetail } from "@/api/recruit";
+import { getNotification } from "@/api/notification";
+import {
+  getDisplay,
+  getUserInfo,
+  commonInformation,
+  getModuleStatus,
+  runningCount,
+  getPromotionInformation
+} from "@/api/common";
+import { classSchedule } from "@/api/education";
+import { campusCardRequestInfo } from "@/api/campusCard";
+import { educationSystemInformation } from "@/api/education";
+// import { connect } from "wepy-redux";
+import ClassMixin from "../mixins/class.js";
+// @connect({})
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: "NJUPT",
+    enablePullDownRefresh: true
+  };
+  mixins = [];
+  data = {
+    moreFunc: {},
+    courseColor: [
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%80.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%89.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%8C.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%94.png",
+      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E5%9B%9B.png"
+    ],
+    courses: [],
+    noCourseItem: false,
+    balance: "",
+    time: "",
+    functionalList: "",
+    swiperInfo: [],
+    isNewInfo: false,
+    runTime: "",
+    isGoYkt: true,
+    isGoRun: true,
+    isGoCourse: true,
+    loadHide: false,
+    openPage: false,
+    passTime: 5,
+    displayWebviewLink: "",
+    displayPic: "",
+    displayColor: "",
+    schoolTalkText: "搜点什么吧~",
+    // 是否检测到口令
+    commandInfoStatus: false,
+    // 社团信息
+    assoInfo: {},
+    showLaboratory: true
+  };
+  computed = {};
+  // 首页广告
+  watch = {
+    openPage(newValue, oldValue) {
+      if (newValue) {
+        wepy.setNavigationBarColor({
+          frontColor: "#ffffff",
+          backgroundColor:
+            this.displayColor || wepy.getStorageSync("display").displayColor,
+          animation: {
+            duration: 0,
+            timingFunc: "easeIn"
+          }
+        });
+        wepy.setNavigationBarTitle({
+          title: ""
+        });
+        wepy.hideTabBar();
+        let timer = setInterval(() => {
+          this.passTime--;
+          if (Number(this.passTime) <= 0) {
+            clearInterval(timer);
+            this.openPage = false;
+            wepy.showTabBar();
+            wepy.setNavigationBarColor({
+              frontColor: "#000000",
+              backgroundColor: "#fff",
+              animation: {
+                duration: 0,
+                timingFunc: "easeIn"
+              }
+            });
+            wepy.setNavigationBarTitle({
+              title: "NJUPT"
+            });
+            this.$apply();
+          }
+          this.$apply();
+        }, 1000);
+      }
+    }
+  };
+  methods = {
+    goSearch() {
+      this.$navigate({
+        url: "../others-page/pages/search"
+      });
+    },
+    goInfobox() {
+      this.$navigate({
+        url: "../others-page/pages/information-box"
+      });
+    },
+    goYkt() {
+      this.$navigate({
+        url: this.isGoYkt
+          ? "../campus-card-page/pages/campus-card-index"
+          : "../others-page/pages/close"
+      });
+    },
+    async moveTo(e) {
+      const name = e.currentTarget.dataset.name;
+      if (e.currentTarget.dataset.isnew) {
+        let newModule = wepy.getStorageSync("newModule");
+        for (let i in newModule) {
+          if (newModule[i].moduleName === name) {
+            newModule.splice(i, 1);
+            wepy.setStorageSync("newModule", newModule);
+            break;
+          }
+        }
+        for (let j of this.functionalList) {
+          if (j.name === name) {
+            j.isNew = false;
+          }
+        }
+      }
+      if (
+        e.currentTarget.dataset.path === "../others-page/pages/more" &&
+        wepy.getStorageSync("indexIcon") === ""
+      ) {
+        wepy.setStorageSync("indexIcon", this.functionalList);
+      }
+      if (wepy.getStorageSync("moduleStatus")) {
+        for (let i of wepy.getStorageSync("moduleStatus")) {
+          if (
+            !e.currentTarget.dataset.module ||
+            e.currentTarget.dataset.module === ""
+          ) {
+            this.$navigate({
+              url: e.currentTarget.dataset.path
+            });
+            break;
+          } else {
+            if (i.moduleName === e.currentTarget.dataset.module) {
+              if (!i.open && e.currentTarget.dataset.name !== "课表") {
+                this.$navigate({
+                  url: "../others-page/pages/close"
+                });
+              } else {
+                this.$navigate({
+                  url: e.currentTarget.dataset.path
+                });
+              }
+              break;
+            }
+          }
+        }
+      } else {
+        await this.moduleStatusJudge();
+        this.$navigate({
+          url: e.currentTarget.dataset.path
+        });
+      }
+    },
+    showAllCourse() {
+      this.$navigate({
+        url: this.isGoCourse
+          ? "../edu-admin-page/pages/course"
+          : "../others-page/pages/close"
+      });
+    },
+    showRuntime() {
+      this.$navigate({
+        url: this.isGoRun
+          ? "../others-page/pages/run"
+          : "../others-page/pages/close"
+      });
+    },
+    // 首页广告
+    passOpenPage() {
+      this.openPage = false;
+      wepy.setNavigationBarColor({
+        frontColor: "#000000",
+        backgroundColor: "#fff",
+        animation: {
+          duration: 0
+        }
+      });
+      wepy.setNavigationBarTitle({
+        title: "NJUPT"
+      });
+      wepy.showTabBar();
+    },
+    navigateToWebview() {
+      if (this.displayWebviewLink) {
+        wepy.setNavigationBarColor({
+          frontColor: "#000000",
+          backgroundColor: "#fff",
+          animation: {
+            duration: 0
+          }
+        });
+        wepy.setNavigationBarTitle({
+          title: "NJUPT"
+        });
+        wepy.showTabBar();
+        this.$apply();
+        this.$navigate({
+          url: "../others-page/pages/display-webview"
+        });
+      }
+    },
+    // 通过口令跳转到社团详情
+    codeToDetail() {
+      wepy.navigateTo({
+        url: `../others-page/pages/associationPages/association-detail?info=${JSON.stringify(
+          this.assoInfo.info
+        )}&koulingStatus=true&command=${this.assoInfo.command}`
+      });
+      wepy.setClipboardData({
+        data: "剪贴板清空惹~"
+      });
+    }
+  };
+  events = {};
+  mixins = [ClassMixin];
+  async getBalance() {
+    const moduleStatus = wepy.getStorageSync("moduleStatus");
+    // 先判断是否可用
+    if (moduleStatus[0] && !moduleStatus[0].open) {
+      this.balance = "暂停服务";
+    } else {
+      const tempDate = new Date();
+      this.time = `${tempDate.getFullYear()}-${tempDate.getMonth() +
+        1}-${tempDate.getDate()}`;
+      campusCardRequestInfo().then(res => {
+        if (res.data.success) {
+          this.balance =
+            (Number(res.data.data.db_balance) +
+              Number(res.data.data.unsettle_amount)) /
+            100;
+          wepy.setStorageSync("sno", res.data.data.sno);
+        } else {
+          if (res.data.errCode === 24) {
+            this.balance = "密码需要更新";
+          } else {
+            this.balance = "请求失败";
+          }
+        }
+        this.$apply();
+      });
+    }
+  }
+  dealCourse(course) {
+    let common = wepy.getStorageSync("common");
+    let nowWeek = parseInt(common.week);
+    let todayCourse = this.handleCourses(course, nowWeek);
+    let today = new Date().getDay() - 1;
+    today = today === -1 ? 6 : today;
+    let allcourses = todayCourse[0][today];
+    if (todayCourse[2][today].length >= 1) {
+      allcourses.push(...todayCourse[2][today]);
+    }
+    let colorArr = this.courseColor;
+    let nowCourses = [];
+    for (let i in allcourses) {
+      if (
+        allcourses[i].weekarr.indexOf(nowWeek) !== -1 &&
+        allcourses[i].weekarr.indexOf(nowWeek) !== "-1"
+      ) {
+        allcourses[i].time =
+          "第" +
+          allcourses[i].sectionstart +
+          "-" +
+          allcourses[i].sectionend +
+          "节";
+        allcourses[i].bgc = colorArr[i % 5];
+        nowCourses.push(allcourses[i]);
+      }
+    }
+    this.courses = nowCourses;
+    if (this.courses.length >= 0) {
+      this.courses.sort((a, b) => {
+        return a.sectionstart - b.sectionstart;
+      });
+    }
+    this.noCourseItem = this.courses.length === 0;
+    this.loadHide = true;
+    this.$apply();
+  }
+  closeCommandInfo() {
+    this.commandInfoStatus = false;
+  }
+  async moduleStatusJudge() {
+    const moduleStatus = await getModuleStatus();
+    const cantUse = [];
+    const newModule = [];
+    if (moduleStatus.data) {
+      const moduleStatusData = moduleStatus.data.data;
+      if (wepy.getStorageSync("moduleStatus")) {
+        const preModuleStatus = wepy.getStorageSync("moduleStatus");
+        for (let i of moduleStatusData) {
+          for (let j of preModuleStatus) {
+            if (i.moduleName === j.moduleName) {
+              if (i.isNew && i.notificationHash !== j.notificationHash) {
+                newModule.push(i);
+              }
+            }
+          }
+        }
+        wepy.setStorageSync("newModule", newModule);
+        for (let i of newModule) {
+          for (let j of this.functionalList) {
+            if (i.moduleName === j.name) {
+              j.isNew = true;
+            }
+          }
+        }
+      }
+      moduleStatusData.forEach(module => {
+        if (!module.open) {
+          cantUse.push(module);
+          if (module.moduleName === "一卡通") {
+            this.isGoYkt = false;
+          }
+          if (module.moduleName === "正方") {
+            this.isGoCourse = false;
+          }
+          if (module.moduleName === "晨跑") {
+            this.isGoRun = false;
+          }
+        }
+      });
+      wepy.setStorageSync("moduleStatus", moduleStatusData);
+    }
+    const functionalItem = this.functionalList.find(item => item.id === 15);
+    if (functionalItem) {
+      functionalItem.module = "正方";
+    }
+  }
+  async init() {
+    const indexIconList = wepy.getStorageSync("indexIcon");
+    if (indexIconList && indexIconList.length === 8) {
+      this.functionalList = indexIconList;
+    } else {
+      this.functionalList = this.$parent.globalData.modules.slice(0, 8);
+    }
+    wepy.setStorageSync("indexIcon", this.functionalList);
+    const userInfoResponse = await getUserInfo();
+    if (userInfoResponse.data !== undefined) {
+      const userInfo = userInfoResponse.data.data;
+      wepy.setStorageSync("User", userInfo);
+      if (!wepy.getStorageSync("token") || !userInfo.enabled) {
+        wepy.reLaunch({
+          url: "/others-page/pages/login"
+        });
+      } else {
+        // 获取消息
+        getNotification().then(res => {
+          if (res.data) {
+            const {
+              data: { data: notificationList }
+            } = res;
+            this.swiperInfo = notificationList
+              .filter(notification => {
+                return !notification.read;
+              })
+              .sort((prev, next) => prev.createDate < next.createDate);
+            if (this.swiperInfo.length > 0) {
+              this.isNewInfo = true;
+            }
+            this.$apply();
+          }
+        });
+        await this.moduleStatusJudge();
+        const common = await commonInformation();
+        common.data && wepy.setStorageSync("common", common.data.data);
+        const userInfoCache = wepy.getStorageSync("userInfo");
+        if (!userInfoCache || !userInfoCache.studentId) {
+          educationSystemInformation().then(res => {
+            wepy.setStorageSync("userInfo", res.data.data);
+          });
+        }
+
+        runningCount().then(res => {
+          if (res.data.data) {
+            this.runTime = res.data.data.totalCount;
+            this.$apply();
+          }
+        });
+        this.getBalance();
+        classSchedule().then(timetable => {
+          if (timetable.data) {
+            wepy.setStorageSync("timetable", timetable.data.data.timetable);
+            this.dealCourse(timetable.data.data.timetable);
+            this.loadHide = true;
+            this.$apply();
+            // classSchedule(null, null, "courseRefresh").then(response => {
+            //   wepy.setStorageSync("timetable", response.data.data.timetable);
+            //   this.dealCourse(response.data.data.timetable);
+            //   this.$apply();
+            // });
+          }
+        });
+        getPromotionInformation(1, 10).then(res => {
+          const { success, data } = res.data;
+          if (success) {
+            if (data.totalAdCount !== wepy.getStorageSync("newsListSum")) {
+              wepy.showTabBarRedDot({ index: 1 });
+            }
+          }
+        });
+      }
+    }
+  }
+  async onShow() {
+    const token = wepy.getStorageSync("token");
+    const userInfo = wepy.getStorageSync("User");
+    if (token && userInfo && userInfo.enabled) {
+      const timetable = wepy.getStorageSync("timetable");
+      if (timetable) {
+        this.loadWrong = false;
+        this.dealCourse(timetable);
+      }
+      // 判断口令
+      const copyData = await wepy.getClipboardData();
+      const filterStr = copyData.data.match(/€(.+?)€/g);
+      if (filterStr !== null) {
+        const filterCommand = filterStr[0].substring(
+          1,
+          filterStr[0].length - 1
+        );
+        if (this.assoInfo && filterCommand !== this.assoInfo.command) {
+          assoicationDetail(filterCommand).then(res => {
+            if (res.data.data) {
+              this.commandInfoStatus = true;
+              const { assoInfo, assoInfoDetails } = res.data.data;
+              const associationItem = assoInfoDetails.filter(x => x.type === 1);
+              if (associationItem) {
+                const avatar = associationItem.picUrl;
+                this.assoInfo = {
+                  avatar,
+                  command: filterCommand,
+                  info: assoInfo
+                };
+                this.commandInfoStatus = true;
+                this.$apply();
+              }
+            }
+          });
+        }
+      }
+    }
+  }
+  onLoad() {
+    const token = wepy.getStorageSync("token");
+    if (token) {
+      // 首页开屏
+      getDisplay().then(res => {
+        const display = wepy.getStorageSync("display");
+        if (res.data && res.data.data !== null) {
+          const { displayId, color, picture, link } = res.data.data;
+          this.displayWebviewLink = link;
+          let count = wepy.getStorageSync("openthePage") || 0;
+          switch (true) {
+            case displayId !== display.displayId:
+              count = 0;
+              wepy.setStorageSync("display", {
+                displayPic: picture,
+                displayColor: color,
+                displayId
+              });
+            case count < 5:
+              this.openPage = true;
+              this.displayPic = picture;
+              this.displayColor = color;
+              count++;
+              wepy.setStorageSync("openthePage", count);
+              break;
+            default:
+              break;
+          }
+          this.$apply();
+        }
+      });
+    }
+    this.init();
+  }
+  async onPullDownRefresh() {
+    if (!this.openPage) {
+      await this.init();
+    }
+    wepy.stopPullDownRefresh();
+  }
+}
+</script>
 <style lang="stylus" scoped>
 vendors = official
 @import '../css/search-input'
 @import '../css/loading'
-.container
-  min-height 100vh
 .split-line
   width 750rpx
   height 15rpx
   background #f5f5f5
+.splitLine
+  width 710rpx
+  height 2rpx
+  margin 0 auto
+  background rgb(239, 238, 239)
 .open-page-container
   height 100vh
+  width 100vw
   background-size cover
   background-repeat no-repeat
   background-position bottom center
+  .pass-open-page-container
+    position absolute
+    width 87px
+    height 87px
+    bottom 0
+    right 10px
   .pass-open-page
     position absolute
     right 54rpx
@@ -27,17 +719,17 @@ vendors = official
     border 1rpx solid #AAAAAA
     background #fff
 .navbar
-  box-shadow 0 10rpx 8rpx 0 rgba(0, 0, 0, 0.05)
+  box-shadow 0 6rpx 4rpx 0 rgba(0, 0, 0, 0.05)
   display flex
   align-items center
 .search-bar
   padding 20rpx
   position relative
   font-size 30rpx
-  width 650rpx
+  width 100%
   box-sizing border-box
   .virsual-placeholder
-    width 630rpx
+    width calc(100% - 20px)
     position absolute
     display inline-block
     z-index 1
@@ -53,6 +745,7 @@ vendors = official
       top 4rpx
   .search-input
     pointer-events none
+    width 100%
 .alert-img
   width 45rpx
   height 48rpx
@@ -90,12 +783,21 @@ vendors = official
     width 25%
     margin-bottom 41rpx
     text-align center
+    position relative
     .functional-item-image
       width 60rpx
       height 60rpx
       display block
       margin 0 auto
       margin-bottom 10rpx
+    .image-red-dot
+      position absolute
+      top -10rpx
+      right 30rpx
+      height 25rpx
+      width 25rpx
+      border-radius 50%
+      background #fd2200
 .school-talk-container
   width 550rpx
   margin 0 auto
@@ -104,9 +806,10 @@ vendors = official
     min-height 0rpx
     height 130rpx
 .notification-container
+  position relative
   width 710rpx
   margin 0 auto
-  min-height 100rpx
+  min-height 120rpx
   display flex
   align-items center
   .notification-image
@@ -118,12 +821,36 @@ vendors = official
     background-size contain
     margin-left 20rpx
     margin-right 55rpx
+    position relative
+    .notification-oval
+      color #fff
+      font-size 26rpx
+      width 40rpx
+      height 32rpx
+      display flex
+      align-items center
+      justify-content center
+      border-radius 100rpx
+      border 5rpx solid #fff
+      background #fd2200
+      position absolute
+      top -2px
+      right 0
+    .move
+      animation move 1.2s ease 1s infinite normal
+      @keyframes move
+        0%
+          transform translateY(0)
+        50%
+          transform translateY(3px)
+        100%
+          transform translateY(0)
   .notification-content
     position relative
     height 80rpx
     line-height 80rpx
     width 600rpx
-    font-size 24rpx
+    font-size 28rpx
     .swiper-content
       width 500rpx
       height 80rpx
@@ -131,16 +858,40 @@ vendors = official
       overflow hidden
       text-overflow ellipsis
       white-space nowrap
-    .notification-arrow
-      position absolute
-      right 0
-      top 28rpx
-      width 26rpx
-      height 26rpx
-      background-image url('https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png')
-      background-position center
-      background-repeat no-repeat
-      background-size contain
+  .notification-arrow
+    position absolute
+    right 0
+    top 50%
+    margin-top -13rpx
+    width 26rpx
+    height 26rpx
+    background-image url('https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png')
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+.laboratory-container
+  width 750rpx
+  padding 30rpx 0
+  margin 0 auto
+  .container-top
+    margin 0 20rpx
+  .newfunction-container
+    width 100%
+    display flex
+    font-size 28rpx
+    flex-wrap wrap
+    margin-top 50rpx
+    margin-bottom 7rpx
+    .functional-item
+      width 25%
+      margin-bottom 41rpx
+      text-align center
+      .functional-item-image
+        width 60rpx
+        height 60rpx
+        display block
+        margin 0 auto
+        margin-bottom 10rpx
 .course-container
   width 710rpx
   margin 0 auto
@@ -249,10 +1000,12 @@ vendors = official
       font-weight 600
       font-size 40rpx
 .perfect-info
-  position absolute
-  z-index 999
-  width 100%
-  height 100%
+  position fixed
+  z-index 99
+  top 0
+  bottom 0
+  left 0
+  right 0
   background rgba(0, 0, 0, 0.5)
   display flex
   justify-content center
@@ -319,669 +1072,3 @@ vendors = official
         text-align center
         padding 43px 0 3px 0
 </style>
-
-<template>
-  <view>
-    <view class="perfect-info" wx:if="{{commandInfoStatus === false}}">
-      <view class="perfect-info-body">
-        <view class="perfect-img">
-          <image src="https://static.airbob.org/under-graduate/kl.png" />
-        </view>
-        <view class="perfect-info-card">
-          <view class="command-avatar">
-            <view>
-              <image class="command-avatar-img" src="{{command.avatar}}" />
-            </view>
-          </view>
-          <view class="perfect-info-tip">发现了社团口令{{command.data}}</view>
-          <view class="command-name">{{command.name}}</view>
-          <view class="submission" @tap="codeToDetail">
-            <view>点击查看</view>
-          </view>
-        </view>
-      </view>
-    </view>
-    <view  @tap.stop="loadTheQuestion" class="open-page-container" hidden="{{openPage}}" style="background-image:url('{{displayPic}}');">
-      <view class="pass-open-page" @tap.stop="passOpenPage" >跳过{{passTime}}秒</view>
-    </view>
-    <view class="container" hidden="{{!openPage}}" style="{{commandInfoStatus === false ? 'height:100vh;overflow:hidden;' : ''}}">
-      <view class="navbar">
-        <view class="search-bar" @tap="goSearch">
-          <view class="virsual-placeholder">
-            <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon" />
-            <text>{{schoolTalkText}}</text>
-          </view>
-          <input type="text" class="search-input" @focus="focus" />
-        </view>
-        <image src="{{isNewInfo ? 'https://static.airbob.org/under-graduate/alert-active.png' : 'https://static.airbob.org/under-graduate/alert.png'}}" class="alert-img {{isNewInfo ? 'shake' : ''}}" @tap="goInfobox"/>
-      </view>
-      <view class="functional">
-        <repeat for="{{functionalList}}">
-          <view class="functional-item" @tap="moveTo" data-path="{{item.path}}" data-module="{{item.module}}" data-name="{{item.name}}">
-            <image src="{{item.src}}" class="functional-item-image" /> {{item.name}}
-          </view>
-        </repeat>
-      </view>
-        <navigator open-type="navigate" target="miniProgram" app-id="wxa16acae9f9d131fb" style="width:750rpx;">
-          <view class="school-talk-container">
-              <image src="https://static.airbob.org/under-graduate/home-bannerbar-chat@3x.png" mode="aspectFit" class="school-talk"/>
-          </view>
-        </navigator>
-        <!-- <navigator url="../others-page/pages/association" style="width:750rpx;">
-          <view class="school-talk-container">
-              <image src="https://static.airbob.org/club-enter.png" mode="aspectFill" class="school-talk"/>
-          </view>
-        </navigator> -->
-      <view class="split-line"></view>            
-      <view class="notification-container" @tap="goInfobox" wx:if="{{!swiperInfo[0]}}" >
-        <view class="notification-image"></view>
-        <view class="notification-content">
-          <view class="swiper-content">你没有新消息哟～</view>
-          <view class="notification-arrow"></view>
-        </view>
-      </view>
-      <view class="notification-container" @tap="goInfobox" wx:else>
-        <view class="notification-image"></view>
-        <swiper class="notification-content" autoplay="true" vertical="true" circular="true">
-          <repeat for="{{swiperInfo}}" item="item" index="index" key="key">
-            <swiper-item>
-              <view class="swiper-content">{{item.title}}</view>
-              <view class="notification-arrow"></view>
-            </swiper-item>
-          </repeat>
-        </swiper>
-      </view>
-      <view class="split-line"></view>      
-      <view class="course-container">
-        <view class="container-top">
-          <view class="container-top-title">今日课表</view>
-          <span @tap="showAllCourse">完整课表</span>
-          <view class="arrow"></view>
-        </view>
-        <view class="boxLoading" hidden="{{loadHide}}"></view>
-        <view class="nocourse-list" wx:if="{{loadWrong}}">
-          <view class="nocourse-image"></view>
-          <view class="nocourse-word">加载失败了，请您重试哟`~`</view>
-        </view>
-        <view class="nocourse-list" wx:if="{{noCourseItem}}">
-          <view class="nocourse-image"></view>
-          <view class="nocourse-word">今日无课，要合理安排时间哦</view>
-        </view>
-        <scroll-view class="course-list" scroll-x="true" wx:if="{{!noCourseItem}}">
-          <repeat for="{{courses}}" index="index" key="key" item="item">
-            <view class="course-item" style="background-image:url({{item.bgc}})">
-              <view class="course-thing">
-                <view style="font-size:28rpx;">{{item.name}}</view>
-                <view>{{item.time}}</view>
-                <view>{{item.teacher}} <span wx:if="{{item.locale}}">| {{item.locale}}</span></view>
-              </view>
-            </view>
-          </repeat>
-        </scroll-view>
-      </view>
-      <view class="split-line"></view>
-      <view class="card-container">
-        <view class="container-top">
-          <view class="container-top-title">一卡通</view><span @tap.stop="goYkt">完整记录</span>
-          <view class="arrow"></view>
-        </view>
-        <view class="campus-card">
-          <view class="content">
-            <view hidden="{{!isNum}}">
-              <view><span wx:if="{{balance !== '暂停服务'}}">余额: </span><span class="bigger">{{balance}}</span><span wx:if="{{balance !== '暂停服务'}}">元</span></view>
-              <view wx:if="{{balance !== '暂停服务'}}">截止时间：{{time}}</view>
-            </view>
-          </view>
-        </view>
-      </view>
-      <view class="split-line"></view>      
-      <view class="card-container" style="border:none">
-        <view class="container-top">
-          <view class="container-top-title">晨跑</view><span @tap="showRuntime">完整记录</span>
-          <view class="arrow"></view>
-        </view>
-        <view class="run-card">
-          <view class="run-detail">
-            <view wx:if="{{runTime !== -1 && runTime !== '-1'}}">
-              <view wx:if="{{runTime !== 0 && runTime !== '0'}}">
-                跑操总数：<span>{{runTime}}</span>次
-              </view>
-            </view>
-            <view wx:else>
-              抱歉,查询失败了呢。。。
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-</template>
-
-<script>
-import wepy from "wepy";
-
-// import { connect } from "wepy-redux";
-import ClassMixin from "../mixins/class.js";
-// @connect({})
-export default class Index extends wepy.page {
-  config = {
-    navigationBarTitleText: "NJUPT",
-    enablePullDownRefresh: true
-  };
-  mixins = [];
-  data = {
-    moreFunc: {},
-    courseColor: [
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%80.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%89.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%8C.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%94.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E5%9B%9B.png"
-    ],
-    courses: [],
-    noCourseItem: false,
-    balance: "",
-    time: "",
-    functionalList: "",
-    swiperInfo: [],
-    isNewInfo: false,
-    runTime: "",
-    isNum: false,
-    isGoYkt: true,
-    isGoRun: true,
-    isGoCourse: true,
-    loadWrong: false,
-    loadHide: false,
-    openPage: true,
-    passTime: 5,
-    displayPic: "",
-    displayColor: "",
-    schoolTalkText: "搜点什么吧~",
-    // 是否检测到口令
-    commandInfoStatus: true,
-    // 弹窗社团的口令,头像,名称
-    command: {},
-    // 社团口令数组
-    commands: [],
-    commandData: {}
-  };
-  computed = {};
-  // 首页广告
-  watch = {
-    openPage(newValue, oldValue) {
-      if (!newValue) {
-        wepy.setNavigationBarColor({
-          frontColor: "#ffffff",
-          backgroundColor:
-            this.displayColor || wepy.getStorageSync("display").displayColor,
-          animation: {
-            duration: 0,
-            timingFunc: "easeIn"
-          }
-        });
-        wepy.setNavigationBarTitle({
-          title: ""
-        });
-        this.$apply();
-        wepy.hideTabBar();
-        let timer = setInterval(() => {
-          this.passTime--;
-          if (Number(this.passTime) <= 0) {
-            clearInterval(timer);
-            this.openPage = true;
-            wepy.showTabBar();
-            wepy.setNavigationBarColor({
-              frontColor: "#000000",
-              backgroundColor: "#fff",
-              animation: {
-                duration: 0,
-                timingFunc: "easeIn"
-              }
-            });
-            wepy.setNavigationBarTitle({
-              title: "NJUPT"
-            });
-            this.$apply();
-          }
-          this.$apply();
-        }, 1000);
-      }
-    }
-  };
-  methods = {
-    goSearch() {
-      this.$navigate({
-        url: "../others-page/pages/search"
-      });
-    },
-    goInfobox() {
-      this.$navigate({
-        url: "../others-page/pages/information-box"
-      });
-    },
-    goYkt() {
-      this.$navigate({
-        url: this.isGoYkt
-          ? "../campus-card-page/pages/campus-card-index"
-          : "../others-page/pages/close"
-      });
-    },
-    moveTo(e) {
-      if (
-        e.currentTarget.dataset.path === "../others-page/pages/more" &&
-        wepy.getStorageSync("indexIcon") === ""
-      ) {
-        wepy.setStorageSync("indexIcon", this.functionalList);
-      }
-      if (wepy.getStorageSync("moduleStatus")) {
-        for (let i of wepy.getStorageSync("moduleStatus")) {
-          if (
-            !e.currentTarget.dataset.module ||
-            e.currentTarget.dataset.module === ""
-          ) {
-            this.$navigate({
-              url: e.currentTarget.dataset.path
-            });
-            break;
-          } else {
-            if (i.moduleName === e.currentTarget.dataset.module) {
-              if (!i.open && e.currentTarget.dataset.name !== "课表") {
-                this.$navigate({
-                  url: "../others-page/pages/close"
-                });
-              } else {
-                this.$navigate({
-                  url: e.currentTarget.dataset.path
-                });
-              }
-              break;
-            }
-          }
-        }
-      } else {
-        this.$navigate({
-          url: e.currentTarget.dataset.path
-        });
-      }
-    },
-    showAllCourse() {
-      this.$navigate({
-        url: this.isGoCourse
-          ? "../edu-admin-page/pages/course"
-          : "../others-page/pages/close"
-      });
-    },
-    showRuntime() {
-      this.$navigate({
-        url: this.isGoRun
-          ? "../others-page/pages/run"
-          : "../others-page/pages/close"
-      });
-    },
-    // 首页广告
-    passOpenPage() {
-      this.openPage = true;
-      wepy.setNavigationBarColor({
-        frontColor: "#000000",
-        backgroundColor: "#fff",
-        animation: {
-          duration: 0
-        }
-      });
-      wepy.setNavigationBarTitle({
-        title: "NJUPT"
-      });
-      wepy.showTabBar();
-      this.$apply();
-    },
-    loadTheQuestion() {
-      wepy.setNavigationBarColor({
-        frontColor: "#000000",
-        backgroundColor: "#fff",
-        animation: {
-          duration: 0
-        }
-      });
-      wepy.setNavigationBarTitle({
-        title: "NJUPT"
-      });
-      wepy.showTabBar();
-      this.$apply();
-      this.$navigate({
-        url: "../others-page/pages/wenjuan"
-      });
-    },
-    // 通过口令跳转到社团详情
-    codeToDetail() {
-      wepy.navigateTo({
-        url: `../others-page/pages/association-detail?info=${JSON.stringify(
-          this.commandData.assoInfo
-        )}&koulingStatus=true&command=${this.command.data}`
-      });
-      wepy.setClipboardData({
-        data: "剪贴板清空惹~"
-      });
-    }
-  };
-  events = {};
-  mixins = [ClassMixin];
-  async getBalance() {
-    const moduleStatus = wepy.getStorageSync("moduleStatus");
-    // 先判断是否可用
-    if (!moduleStatus[0].open) {
-      this.balance = "暂停服务";
-      this.isNum = true;
-    } else {
-      const tempDate = new Date();
-      this.time = `${tempDate.getFullYear()}-${tempDate.getMonth() +
-        1}-${tempDate.getDate()}`;
-      const res = await wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.campusCardRequestInfo}`,
-        method: "POST"
-      });
-      if (res.data.success) {
-        this.balance =
-          (Number(res.data.data.db_balance) +
-            Number(res.data.data.unsettle_amount)) /
-          100;
-        this.isNum = true;
-        wepy.setStorageSync("sno", res.data.data.sno);
-      } else {
-        this.balance = "密码需要更新";
-        this.isNum = false;
-      }
-    }
-    this.$apply();
-  }
-  dealCourse(course) {
-    let common = wepy.getStorageSync("common");
-    let nowWeek = parseInt(common.week);
-    let todayCourse = this.handleCourses(course, nowWeek);
-    let today = new Date().getDay() - 1;
-    today = today === -1 ? 6 : today;
-    let allcourses = todayCourse[0][today];
-    if (todayCourse[2][today].length >= 1) {
-      allcourses.push(...todayCourse[2][today]);
-    }
-    let colorArr = this.courseColor;
-    let nowCourses = [];
-    for (let i in allcourses) {
-      if (
-        allcourses[i].weekarr.indexOf(nowWeek) !== -1 &&
-        allcourses[i].weekarr.indexOf(nowWeek) !== "-1"
-      ) {
-        allcourses[i].time =
-          "第" +
-          allcourses[i].sectionstart +
-          "-" +
-          allcourses[i].sectionend +
-          "节";
-        allcourses[i].bgc = colorArr[i % 5];
-        nowCourses.push(allcourses[i]);
-      }
-    }
-    this.courses = nowCourses;
-    if (this.courses.length >= 0) {
-      this.courses.sort((a, b) => {
-        return a.sectionstart - b.sectionstart;
-      });
-    }
-    this.noCourseItem = this.courses.length === 0;
-    this.loadWrong = false;
-    this.loadHide = true;
-    this.$apply();
-  }
-  async init() {
-    let that = this;
-    const { data: { data: userInfo } } = await wepy.request({
-      url: `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.userInformation}`,
-      method: "GET"
-    });
-    wepy.setStorageSync("User", userInfo);
-    if (!wepy.getStorageSync("token") || !wepy.getStorageSync("User").enabled) {
-      wepy.reLaunch({
-        url: "/others-page/pages/login"
-      });
-      this.$apply();
-    } else {
-      let moduleStatus = await wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getModStatus}`
-      });
-      if (moduleStatus.data.success) {
-        wepy.setStorageSync("moduleStatus", moduleStatus.data.data);
-        that.$apply();
-        let cantUse = [];
-        for (let i of wepy.getStorageSync("moduleStatus")) {
-          if (i.open === false) {
-            cantUse.push(i);
-            if (i.moduleName === "一卡通") {
-              that.isGoYkt = false;
-            }
-            if (i.moduleName === "正方") {
-              that.isGoCourse = false;
-            }
-            if (i.moduleName === "跑操") {
-              that.isGoRun = false;
-            }
-          }
-        }
-        for (let i of that.functionalList) {
-          if (i.id === 15 || i.id === "15") {
-            i.module = "正方";
-            wepy.setStorageSync("indexIcon", that.functionalList);
-          }
-          for (let j of cantUse) {
-            if (i.module === j.moduleStatus && i.id !== -1 && i.id !== -1) {
-              i.path = "../others-page/pages/close";
-              that.$apply();
-            }
-          }
-        }
-        const common = await wepy.request({
-          url:
-            this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.commonInformation
-        });
-        if (common.data.success) {
-          wepy.setStorageSync("common", common.data.data);
-        }
-        if (
-          !wepy.getStorageSync("userInfo") ||
-          !wepy.getStorageSync("userInfo").studentId ||
-          wepy.getStorageSync("userInfo").studentId === "" ||
-          wepy.getStorageSync("userInfo").studentId === null ||
-          wepy.getStorageSync("userInfo").studentId === "null"
-        ) {
-          wepy
-            .request({
-              url:
-                this.$parent.globalData.requestUrl +
-                this.$parent.globalData.config.educationSystemInformation
-            })
-            .then(res => {
-              if (res.data.success) {
-                wepy.setStorageSync("userInfo", res.data.data);
-              }
-            });
-        }
-        wepy
-          .request({
-            url: `${this.$parent.globalData.requestUrl}search`
-          })
-          .then(res => {
-            that.schoolTalkText = res.data.data[0].tag;
-          });
-        wepy
-          .request({
-            url:
-              this.$parent.globalData.requestUrl +
-              this.$parent.globalData.config.getExercise
-          })
-          .then(res => {
-            if (res.data.success) {
-              that.runTime = res.data.data.totalCount;
-            } else {
-              that.runTime = -1;
-            }
-          });
-        that.getBalance();
-        wepy
-          .request({
-            url:
-              this.$parent.globalData.requestUrl +
-              this.$parent.globalData.config.classSchedule
-          })
-          .then(timetable => {
-            if (!timetable.data.success) {
-              if (!wepy.getStorageSync("timetable")) {
-                that.loadWrong = true;
-                that.loadHide = true;
-              }
-              that.$apply();
-            } else {
-              wepy.setStorageSync("timetable", timetable.data.data.timetable);
-              that.dealCourse(timetable.data.data.timetable);
-            }
-          });
-        this.$apply();
-      }
-    }
-  }
-  async onShow() {
-    let that = this;
-    if (wepy.getStorageSync("token") && wepy.getStorageSync("User").enabled) {
-      if (
-        wepy.getStorageSync("indexIcon") &&
-        wepy.getStorageSync("indexIcon").length === 8
-      ) {
-        that.functionalList = wepy.getStorageSync("indexIcon");
-      } else {
-        that.functionalList = this.$parent.globalData.modules.slice(0, 8);
-      }
-      if (wepy.getStorageSync("timetable")) {
-        that.loadWrong = false;
-        that.$apply();
-        setTimeout(() => {
-          that.dealCourse(wepy.getStorageSync("timetable"));
-        }, 1000);
-      }
-      that.getBalance();
-      that.$apply();
-      wepy
-        .request({
-          url:
-            this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.getOwnMessage
-        })
-        .then(res => {
-          if (res.data.success) {
-            let data = [];
-            for (let i of res.data.data) {
-              if (i.enable && !i.read) {
-                data.unshift(i);
-              }
-            }
-            that.isNewInfo = data.length !== 0;
-            that.swiperInfo = data;
-          }
-        });
-    }
-    const copyData = await wepy.getClipboardData();
-    const filterStr = copyData.data.match(/€(.+?)€/g);
-    if (filterStr === null) {
-      this.commandInfoStatus = true;
-    } else {
-      this.commandInfoStatus = false;
-    }
-  }
-  async onLoad() {
-    const copyData = await wepy.getClipboardData();
-    const filterStr = copyData.data.match(/€(.+?)€/g);
-    if (filterStr === null) {
-      this.commandInfoStatus = true;
-    } else {
-      this.commandInfoStatus = false;
-      const filterCommand = filterStr[0].substring(1, filterStr[0].length - 1);
-      wepy
-        .request({
-          url: `${this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.AssociationMembers}${filterCommand}`,
-          method: `GET`
-        })
-        .then(res => {
-          if (res.data.success) {
-            const requestData = res.data.data;
-            this.commandData = requestData;
-            const logo = requestData.assoInfoDetails.filter(x => x.type === 1)
-              .picUrl;
-            this.command = {
-              avatar: logo,
-              name: requestData.assoInfo.fullname,
-              data: filterCommand
-            };
-            this.$apply();
-          } else {
-            if (res.data.errCode === 52) {
-              wepy.showModal({
-                content: "学号或密码错误",
-                confirmText: "知道了",
-                showCancel: false,
-                confirmColor: "#47CFF5"
-              });
-            }
-          }
-        });
-      this.$apply();
-    }
-    if (wepy.getStorageSync("token")) {
-      // 首页广告
-      wepy
-        .request({
-          url: `${this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.getIndexShow}`
-        })
-        .then(res => {
-          if (
-            res.data.data.displayId === "" ||
-            res.data.data.displayId === null
-          ) {
-            this.openPage = true;
-            this.$apply();
-          } else if (
-            !wepy.getStorageSync("display").displayId &&
-            wepy.getStorageSync("display").displayId !== res.data.data.displayId
-          ) {
-            wepy.setStorageSync("display", {
-              displayId: res.data.data.displayId,
-              displayColor: res.data.data.color,
-              displayPic: res.data.data.picture
-            });
-            wepy.setStorageSync("openthePage", 0);
-            this.openPage = false;
-          } else {
-            if (wepy.getStorageSync("openthePage") < Number(5)) {
-              this.openPage = false;
-              let number = ~~wepy.getStorageSync("openthePage");
-              wepy.setStorageSync("openthePage", ~~(number + 1));
-              this.$apply();
-            } else {
-              this.openPage = true;
-            }
-          }
-          wepy.removeStorageSync("openPage");
-          this.displayPic = wepy.getStorageSync("display").displayPic;
-          this.displayColor = wepy.getStorageSync("display").displayColor;
-          this.$apply();
-        });
-    }
-    this.init();
-  }
-  async onPullDownRefresh() {
-    this.init();
-    wepy.stopPullDownRefresh();
-  }
-}
-</script>

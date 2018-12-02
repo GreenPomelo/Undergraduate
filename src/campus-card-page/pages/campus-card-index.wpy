@@ -41,7 +41,7 @@
     </view>
     <QyModal :maskClosable="maskClosable" width="500rpx" :visible.sync="bindModalVisible">
       <view slot="content" class="bind-container">
-        <input class="bind-input" placeholder="6位校园卡密码" maxlength="6" type="number" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+        <input class="bind-input" placeholder="{{placeholder}}" maxlength="6" type="number" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
         <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
       </view>
     </QyModal>
@@ -52,6 +52,13 @@
 import wepy from "wepy";
 import Chart from "../components/wxcharts-min.js";
 import QyModal from "@/components/qy-modal";
+import {
+  campusCardRequestInfo,
+  sevenDayTurnOver,
+  yearTurnOver
+} from "@/api/campusCard";
+import { changeSecretCode } from "@/api/common";
+
 export default class CampusCard extends wepy.page {
   components = {
     QyModal
@@ -109,7 +116,8 @@ export default class CampusCard extends wepy.page {
     bindInputPassword: "",
     bindModalVisible: false,
     chartContainerHeight: "auto",
-    yktStatus: true
+    yktStatus: true,
+    placeholder: ""
   };
   watch = {
     chartTab(val) {
@@ -150,7 +158,10 @@ export default class CampusCard extends wepy.page {
     }
     wepy.stopPullDownRefresh();
   }
-  onLoad() {
+  async onLoad() {
+    wepy.showLoading({
+      title: "正在加载"
+    });
     const moduleStatus = wepy.getStorageSync("moduleStatus");
     this.yktStatus = moduleStatus && moduleStatus[0] && moduleStatus[0].open;
     if (!this.yktStatus) {
@@ -159,7 +170,8 @@ export default class CampusCard extends wepy.page {
         url: "../../others-page/pages/close"
       });
     } else {
-      this.init();
+      await this.init();
+      wepy.hideLoading();
     }
   }
   methods = {
@@ -186,33 +198,24 @@ export default class CampusCard extends wepy.page {
         /^[0-9]*$/.test(this.bindInputPassword) &&
         this.bindInputPassword.length === 6;
       if (isNumber) {
-        await wepy
-          .request({
-            url: `${this.$parent.globalData.requestUrl +
-              this.$parent.globalData.config.changeSecretCode}`,
-            method: "POST",
-            data: {
-              domainType: "7",
-              password: this.bindInputPassword
-            }
-          })
-          .then(res => {
-            if (res.data.success && res.data.data) {
-              // 绑定成功
-              this.bindModalVisible = false;
-              // this.$invoke("QyModal", "close");
-              this.init();
-            } else {
-              wepy.showModal({
-                content: res.data.errMsg
-                  ? res.data.errMsg
-                  : "不知道什么原因呢= =",
-                confirmText: "知道了",
-                showCancel: false,
-                confirmColor: "#353535"
-              });
-            }
-          });
+        await changeSecretCode("", this.bindInputPassword, "7").then(res => {
+          if (res.data && res.data.data) {
+            // 绑定成功
+            this.placeholder = "";
+            this.bindModalVisible = false;
+            // this.$invoke("QyModal", "close");
+            this.init();
+          } else {
+            wepy.showModal({
+              content: res.data.errMsg
+                ? res.data.errMsg
+                : "不知道什么原因呢= =",
+              confirmText: "知道了",
+              showCancel: false,
+              confirmColor: "#353535"
+            });
+          }
+        });
       } else {
         wepy.showModal({
           content: "一卡通密码必须6位数字",
@@ -233,12 +236,8 @@ export default class CampusCard extends wepy.page {
     const tempDate = new Date();
     this.time = `${tempDate.getFullYear()}-${tempDate.getMonth() +
       1}-${tempDate.getDate()}`;
-    const res = await wepy.request({
-      url: `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.yourCampus}`,
-      method: "POST"
-    });
-    if (res.data.success) {
+    const res = await campusCardRequestInfo();
+    if (res.data) {
       this.balance =
         (Number(res.data.data.db_balance) +
           Number(res.data.data.unsettle_amount)) /
@@ -249,19 +248,10 @@ export default class CampusCard extends wepy.page {
       this.$apply();
     } else {
       // 密码错误
-      wepy
-        .showModal({
-          content: "密码已经更新请重新绑定",
-          confirmText: "知道了",
-          showCancel: false,
-          confirmColor: "#353535"
-        })
-        .then(res => {
-          this.chartContainerHeight = 0;
-          this.bindModalVisible = true;
-          // this.$invoke("QyModal", "open");
-          this.$apply();
-        });
+      this.chartContainerHeight = 0;
+      this.placeholder = "6位校园卡密码";
+      this.bindModalVisible = true;
+      this.$apply();
     }
   }
   async getWeek() {
@@ -271,11 +261,7 @@ export default class CampusCard extends wepy.page {
     for (let i = 6; i >= 0; i--) {
       this.labels1.push(new Date(now - i * 1000 * 3600 * 24).getDate());
     }
-    const { data: week } = await wepy.request({
-      url: `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.sevenDayTurnOver}`,
-      method: "POST"
-    });
+    const { data: week } = await sevenDayTurnOver();
     if (week.data && week.data.slice) {
       this.chartdata1 = week.data.slice().reverse();
       if (Object.keys(this.chartInstance).length === 0) {
@@ -312,82 +298,77 @@ export default class CampusCard extends wepy.page {
   }
   async getYear() {
     // 获取月流水
-    const { data: now_month } = await wepy.request({
-      url: `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.yearTurnOver}?year=${2018}`,
-      method: "POST"
-    });
+    const { data: now_month } = await yearTurnOver();
     if (now_month.data) {
       this.labels2 = [];
-      this.labels2 = now_month.data.resmonth;
-      this.chartdata2 = now_month.data.amt.map(_ => Number(_));
+      this.labels2 = now_month.data.resmonth.slice(-6);
+      this.chartdata2 = now_month.data.amt.slice(-6).map(_ => Number(_));
     }
   }
 }
 </script>
 
-
 <style lang="stylus" scoped>
 .container
-	display flex
-	flex-direction column
-	align-items center
-	.bg
-		position fixed
-		width 100vw
-		height 100vh
-		background-color rgb(245,245,245)
-		z-index -1000
-	.head
-		background-image url("https://static.airbob.org/under-graduate/card_pic.png")
-		width 100%
-		background-repeat no-repeat
-		background-size contain
-		height 400rpx
-		display flex
-		flex-direction column
-		align-items center
-		color #353535
-		background-color rgb(255,255,255)
-		.tip
-			font-size 24rpx
-			&:first-child
-				margin-top 49rpx
-		.balance
-			font-size 90rpx
-			font-weight bold
-		.card-text
-			font-size 30rpx
-			font-weight bold
-			margin-top 50rpx
-	.list
-		width 100%
-		margin 20rpx 0
-	.chart-container
-		background-color white
-		overflow hidden
-		padding-top 26rpx
-		width 100%
-		.title
-			font-size 32rpx
-			color #353535
-			font-weight bold
-			margin 30rpx 0 0 20rpx
-		.tab-list
-			display flex
-			margin 15rpx 0 0 20rpx
-			.tab
-				border-radius 60rpx
-				font-size 24rpx
-				padding 4rpx 16rpx
-				& + .tab
-					margin-left 30rpx
-			.active
-				color #fff
-				background-color #47CFF5
-			.unactive
-				color #999CA0
-				border 2rpx solid #999CA0
+  display flex
+  flex-direction column
+  align-items center
+  .bg
+    position fixed
+    width 100vw
+    height 100vh
+    background-color rgb(245, 245, 245)
+    z-index -1000
+  .head
+    background-image url('https://static.airbob.org/under-graduate/card_pic.png')
+    width 100%
+    background-repeat no-repeat
+    background-size contain
+    height 400rpx
+    display flex
+    flex-direction column
+    align-items center
+    color #353535
+    background-color rgb(255, 255, 255)
+    .tip
+      font-size 24rpx
+      &:first-child
+        margin-top 49rpx
+    .balance
+      font-size 90rpx
+      font-weight bold
+    .card-text
+      font-size 30rpx
+      font-weight bold
+      margin-top 50rpx
+  .list
+    width 100%
+    margin 20rpx 0
+  .chart-container
+    background-color white
+    overflow hidden
+    padding-top 26rpx
+    width 100%
+    .title
+      font-size 32rpx
+      color #353535
+      font-weight bold
+      margin 30rpx 0 0 20rpx
+    .tab-list
+      display flex
+      margin 15rpx 0 0 20rpx
+      .tab
+        border-radius 60rpx
+        font-size 24rpx
+        padding 4rpx 16rpx
+        &+.tab
+          margin-left 30rpx
+      .active
+        color #fff
+        background-color #47CFF5
+      .unactive
+        color #999CA0
+        border 2rpx solid #999CA0
 </style>
 
 <style lang="stylus" scoped>

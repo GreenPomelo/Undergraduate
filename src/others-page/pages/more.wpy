@@ -37,6 +37,7 @@
                 <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
                   <view class="detail-image" style="position:relative;">
                     <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
                     <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
@@ -55,6 +56,7 @@
                 <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
                   <view class="detail-image" style="position:relative;">
                     <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
                     <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
@@ -73,6 +75,7 @@
                 <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
                   <view class="detail-image" style="position:relative;">
                     <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
                     <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
@@ -91,6 +94,7 @@
                 <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
                   <view class="detail-image" style="position:relative;">
                     <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
                     <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
@@ -106,7 +110,7 @@
 
 <script>
 import wepy from "wepy";
-
+import { getModuleStatus } from "@/api/common";
 import tip from "@/components/qy-tip";
 
 export default class extends wepy.page {
@@ -128,36 +132,40 @@ export default class extends wepy.page {
           src: "https://static.airbob.org/under-graduate/more/library.png",
           isIndex: true,
           id: 0,
-          path: "../others-page/pages/library",
+          path: "../others-page/pages/libraryPages/library",
           module: "图书馆",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "已借书目",
           src: "https://static.airbob.org/under-graduate/more/borrow.png",
           isIndex: false,
           id: 1,
-          path: "../others-page/pages/library",
+          path: "../others-page/pages/libraryPages/library",
           module: "图书馆",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "检索书目",
           src: "https://static.airbob.org/under-graduate/more/retrieval.png",
           isIndex: false,
           id: 2,
-          path: "../others-page/pages/library",
+          path: "../others-page/pages/libraryPages/library",
           module: "图书馆",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "座位查询",
           src: "https://static.airbob.org/under-graduate/more/seat inquiry.png",
           isIndex: false,
           id: 3,
-          path: "../others-page/pages/library",
+          path: "../others-page/pages/libraryPages/library",
           module: "图书馆",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         }
       ],
       card: [
@@ -168,7 +176,8 @@ export default class extends wepy.page {
           id: 4,
           path: "../campus-card-page/pages/campus-card-index",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "校园卡充值",
@@ -177,7 +186,8 @@ export default class extends wepy.page {
           id: 5,
           path: "../campus-card-page/pages/campus-card-charge",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "电费充值",
@@ -186,7 +196,8 @@ export default class extends wepy.page {
           id: 6,
           path: "../campus-card-page/pages/electric-charge",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "校园网充值",
@@ -196,7 +207,8 @@ export default class extends wepy.page {
           id: 7,
           path: "../campus-card-page/pages/net-charge",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "校园卡挂失",
@@ -206,7 +218,8 @@ export default class extends wepy.page {
           id: 8,
           path: "../campus-card-page/pages/campus-card-loss",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         }
       ],
       course: [
@@ -218,7 +231,8 @@ export default class extends wepy.page {
           id: 9,
           path: "../edu-admin-page/pages/score-inquire",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "体育部",
@@ -227,7 +241,8 @@ export default class extends wepy.page {
           id: 10,
           path: "../others-edu-page/pages/pe-score",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "考试倒计时",
@@ -236,7 +251,8 @@ export default class extends wepy.page {
           id: 11,
           path: "../edu-admin-page/pages/cut-down",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "等级考试",
@@ -246,7 +262,8 @@ export default class extends wepy.page {
           id: 12,
           path: "../edu-admin-page/pages/check-grade",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "补考查询",
@@ -256,7 +273,8 @@ export default class extends wepy.page {
           id: 13,
           path: "../edu-admin-page/pages/supplement-and-tutorials",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "辅导课查询",
@@ -267,7 +285,8 @@ export default class extends wepy.page {
           path:
             "../edu-admin-page/pages/supplement-and-tutorials?title=tutorials",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "GPA计算器",
@@ -276,7 +295,8 @@ export default class extends wepy.page {
           id: 15,
           path: "../others-edu-page/pages/GpaCalculator",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         }
       ],
       campus: [
@@ -287,7 +307,8 @@ export default class extends wepy.page {
           id: 16,
           path: "../edu-admin-page/pages/course",
           module: "一卡通",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "校历",
@@ -296,7 +317,8 @@ export default class extends wepy.page {
           id: 17,
           path: "../others-edu-page/pages/calendar",
           module: "校历",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "自主学分",
@@ -305,7 +327,8 @@ export default class extends wepy.page {
           id: 18,
           path: "../edu-admin-page/pages/credit",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "晨跑",
@@ -313,8 +336,9 @@ export default class extends wepy.page {
           isIndex: true,
           id: 19,
           path: "../others-page/pages/run",
-          module: "跑操",
-          isOpen: true
+          module: "晨跑",
+          isOpen: true,
+          isNew: false
         },
         {
           name: "学费查询",
@@ -323,16 +347,18 @@ export default class extends wepy.page {
           id: 20,
           path: "../others-page/pages/tuition",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "社团招新",
           src: "https://static.airbob.org/under-graduate/more/club.png",
           isIndex: false,
           id: 21,
-          path: "../others-page/pages/association",
+          path: "../others-page/pages/associationPages/association",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         },
         {
           name: "问卷",
@@ -340,9 +366,11 @@ export default class extends wepy.page {
             "https://static.airbob.org/under-graduate/more/questionnaire.png",
           isIndex: false,
           id: 22,
-          path: "../others-page/pages/questionnaire-homepage",
+          path:
+            "../others-page/pages/questionnairePages/questionnaire-homepage",
           module: "正方",
-          isOpen: true
+          isOpen: true,
+          isNew: false
         }
         // {
         //   name: "认证",
@@ -351,7 +379,8 @@ export default class extends wepy.page {
         //   id: 23,
         //   path: "../others-page/pages/auth",
         //   module: "正方",
-        //   isOpen: true
+        //   isOpen: true,
+        //   isNew: false
         // }
       ]
     },
@@ -372,6 +401,25 @@ export default class extends wepy.page {
     nav(e) {
       if (!this.showEdit) {
         let item = e.currentTarget.dataset.item;
+        let newModule = wepy.getStorageSync("newModule");
+        if (item.isNew) {
+          for (let i in this.details) {
+            for (let j of this.details[i]) {
+              if (j.name === item.name) {
+                j.isNew = false;
+              }
+            }
+          }
+          for (let i in newModule) {
+            if (newModule[i].moduleName === item.name) {
+              newModule.splice(i, 1);
+              wepy.setStorageSync("newModule", newModule);
+              break;
+            }
+          }
+          this.$apply();
+        }
+
         if (!item.isOpen) {
           item.path = "../others-page/pages/close";
         }
@@ -483,28 +531,41 @@ export default class extends wepy.page {
   };
   async onShow() {
     let that = this;
-    const module = await wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.getModStatus
-    });
+    const module = await getModuleStatus();
+    const newModule = wepy.getStorageSync("newModule");
     let cantUse = [];
-    for (let i of module.data.data) {
-      if (!i.open) {
-        cantUse.push(i);
+    if (module.data) {
+      const currentModuleData = module.data.data;
+      for (let i of currentModuleData) {
+        if (!i.open) {
+          cantUse.push(i);
+        }
+      }
+      if (newModule) {
+        for (let i of newModule) {
+          for (let j in this.details) {
+            for (let k of this.details[j]) {
+              if (k.name === i.moduleName) {
+                k.isNew = true;
+              }
+            }
+          }
+        }
+        this.$apply();
       }
     }
     if (cantUse.length !== 0) {
       for (let i in that.details) {
         for (let j of that.details[i]) {
           for (let m of cantUse) {
-            if (j.module === m.moduleName) {
+            if (j.name === m.moduleName) {
               j.isOpen = false;
             }
           }
         }
       }
     }
+
     if (wepy.getStorageSync("indexIcon").length !== 8) {
       wepy.setStorageSync(
         "indexIcon",
@@ -568,11 +629,9 @@ export default class extends wepy.page {
     background-position center
     background-repeat no-repeat
     background-size contain
-
 .now-index-course
   width 750rpx
   height 300rpx
-
 .classification
   width 750rpx
   border-bottom 1rpx solid #E3E3E3
@@ -617,10 +676,17 @@ export default class extends wepy.page {
           margin 0 auto
           height 65rpx
           width 65rpx
+          .image-red-dot
+            position absolute
+            top -10rpx
+            right -30rpx
+            height 25rpx
+            width 25rpx
+            border-radius 50%
+            background #fd2200
         .detail-name
           font-size 28rpx
           color #353535
-
 #show-index
   overflow hidden
   height 0rpx

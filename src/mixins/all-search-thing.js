@@ -8,7 +8,7 @@ export default class allSearch extends wepy.mixin {
         icon: "https://static.airbob.org/under-graduate/more/library.png",
         isIndex: true,
         id: 0,
-        path: "../others-page/pages/library",
+        path: "../others-page/pages/libraryPages/library",
         isOpen: true,
         module: "图书馆"
       },
@@ -17,7 +17,7 @@ export default class allSearch extends wepy.mixin {
         icon: "https://static.airbob.org/under-graduate/more/borrow.png",
         isIndex: false,
         id: 1,
-        path: "../others-page/pages/library",
+        path: "../others-page/pages/libraryPages/library",
         isOpen: true,
         module: "图书馆"
       },
@@ -26,7 +26,7 @@ export default class allSearch extends wepy.mixin {
         icon: "https://static.airbob.org/under-graduate/more/retrieval.png",
         isIndex: false,
         id: 2,
-        path: "../others-page/pages/library",
+        path: "../others-page/pages/libraryPages/library",
         isOpen: true,
         module: "图书馆"
       },
@@ -35,7 +35,7 @@ export default class allSearch extends wepy.mixin {
         icon: "https://static.airbob.org/under-graduate/more/seat inquiry.png",
         isIndex: false,
         id: 3,
-        path: "../others-page/pages/library",
+        path: "../others-page/pages/libraryPages/library",
         isOpen: true,
         module: "图书馆"
       },
@@ -185,7 +185,7 @@ export default class allSearch extends wepy.mixin {
         id: 19,
         path: "../others-page/pages/run",
         isOpen: true,
-        module: "跑操"
+        module: "晨跑"
       },
       {
         name: "学费查询",
@@ -201,7 +201,7 @@ export default class allSearch extends wepy.mixin {
         icon: "https://static.airbob.org/under-graduate/more/club.png",
         isIndex: false,
         id: 21,
-        path: "../others-page/pages/association",
+        path: "../others-page/pages/associationPages/association",
         isOpen: true,
         module: "正方"
       },
