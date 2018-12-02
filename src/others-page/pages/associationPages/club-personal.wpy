@@ -1,0 +1,757 @@
+<template>
+    <view class="container">
+        <view class="container-top column">
+            <image class="bg-index" style="height:{{showPage==1?'calc(80vh + 20rpx)':'calc(35vh + 20rpx)'}};" src="https://static.airbob.org/under-graduate/bg_index.png" />
+            <view class="club-header row">
+                <view class="user-container row" @tap="changePage" data-page="1">
+                    <image class="user-avatar" mode="aspectFit" src="{{avatar}}" />
+                    <view class="user-name">{{ username }}</view>
+                    <view class="userinfo-complete {{userInfoCompleted?'userinfo-completed':''}}"><span>{{userInfoCompleted?'已完善':'完善信息'}}</span></view>
+                </view>
+                <image @tap="scanQrcode" class="scan-icon" src="https://static.airbob.org/under-graduate/scan.png" />
+            </view>
+            <view class="club-line"></view>
+        </view>
+        <scroll-view class="club-scroll" scroll-y="true">
+            <view class="club-move">
+                <navigator open-type="navigate" hover-class="none" path="/pages/index?token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="xiaotan row">
+                    <image class="xiaotan-logo" mode="aspectFit" src="https://static.airbob.org/under-graduate/xtlogo.png" />
+                    <view class="xiaotan-text">
+                        <span>南邮事,校谈说</span>
+                        <view>去校谈聊聊社团吧>></view>
+                    </view>
+                </navigator>
+                <view class="club-num" @tap="changePage" data-page="2">
+                    <view class="number"><span>{{ clubNum }}</span>个</view>
+                    <span>已报名社团</span>
+                </view>
+            </view>
+            <view class="info-container" wx:if="{{ showPage==1 }}">
+                <view class="questionnaire">
+                    <view class="personal-info">
+                        <view class="questionnaire-title">个人信息</view>
+                        <view class="questionnaire-row row">
+                            <input class="club-box user-name" placeholder="{{username}}" disabled="true" />
+                            <picker class="club-box user-gender" value="{{gIndex}}" range="{{genderArr}}" @change="setInformation" data-type="gIndex">
+                              <view class="picker-gender">{{gIndex===null?"性别":genderArr[gIndex]}}</view>
+                              <view class="picker-arrow"></view>
+                            </picker>
+                        </view>
+                        <view class="questionnaire-row row">
+                            <picker class="club-box user-birth-year" value="{{yIndex}}" range="{{yearArr}}" @change="setInformation" data-type="yIndex">
+                                <view class="picker-year">{{yIndex==null?"生日":yearArr[yIndex]}}</view>
+                                <view class="picker-arrow"></view>
+                            </picker>
+                            <picker class="club-box user-birth-month" value="{{mIndex}}" range="{{monthArr}}" @change="setInformation" data-type="mIndex">
+                                <view class="picker-month">{{mIndex==null?"月":monthArr[mIndex]}}</view>
+                                <view class="picker-arrow"></view>
+                            </picker>
+                            <picker class="club-box user-birth-day" value="{{dIndex}}" range="{{dateArr}}" @change="setInformation" data-type="dIndex">
+                                <view class="picker-day">{{dIndex==null?"日":dateArr[dIndex]}}</view>
+                                <view class="picker-arrow"></view>
+                            </picker>
+                        </view>
+                        <view class="questionnaire-row row">
+                            <picker class="club-box user-college" disabled="true">
+                                <view class="picker-college">{{college}}</view>
+                                <view class="picker-arrow"></view>
+                            </picker>
+                            <picker class="club-box user-major" disabled="true">
+                                <view class="picker-major">{{major}}</view>
+                                <view class="picker-arrow"></view>
+                            </picker>
+                        </view>
+                        <input class="club-box user-highschool" placeholder="中学学校" value="{{highschool}}" @input="setInformation" data-type="highschool"/>
+                        <input class="club-box user-dorm" placeholder="宿舍(格式:xx-xxx-x)" value="{{dorm}}" @input="setInformation" data-type="dorm"/>
+                    </view>
+                    <view class="personal-contact">
+                        <view class="questionnaire-title">联系方式</view>
+                        <input class="club-box user-phonenumber" placeholder="电话号码" value="{{phonenumber}}" @input="setInformation" data-type="phonenumber"/>
+                        <input class="club-box user-qq" placeholder="QQ号" value="{{qq}}" @input="setInformation" data-type="qq"/>
+                        <input class="club-box user-email" placeholder="邮箱" value="{{email}}" @input="setInformation" data-type="email"/>
+                    </view>
+                    <view class="club-des column">
+                        <view>使用南邮小程序招新系统报名社团与线下填写</view>
+                        <view>纸质表具有相同报名效力。</view>
+                        <view>且线上报名更加方便、快捷、环保。</view>
+                    </view>
+                </view>
+                <button class="save-btn" @tap="submitInformation"><span>保存</span></button>
+            </view>
+            <view class="club-container" wx:if="{{ showPage==2 }}">
+                <view wx:if="{{ nojoin }}">
+                    <view class="card-container">
+                        <view class="club-card column" style="align-items:center;">
+                            <image class="nojoin-pic" mode="aspectFit" src="https://static.airbob.org/under-graduate/nojoin.png" />
+                        </view>
+                        <view class="card-line"></view>
+                    </view>
+                    <view class="card-container">
+                        <view class="club-card column"></view>
+                        <view class="card-line"></view>
+                    </view>
+                </view>
+                <view wx:if="{{ !nojoin }}">
+                    <repeat for="{{clubs}}" index="index" key="key" item="item">
+                        <view class="card-container"> 
+                            <view class="club-card column">
+                                <view class="card-header row">
+                                    <view class="card-info row">
+                                        <image class="club-avatar" mode="as1pectFit" src="{{item.logo}}" />
+                                        <view class="card-name column">
+                                            <view class="club-name">{{item.fullname}}</view>
+                                            <view class="card-key row" @tap="copyKey" data-code="{{item.kouling}}" data-name="{{ item.associationName }}">
+                                                <span>招新口令</span>
+                                                <view class="club-key">{{item.kouling}}</view>
+                                                <span>点击复制分享</span>
+                                            </view>
+                                        </view>
+                                    </view>
+                                    <view class="card-detail">
+                                        <view class="club-date">{{item.lastModifiedDate}}</view>
+                                        <view class="club-status">{{ item.status }}</view>
+                                    </view>
+                                </view>
+                                <view class="card-choice row">
+                                    <view class="club-first-choice column">
+                                        <view style="font-weight:bold;">{{item.departmentModelList[0].departmentName?item.departmentModelList[0].departmentName:'无'}}</view>
+                                        <span>第一志愿</span>
+                                    </view>
+                                    <view class="club-second-choice column">
+                                        <view style="font-weight:bold;">{{item.departmentModelList[1].departmentName?item.departmentModelList[1].departmentName:'无'}}</view>
+                                        <span>第二志愿</span>
+                                    </view>
+                                </view>
+                                <view class="card-footer row">
+                                    <span @tap="toClubPage" data-idx="{{index}}">了解社团信息</span>
+                                    <span @tap="toFormPage" data-idx="{{index}}">查看报名表</span>
+                                </view>
+                            </view>
+                            <view class="card-line"></view>
+                        </view>
+                    </repeat>
+                    <view class="card-container" @tap="toHomePage">
+                        <view class="club-card row" style="align-items:center;">
+                            <span class="card-nomore">没有更多了，去首页看看？</span>
+                        </view>
+                        <view class="card-line"></view>
+                    </view>
+                </view>
+            </view>
+            <view class="footer-container" wx:if="{{ showPage==2 }}">
+                <view class="club-footer">
+                    <view class="club-des column">
+                        <view>使用南邮小程序招新系统报名社团与线下填写</view>
+                        <view>纸质表具有相同报名效力。</view>
+                        <view>且线上报名更加方便、快捷、环保。</view>
+                    </view>
+                    <navigator open-type="navigate" hover-class="none" path="/pages/index?token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="xiaotan-btn"><span>去校谈,聊社团</span></navigator>
+                </view>
+            </view>
+        </scroll-view>
+        <view class="club-toast  {{showToast?'club-toast-fadeInUp':''}}">
+          <view>口令复制成功！快去QQ/微信中粘贴给同学</view>
+          <view>一起报名这个社团吧</view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from "wepy";
+import { associationUpdate, getAssociationStatus } from "@/api/recruit";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "社团报名",
+    navigationBarBackgroundColor: "#45d3fb",
+    disableScroll: true
+  };
+  data = {
+    userInfoCompleted: false,
+    clubNum: 0,
+    showPage: 2,
+    nojoin: true,
+    username: "",
+    avatar: "",
+    college: "",
+    major: "",
+    xh: "",
+    genderArr: ["男", "女"],
+    yearArr: [],
+    monthArr: [],
+    dateArr: [],
+    gIndex: null,
+    yIndex: null,
+    mIndex: null,
+    dIndex: null,
+    highschool: "",
+    dorm: "",
+    phonenumber: "",
+    qq: "",
+    email: "",
+    clubs: [],
+    showToast: false,
+    schoolTalkToken: ""
+  };
+  computed = {
+    userInfoCompleted() {
+      return !wepy.getStorageSync("associationInfo")
+        ? false
+        : Object.entries(wepy.getStorageSync("associationInfo")).filter(
+            item => item[1] === ""
+          ).length === 0;
+    }
+  };
+  methods = {
+    changePage(e) {
+      this.showPage = Number(e.currentTarget.dataset.page);
+    },
+    setInformation(e) {
+      let type = e.currentTarget.dataset.type;
+      this[type] = e.detail.value;
+      this.$apply();
+    },
+    // 扫描二维码
+    scanQrcode() {
+      wepy.scanCode().then(res => {
+        const postData = res.path.match(/{(.+?)}/g)[0];
+        wepy.navigateTo({
+          url: `./association-detail?info=${postData}`
+        });
+      });
+    },
+    async submitInformation() {
+      let that = this;
+      const data = {
+        name: that.username,
+        college: that.college,
+        major: that.major,
+        sex: Number(that.gIndex) === 0 ? 1 : 2,
+        xh: that.xh,
+        qq: that.qq,
+        mail: that.email,
+        phone: that.phonenumber,
+        birthday:
+          that.yearArr[that.yIndex] +
+          "-" +
+          that.monthArr[that.mIndex] +
+          "-" +
+          that.dateArr[that.dIndex],
+        gaozhong: that.highschool,
+        dorm: that.dorm
+      };
+      if (Object.entries(data).filter(item => item[1] === "").length !== 0) {
+        return wepy.showToast({
+          title: "信息未填全",
+          icon: "none",
+          duration: 1500
+        });
+      }
+      let response = await associationUpdate(data);
+      if (response.data.success) {
+        wepy.setStorageSync("associationInfo", data);
+        wepy.showToast({
+          title: "保存成功",
+          icon: "none",
+          duration: 1500
+        });
+      } else if (response.data.errCode === 53) {
+        wepy.showToast({
+          title: "用户信息未更改",
+          icon: "none",
+          duration: 1500
+        });
+        if (response.data.success) {
+          wepy.showToast({
+            title: "保存成功",
+            icon: "none",
+            duration: 1500
+          });
+        } else if (response.data.errCode === 53) {
+          wepy.showToast({
+            title: "用户信息未更改",
+            icon: "none",
+            duration: 1500
+          });
+        } else {
+          wepy.showToast({
+            title: "保存失败，请重试",
+            icon: "none",
+            duration: 1500
+          });
+        }
+      } else {
+        wepy.showToast({
+          title: "信息填写不完整",
+          icon: "none",
+          duration: 1500
+        });
+      }
+    },
+    toHomePage() {
+      wepy.navigateTo({
+        url: `./association?associationNum=${this.clubNum}`
+      });
+    },
+    toClubPage(e) {
+      const index = e.currentTarget.dataset.idx;
+      let postData = this.clubs[index];
+      postData.description = postData.associationName;
+      wepy.navigateTo({
+        url: `./association-detail?info=${JSON.stringify(
+          postData.associationName
+        )}&fullname=${JSON.stringify(
+          postData.fullname
+        )}&clubPersonalStatus=true`
+      });
+    },
+    toFormPage(e) {
+      const index = e.currentTarget.dataset.idx;
+      let postData = this.clubs[index];
+      postData.description = postData.associationName;
+      this.$parent.globalData.associationUserTableInfo = postData;
+      wepy.navigateTo({
+        url: `./association-register?clubPersonalStatus=true`
+      });
+    },
+    async copyKey(e) {
+      let code = e.currentTarget.dataset.code;
+      let name = e.currentTarget.dataset.name;
+      let res = await wepy.setClipboardData({
+        data:
+          "长按复制这段文字，打开👉南邮小程序👈立即加入【" +
+          name +
+          "】€" +
+          code +
+          "€"
+      });
+      if (res.errMsg === "setClipboardData:ok") {
+        this.showToast = true;
+        this.$apply();
+        setTimeout(() => {
+          this.showToast = false;
+          this.$apply();
+        }, 5000);
+      }
+      this.$apply();
+    }
+  };
+  async getUserInfo() {
+    let that = this;
+    let response = wepy.getStorageSync("associationInfo");
+    if (response) {
+      let birthday = response.birthday.split("-");
+      that.username = response.name;
+      that.gIndex = response.sex === 1 ? 0 : 1;
+      that.yIndex =
+        that.yearArr.indexOf(birthday[0]) === -1
+          ? null
+          : that.yearArr.indexOf(birthday[0]);
+      that.mIndex =
+        that.monthArr.indexOf(birthday[1]) === -1
+          ? null
+          : that.monthArr.indexOf(birthday[1]);
+      that.dIndex =
+        that.dateArr.indexOf(birthday[2]) === -1
+          ? null
+          : that.dateArr.indexOf(birthday[2]);
+      that.highschool = response.gaozhong;
+      that.dorm = response.dorm;
+      that.phonenumber = Number(response.phone) === 0 ? "" : response.phone;
+      that.qq = Number(response.qq) === 0 ? "" : response.qq;
+      that.email = response.mail;
+    }
+    this.$apply();
+  }
+  async getClubInfo() {
+    let that = this;
+    let response = await getAssociationStatus(that.xh);
+    if (response.data.success) {
+      if (response.data.data.length) {
+        that.clubNum = response.data.data.length;
+        that.nojoin = false;
+        response.data.data.map(item => {
+          item.lastModifiedDate = item.lastModifiedDate
+            .slice(0, 10)
+            .replace(/-/g, ".");
+          if (item.status <= 0 && item.status !== -2) {
+            item.status = "审核中";
+          } else if (item.status === -2) {
+            item.status = "未通过";
+          } else if (item.status > 0) {
+            for (let i = 0; i < item.departmentModelList.length; i++) {
+              if (item.status === item.departmentModelList[i].id) {
+                if (i === 0) {
+                  item.status = "第一志愿通过";
+                } else if (i === 1) {
+                  item.status = "第二志愿通过";
+                }
+              }
+            }
+          }
+          that.clubs.push(item);
+        });
+      } else {
+        that.nojoin = true;
+      }
+    } else {
+      await wepy.showToast({
+        title: "获取社团信息失败,请重试",
+        icon: "none",
+        duration: 1500
+      });
+    }
+    this.$apply();
+  }
+  async init() {
+    for (let i = 2018; i >= 1990; i--) {
+      this.yearArr.push(String(i));
+    }
+    for (let i = 1; i <= 12; i++) {
+      if (i < 10) {
+        this.monthArr.push(String("0" + i));
+      } else {
+        this.monthArr.push(String(i));
+      }
+    }
+    for (let i = 1; i <= 31; i++) {
+      if (i < 10) {
+        this.dateArr.push(String("0" + i));
+      } else {
+        this.dateArr.push(String(i));
+      }
+    }
+    await this.getUserInfo();
+    await this.getClubInfo();
+  }
+  async onLoad(options) {
+    this.schoolTalkToken = wepy.getStorageSync("token");
+    let showPage = options.showPage;
+    if (showPage) {
+      this.showPage = showPage;
+    }
+    if (
+      wepy.getStorageSync("token") &&
+      wepy.getStorageSync("User").enabled &&
+      wepy.getStorageSync("userInfo")
+    ) {
+      this.avatar = wepy.getStorageSync("User").nativeInformation.avatar;
+      this.college = wepy.getStorageSync("userInfo").college;
+      this.major = wepy.getStorageSync("userInfo").major;
+      this.xh =
+        wepy.getStorageSync("userInfo").studentId ||
+        wepy.getStorageSync("User").studentId;
+    } else {
+      wepy.reLaunch({
+        url: "../../pages/login"
+      });
+    }
+    this.init();
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+vendors = official
+@import '../../../css/loading'
+
+.container
+  height 100%
+  min-height 100vh
+  font-family PingFangSC-Regular
+  .container-top
+    position fixed
+    top 0
+    right 0
+    left 0
+    background transparent
+    .bg-index
+      z-index -1
+      width 100%
+      position fixed
+      top -20rpx
+      left 0
+      right 0
+  .club-header
+    justify-content space-between
+    align-items center
+    .user-container
+      align-items center
+      height 100rpx
+      .user-avatar
+        height 56rpx
+        width 56rpx
+        border 4rpx solid #fff
+        border-radius 50%
+        margin-left 30rpx
+      .user-name
+        margin-right 4rpx
+        font-size 36rpx
+        font-weight 700
+        color #353535
+        margin 0 8rpx 0 18rpx
+      .userinfo-complete
+        display flex
+        flex-direction row
+        justify-content space-between
+        align-items center
+        justify-content center
+        width 124rpx
+        height 38rpx
+        border-radius 18rpx
+        background #f5a523
+        span
+          color #fff
+          font-size 24rpx
+      .userinfo-completed
+        background #7ed321
+    .scan-icon
+      height 40rpx
+      width 40rpx
+      margin-right 30rpx
+  .club-line
+    margin 0 auto
+    height 2rpx
+    width calc(100vw - 60rpx)
+    background rgba(218, 218, 218, 0.5)
+  .club-move
+    padding 0 30rpx
+    height 150rpx
+    display flex
+    align-items center
+    justify-content space-between
+    position relative
+    .xiaotan
+      align-items center
+      .xiaotan-logo
+        height 54rpx
+        width 90rpx
+        margin-right 10rpx
+      .xiaotan-text
+        view
+          color #fff
+          font-size 22rpx
+          font-family PingFangSC-Regular
+        span
+          color #606266
+          font-size 30rpx
+    .club-num
+      color #606266
+      font-size 22rpx
+      line-height 34rpx
+      .number
+        text-align right
+        color #353535
+        span
+          font-size 52rpx
+  .info-container
+    padding 0 30rpx 10rpx 30rpx
+    .questionnaire
+      background #fff
+      box-shadow 0rpx 0rpx 24rpx 0rpx rgba(168, 168, 168, 0.5)
+      border-radius 40rpx
+      .personal-info
+        padding 40rpx 50rpx
+      .personal-contact
+        padding 0 50rpx 40rpx 50rpx
+        border-bottom solid 2rpx rgba(218, 218, 218, 0.8)
+      .club-des
+        padding 40rpx
+  .club-container
+    .card-container
+      overflow hidden
+      padding 0 30rpx
+      .club-card
+        padding 30rpx
+        height 300rpx
+        border-radius 28rpx
+        background #fff
+        box-shadow 0rpx 0rpx 24rpx 0rpx rgba(168, 168, 168, 0.5)
+        justify-content space-around
+        position relative
+        .card-header
+          justify-content space-between
+          .card-info
+            .club-avatar
+              height 64rpx
+              width 64rpx
+              border solid 4rpx #e7e7e7
+              border-radius 50%
+              margin-right 20rpx
+            .card-name
+              .club-name
+                font-weight bold
+                font-size 32rpx
+                color #45d4fb
+              .card-key
+                span, view
+                  font-family PingFangSC-Regular
+                  font-size 22rpx
+                  color #9b9b9b
+                .club-key
+                  margin 0 10rpx
+          .card-detail
+            .club-date
+              font-size 32rpx
+              color #606266
+            .club-status
+              font-weight bold
+              font-size 28rpx
+              color #45d4fb
+              float right
+        .card-choice
+          justify-content space-around
+          .club-first-choice
+            border-right solid 2rpx rgba(218, 218, 218, 0.8)
+          .club-first-choice, .club-second-choice
+            width 50%
+            align-items center
+            span
+              font-size 28rpx
+              color #c0c4cc
+              font-family PingFangSC-Regular
+            view
+              overflow hidden
+              text-overflow ellipsis
+              white-space nowrap
+              max-width 220rpx
+              font-size 52rpx
+              color #353535
+        .card-footer
+          justify-content space-between
+          span
+            font-size 24rpx
+            color #9b9b9b
+            font-family PingFangSC-Regular
+        .card-nomore
+          font-size 32rpx
+          color #9b9b9b
+          position absolute
+          top 24rpx
+          display none
+        .nojoin-pic
+          width 350rpx
+      .card-line
+        height 2rpx
+        width calc(100% - 44rpx)
+        margin 0 auto
+        background-image linear-gradient(to right, #dadada, #dadada 15rpx, transparent 15rpx, transparent)
+        background-size 30rpx 100%
+    .card-container:first-of-type
+      overflow visible
+    .card-container:last-child
+      overflow visible
+      .club-card
+        .card-nomore
+          display block
+      .card-line
+        display none
+  .footer-container
+    overflow hidden
+    z-index 2
+    padding-top 30rpx
+    position relative
+    bottom 290rpx
+    .club-footer
+      height 370rpx
+      padding 0 20rpx
+      background #fff
+      box-shadow 0rpx 0rpx 24rpx 0rpx rgba(168, 168, 168, 0.5)
+      .club-des
+        padding 60rpx 0 20rpx 0
+.club-des
+  align-items center
+  view
+    font-family PingFangSC-Regular
+    color #9b9b9b
+    font-size 24rpx
+.save-btn, .xiaotan-btn
+  width 100%
+  height 100rpx
+  margin 40rpx 0 60rpx 0
+  display flex
+  align-items center
+  justify-content center
+  background linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
+  box-shadow 0rpx 0rpx 50rpx 0rpx rgba(168, 168, 168, 0.5)
+  border-radius 30rpx
+  span
+    font-size 36rpx
+    color #fff
+.questionnaire-title
+  font-size 32rpx
+  color #353535
+  margin-bottom 30rpx
+.club-box
+  height 80rpx
+  width 100%
+  border-radius 8rpx
+  border solid 1px #dcdfe5
+  background #fff
+  margin 0 20rpx 20rpx 0
+  font-size 28rpx
+  padding-left 30rpx
+  box-sizing border-box
+  font-family PingFangSC-Regular
+  display flex
+  align-items center
+.club-box:last-child
+  margin-right 0
+.questionnaire-row
+  justify-content space-between
+  .user-name, .user-college, .user-major
+    background #f4f6f9
+  picker
+    color #909399
+    position relative
+    display inline-block
+    view
+      display inline-block
+      max-width 190rpx
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
+      line-height 80rpx
+    .picker-arrow
+      margin-right 30rpx
+      position absolute
+      right 0
+      top 50%
+      transform translateY(-50%)
+      height 0
+      width 0
+      border-top 16rpx solid #8f9299
+      border-left 10rpx solid transparent
+      border-right 10rpx solid transparent
+button:after
+  border none
+.club-scroll
+  height calc(100vh - 102rpx)
+  padding-top 102rpx
+.row
+  display flex
+  flex-direction row
+.column
+  display flex
+  flex-direction column
+.club-toast
+  margin 0 auto
+  background rgba(0, 0, 0, 0.5)
+  z-index 3
+  position absolute
+  right 40rpx
+  left 40rpx
+  bottom -120rpx
+  opacity 0
+  color #fff
+  font-size 26rpx
+  padding 20rpx 60rpx
+  font-family PingFangSC-Regular
+  border-radius 10rpx
+  transition 0.2s ease-in 0s
+  view
+    text-align center
+.club-toast-fadeInUp
+  bottom 80rpx
+  opacity 1
+  transition 0.2s ease-in 0s
+</style>

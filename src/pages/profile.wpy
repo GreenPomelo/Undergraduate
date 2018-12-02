@@ -3,7 +3,9 @@
     <view class="container" slot="qy-content">
       <view class="info-card">
         <view class="main-info">
-          <view class="main-info-avatar" style="background-image:url({{avatar}})"></view>
+          <view class="main-info-avatar">
+            <open-data type='userAvatarUrl'></open-data>
+          </view>
           <view class="main-info-name">
             <view class="main-info-name-items" style="font-size:32rpx">{{name}}</view>
             <view class="main-info-name-items" style="margin-top:15rpx">已绑定的手机号：{{phoneNumber}}<view class="change-phonenumber" @tap="goChangePhone"></view></view>
@@ -33,6 +35,7 @@
 
 <script>
 import wepy from "wepy";
+import { signOut } from "@/api/common";
 // import { connect } from "wepy-redux";
 
 // @connect({})
@@ -54,22 +57,22 @@ export default class Profile extends wepy.page {
   methods = {
     goChangePhone() {
       this.$navigate({
-        url: "../others-page/pages/change-phone"
+        url: "../others-page/pages/personalPages/change-phone"
       });
     },
     goFeedback() {
       this.$navigate({
-        url: "../others-page/pages/feedback"
+        url: "../others-page/pages/feedbackPages/feedback"
       });
     },
     goAboutUs() {
       this.$navigate({
-        url: "../others-page/pages/aboutus"
+        url: "../others-page/pages/personalPages/aboutus"
       });
     },
     goChangelog() {
       this.$navigate({
-        url: "../others-page/pages/changelog"
+        url: "../others-page/pages/personalPages/changelog"
       });
     },
     removeBind() {
@@ -81,19 +84,14 @@ export default class Profile extends wepy.page {
         })
         .then(response => {
           if (response.confirm) {
-            wepy
-              .request({
-                url: `${this.$parent.globalData.requestUrl +
-                  this.$parent.globalData.config.signOut}`
-              })
-              .then(res => {
-                if (res.data.data) {
-                  wepy.clearStorage();
-                  wepy.redirectTo({
-                    url: "/others-page/pages/login?step=1"
-                  });
-                }
-              });
+            signOut().then(res => {
+              if (res.data.data) {
+                wepy.clearStorage();
+                wepy.redirectTo({
+                  url: "/others-page/pages/login?step=1"
+                });
+              }
+            });
           }
         });
     }
@@ -111,7 +109,7 @@ export default class Profile extends wepy.page {
       this.phoneNumber = "xxx";
     }
     this.name =
-      wepy.getStorageSync("userInfo").name || wepy.getStorageSync("User").name;
+      wepy.getStorageSync("User").name || wepy.getStorageSync("userInfo").name;
   }
 }
 </script>
@@ -141,9 +139,7 @@ export default class Profile extends wepy.page {
         height 150rpx
         margin 0 30rpx 0 60rpx
         border-radius 50%
-        background-position center
-        background-repeat no-repeat
-        background-size contain
+        overflow hidden
       .main-info-name
         display inline-block
         margin-top 25rpx

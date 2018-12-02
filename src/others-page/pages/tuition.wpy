@@ -34,7 +34,7 @@
     </view>
     <QyModal width="500rpx">
       <view slot="content" class="bind-container">
-        <input class="bind-input" placeholder="统一身份认证密码(默认身份证后六位)" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+        <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
         <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
       </view>
     </QyModal>
@@ -45,190 +45,169 @@
 </template>
 
 <script>
-  import wepy from "wepy";
-  import QyModal from "@/components/qy-modal";
-  export default class extends wepy.page {
-    config = {
-      navigationBarTitleText: "学费查询"
-    };
-    data = {
-      tapYear: "",
-      showLoading: false,
-      abnormal: false,
-      showBlank: true,
-      years: [],
-      categories: [],
-      dues: [],
-      paid: [],
-      refunds: [],
-      debts: [],
-      tuition: [],
-      password: ""
-      // count: 0,
-      // showWeb: false
-    };
-    components = {
-      QyModal: QyModal
-    };
-    methods = {
-      changeYear(e) {
-        let index = e.currentTarget.dataset.index;
-        this.categories = [];
-        this.dues = [];
-        this.paid = [];
-        this.refunds = [];
-        this.debts = [];
-        this.setTuition(index);
-        this.tapYear = parseInt(index);
-        this.$apply();
-      },
-      bindCardPassword(e) {
-        this.password = e.detail.value;
-      },
-      async bindHandle() {
-        let that = this;
-        if (this.password) {
-          let updatePassword = await wepy.request({
-            url:
-              that.$parent.globalData.requestUrl +
-              this.$parent.globalData.config.changeSecretCode,
-            data: {
-              domainType: 16,
-              username: "",
-              password: this.password
-            },
-            method: "POST"
-          });
-          if (updatePassword.data.success) {
-            that.bindModalVisible = false;
-            that.$invoke("QyModal", "close");
-            that.init();
-          } else {
-            wepy.showModal({
-              content: "密码错误",
-              confirmText: "知道了",
-              showCancel: false,
-              confirmColor: "#353535"
-            });
-            // that.count++;
-            // if (that.count > 3) {
-            //   await wepy.showModal({
-            //     content: "密码错误次数过多,前往认证平台解除验证码",
-            //     confirmText: "知道了",
-            //     showCancel: false,
-            //     confirmColor: "#353535"
-            //   });
-            //   that.showWeb = true;
-            //   that.$apply();
-            // }
-          }
+import wepy from "wepy";
+import QyModal from "@/components/qy-modal";
+import { changeSecretCode, schoolFeeFresh, getSchoolFee } from "@/api/common";
+export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "学费查询"
+  };
+  data = {
+    tapYear: "",
+    showLoading: false,
+    abnormal: false,
+    showBlank: true,
+    years: [],
+    categories: [],
+    dues: [],
+    paid: [],
+    refunds: [],
+    debts: [],
+    tuition: [],
+    password: "",
+    refresh: false,
+    placeholder: ""
+    // count: 0,
+    // showWeb: false
+  };
+  components = {
+    QyModal: QyModal
+  };
+  methods = {
+    changeYear(e) {
+      let index = e.currentTarget.dataset.index;
+      this.categories = [];
+      this.dues = [];
+      this.paid = [];
+      this.refunds = [];
+      this.debts = [];
+      this.setTuition(index);
+      this.tapYear = parseInt(index);
+      this.$apply();
+    },
+    bindCardPassword(e) {
+      this.password = e.detail.value;
+    },
+    async bindHandle() {
+      let that = this;
+      if (this.password) {
+        let updatePassword = await changeSecretCode("", this.password, 16);
+        if (updatePassword.data.success) {
+          that.placeholder = "";
+          that.$invoke("QyModal", "close");
+          that.init();
         } else {
           wepy.showModal({
-            content: "密码为空",
+            content: "密码错误",
             confirmText: "知道了",
             showCancel: false,
             confirmColor: "#353535"
           });
         }
+      } else {
+        wepy.showModal({
+          content: "密码为空",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#353535"
+        });
       }
-    };
-    async getTuition() {
-      let that = this;
-      let currentYearTuition = await wepy.request({
-        url:
-          that.$parent.globalData.requestUrl +
-          that.$parent.globalData.config.schoolFee,
-        mehtod: "GET"
-      });
-      setTimeout(() => {
-        that.showLoading = false;
-        if (currentYearTuition.data.success && currentYearTuition.data.data) {
-          that.showBlank = false;
-          that.tuition = currentYearTuition.data.data.data;
-          that.years = [];
-          that.abnormal = false;
-          for (let i = 0; i < that.tuition.length; i++) {
-            let yearItem = this.tuition[i].year.substr(0, 9) + " 学年";
-            that.years.push(yearItem);
-          }
-          that.setTuition(0);
-          that.$apply();
-        } else if (
-          currentYearTuition.data.success &&
-          !currentYearTuition.data.data
-        ) {
-          that.abnormal = true;
-        } else if (!currentYearTuition.data.success) {
-          that.abnormal = true;
-          wepy
-            .showModal({
-              content: "密码已经更新请重新绑定",
-              confirmText: "知道了",
-              showCancel: false,
-              confirmColor: "#353535"
-            })
-            .then(() => {
-              that.$invoke("QyModal", "open");
-            });
-        }
-        that.$apply();
-      }, 1000);
-      this.$apply();
     }
-    setTuition(e) {
-      this.showBlank = false;
-      let categories = this.tuition[e].items;
-      let dues = this.tuition[e].shouldPay;
-      let paid = this.tuition[e].payed;
-      let refunds = this.tuition[e].refund;
-      let debts = this.tuition[e].arrears;
-      this.categories = categories;
-      for (let key in categories) {
-        this.dues.push(dues[categories[key]]);
-        this.paid.push(paid[categories[key]]);
-        this.refunds.push(refunds[categories[key]]);
-        this.debts.push(debts[categories[key]]);
+  };
+  async getTuition() {
+    let that = this;
+    let currentYearTuition;
+    if (this.refresh) {
+      currentYearTuition = await schoolFeeFresh();
+    } else {
+      currentYearTuition = await getSchoolFee();
+    }
+    setTimeout(() => {
+      that.showLoading = false;
+      if (currentYearTuition.data.success && currentYearTuition.data.data) {
+        that.showBlank = false;
+        that.tuition = currentYearTuition.data.data.data;
+        that.years = [];
+        that.abnormal = false;
+        for (let i = 0; i < that.tuition.length; i++) {
+          let yearItem = this.tuition[i].year.substr(0, 9) + " 学年";
+          that.years.push(yearItem);
+        }
+        that.setTuition(0);
+        that.$apply();
+      } else if (
+        currentYearTuition.data.success &&
+        !currentYearTuition.data.data
+      ) {
+        that.abnormal = true;
+      } else if (!currentYearTuition.data) {
+        that.abnormal = true;
+        that.placeholder = "统一身份认证密码(默认身份证后六位)";
+        that.$invoke("QyModal", "open");
       }
-      this.$apply();
-    }
-    getYears() {
-      let that = this;
-      return new Promise(resolve => {
-        let userInfo = wepy.getStorageSync("userInfo");
-        let nowYear = parseInt(
-          new Date()
-            .getFullYear()
-            .toString()
-            .substr(2, 3)
-        );
-        let enterYear = parseInt(userInfo.studentId.substr(1, 2));
-        let allYears = parseInt(nowYear - enterYear);
-        for (let i = 0; i < allYears; i++) {
-          that.years.unshift(
-            `20${enterYear + i}-20${parseInt(enterYear + i + 1)} 学年`
-          );
-        }
-        that.$apply();
-        resolve();
-      });
-    }
-    async init() {
-      this.years = [];
-      this.showLoading = true;
-      this.abnormal = false;
-      this.showBlank = true;
-      this.getYears();
-      await this.getTuition();
-      this.$apply();
-    }
-    async onLoad() {
-      this.init();
-    }
+      that.$apply();
+    }, 1000);
+    this.$apply();
   }
+  setTuition(e) {
+    this.showBlank = false;
+    let categories = this.tuition[e].items;
+    let dues = this.tuition[e].shouldPay;
+    let paid = this.tuition[e].payed;
+    let refunds = this.tuition[e].refund;
+    let debts = this.tuition[e].arrears;
+    this.categories = categories;
+    for (let key in categories) {
+      this.dues.push(dues[categories[key]]);
+      this.paid.push(paid[categories[key]]);
+      this.refunds.push(refunds[categories[key]]);
+      this.debts.push(debts[categories[key]]);
+    }
+    this.$apply();
+  }
+  getYears() {
+    let that = this;
+    return new Promise(resolve => {
+      let userInfo = wepy.getStorageSync("User");
+      let nowYear = parseInt(
+        new Date()
+          .getFullYear()
+          .toString()
+          .substr(2, 3)
+      );
+      let enterYear = parseInt(userInfo.studentId.substr(1, 2));
+      let allYears = parseInt(nowYear - enterYear);
+      for (let i = 0; i < allYears; i++) {
+        that.years.unshift(
+          `20${enterYear + i}-20${parseInt(enterYear + i + 1)} 学年`
+        );
+      }
+      that.$apply();
+      resolve();
+    });
+  }
+  onPullDownRefresh() {
+    this.refresh = true;
+    this.getTuition();
+  }
+  async init() {
+    this.years = [];
+    this.showLoading = true;
+    this.abnormal = false;
+    this.showBlank = true;
+    this.getYears();
+    await this.getTuition();
+    this.$apply();
+  }
+  async onLoad() {
+    this.init();
+  }
+}
 </script>
 
 <style lang="stylus" scoped>
 vendors = official
+
 @import '../../css/loading'
 
 .container
@@ -287,7 +266,8 @@ vendors = official
         align-items center
         border-bottom solid 2rpx #e0e0e0
         margin 0 20rpx
-        .th, .td
+        .th,
+        .td
           display inline-block
           width 128rpx
           font-family PingFangSC-Medium

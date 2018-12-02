@@ -13,16 +13,27 @@
       </view>
       <view hidden="{{noInfo}}">
         <repeat for="{{info}}" index="index" key="key" item="item">
-          <view class="{{item.read ? 'box-item-read' : 'box-item-unread'}}">
+          <view
+            class="{{item.read ? 'box-item-read' : 'box-item-unread'}} {{item.ontap ? 'box-item-tap':''}}"
+            @tap="tapCard"
+            data-taptype="{{item.type}}"
+            data-title="{{item.title}}"
+            data-id="{{item.id}}"
+            data-ontap="{{item.ontap}}"
+          >
             <view class="box-item-container">
               <view class="box-item-in">
-                <view class="lines" style="font-size:34rpx;padding-top:20rpx;color:#353535;font-weight:bold;">
-                  <view wx:if="{{!item.read}}" class="dot"></view>{{item.title}}
+                <view
+                  class="lines"
+                  style="font-size:34rpx;padding-top:20rpx;color:#353535;font-weight:bold;"
+                >
+                  <view wx:if="{{!item.read}}" class="dot"></view>
+                  {{item.title}}{{item.ontap?'*点击*':''}}
                 </view>
                 <view class="lines">{{item.content}}</view>
                 <view class="lines" style="color:#888888;font-size:24rpx;">{{item.creatDate}}</view>
               </view>
-              <view class="right-line"></view>              
+              <view class="right-line"></view>
             </view>
           </view>
         </repeat>
@@ -33,7 +44,13 @@
 
 <script>
 import wepy from "wepy";
-
+import {
+  getNotification,
+  getOwnMessageAlready,
+  getOwnMessageClear,
+  noClassConfirm,
+  noClassConfirmNext
+} from "@/api/notification";
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "消息盒子"
@@ -45,7 +62,8 @@ export default class extends wepy.page {
       "https://static.airbob.org/under-graduate/read.png",
       "https://static.airbob.org/under-graduate/already-read.png"
     ],
-    info: []
+    info: [],
+    tapType: [5, 6, 7] //5:反馈,6:无课表,7:问卷
   };
   methods = {
     allRead() {
@@ -58,32 +76,26 @@ export default class extends wepy.page {
         })
         .then(response => {
           if (response.confirm) {
-            wepy
-              .request({
-                url:
-                  that.$parent.globalData.requestUrl +
-                  that.$parent.globalData.config.getOwnMessageAlready,
-                method: "PUT"
-              })
-              .then(res => {
-                if (res.data.success) {
-                  for (let i of that.info) {
-                    i.read = true;
-                  }
-                  wepy.showToast({
-                    title: "已全部已读",
-                    icon: "success",
-                    duration: 2000
-                  });
-                  that.$apply();
-                } else {
-                  wepy.showToast({
-                    title: "不知道为什么失败了呢",
-                    icon: "none",
-                    duration: 2000
-                  });
+            getOwnMessageAlready().then(res => {
+              if (res.data) {
+                for (let i of that.info) {
+                  i.read = true;
+                  i.ontap = false;
                 }
-              });
+                wepy.showToast({
+                  title: "已全部已读",
+                  icon: "success",
+                  duration: 2000
+                });
+                that.$apply();
+              } else {
+                wepy.showToast({
+                  title: "不知道为什么失败了呢",
+                  icon: "none",
+                  duration: 2000
+                });
+              }
+            });
           }
         });
     },
@@ -97,40 +109,80 @@ export default class extends wepy.page {
         })
         .then(response => {
           if (response.confirm) {
-            wepy
-              .request({
-                url:
-                  that.$parent.globalData.requestUrl +
-                  that.$parent.globalData.config.getOwnMessageClear,
-                method: "PUT"
-              })
-              .then(res => {
-                if (res.data.success) {
+            getOwnMessageClear().then(res => {
+              if (res.data) {
+                wepy.showToast({
+                  title: "已清空",
+                  icon: "success",
+                  duration: 2000
+                });
+                this.info = [];
+                this.noInfo = true;
+                this.$apply();
+              } else {
+                wepy.showToast({
+                  title: "不知道为什么失败了呢",
+                  icon: "none",
+                  duration: 2000
+                });
+              }
+            });
+          }
+        });
+    },
+    tapCard(e) {
+      let type = e.currentTarget.dataset.taptype;
+      let asso = e.currentTarget.dataset.title.split(" ")[0];
+      let id = e.currentTarget.dataset.id;
+      let ontap = e.currentTarget.dataset.ontap;
+      let that = this;
+      if (type === 5 && ontap) {
+        wepy.navigateTo({
+          url: "./feedbackPages/historyfeedback"
+        });
+      } else if (type === 6 && ontap) {
+        wepy
+          .showModal({
+            title: "授权",
+            content: "该授权将获取您的无课表",
+            confirmColor: "#47CFF5"
+          })
+          .then(res => {
+            if (res.confirm) {
+              noClassConfirm(2, asso).then(res => {
+                if (res.data) {
+                  noClassConfirmNext(id).then(res => {
+                    if (res.data) {
+                      that.onLoad();
+                    }
+                  });
                   wepy.showToast({
-                    title: "已清空",
+                    title: "已授权",
                     icon: "success",
                     duration: 2000
                   });
-                  this.info = [];
-                  this.noInfo = true;
-                  this.$apply();
                 } else {
                   wepy.showToast({
-                    title: "不知道为什么失败了呢",
+                    title: "授权失败",
                     icon: "none",
                     duration: 2000
                   });
                 }
               });
-          }
+            }
+          });
+      } else if (type === 7 && ontap) {
+        wepy.navigateTo({
+          url: "./questionnairePages/questionnaire-homepage"
         });
+      }
     }
   };
   dealTheDate(time) {
     time = time / 1000;
     if (time <= 0) return;
     if (time < 60) {
-      return time + " 秒前";
+      return ~~time + " 秒前";
     } else if (time < 3600) {
       return ~~(time / 60) + " 分钟前";
     } else if (time < 86400) {
@@ -141,23 +193,26 @@ export default class extends wepy.page {
   }
   async onLoad() {
     let that = this;
-    let res = await wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.getOwnMessage
-    });
+    let res = await getNotification();
     let info = [];
-    if (res.data.success) {
+    let read = [];
+    if (res.data) {
       let data = [];
       for (let i of res.data.data) {
         i.creatDate = that.dealTheDate(~~(Date.now() - i.createDate));
+        if (that.tapType.indexOf(i.type) !== -1 && !i.read) {
+          i.ontap = true;
+        }
         if (i.enable) {
-          info.unshift(i);
           if (!i.read) {
+            info.unshift(i);
             data.unshift(i);
+          } else {
+            read.unshift(i);
           }
         }
       }
+      info = info.concat(read);
       that.isNewInfo = data.length !== 0;
     }
     that.info = info;
@@ -187,7 +242,6 @@ export default class extends wepy.page {
     top 400rpx
     font-size 30rpx
     color #E3E3E3
-
 .box-top
   width 710rpx
   margin 0 auto
@@ -215,7 +269,6 @@ export default class extends wepy.page {
       background-position center
       background-repeat no-repeat
       background-size contain
-
 .box-item-read
   width 700rpx
   min-height 150rpx
@@ -235,8 +288,7 @@ export default class extends wepy.page {
       .lines
         overflow hidden
         padding-bottom 20rpx
-        font-size 28rpx        
-
+        font-size 28rpx
 .box-item-unread
   width 700rpx
   min-height 150rpx
@@ -260,6 +312,7 @@ export default class extends wepy.page {
       .lines
         flex-grow 0
         width 620rpx
+        text-align justify
         overflow hidden
         padding-bottom 20rpx
         font-size 28rpx
@@ -277,4 +330,14 @@ export default class extends wepy.page {
       overflow hidden
       border-top-right-radius 15rpx
       border-bottom-right-radius 15rpx
+.box-item-tap
+  background #d8d8d8
+  background-image linear-gradient(44deg, #f7e5a4 0%, #fee082 100%)
+  .box-item-container
+    .right-line
+      background #f6b500
+    .box-item-in
+      .lines
+        .dot
+          background #f6b500
 </style>

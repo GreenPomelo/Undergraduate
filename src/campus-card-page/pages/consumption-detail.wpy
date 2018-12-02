@@ -17,6 +17,8 @@
 <script>
   import wepy from "wepy";
   import ConsumptionDetailCard from "../components/consumption-detail-card";
+  import { oneDayTurnOver } from "@/api/campusCard";
+
   export default class ConsumptionDetail extends wepy.page {
     components = {
       ConsumptionDetailCard
@@ -48,12 +50,8 @@
         this.detailsKeys = [];
         this.details = {};
       }
-      const res = await wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.oneDayTurnOver}?page=${this.page}`,
-        method: "POST"
-      });
-      if (res.data.success) {
+      const res = await oneDayTurnOver(this.page);
+      if (res.data) {
         res.data.data.forEach(item => {
           if (this.details[item.occtime.slice(0, 10)]) {
             this.details[item.occtime.slice(0, 10)] = [

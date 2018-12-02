@@ -13,7 +13,7 @@
           <view class="news-file-item">
             <image mode="aspectFit" src="{{filterWxs.filter(item.name)}}" class="file-type-img"/>
             <view class="file-name">{{item.name}}</view>
-            <image mode="aspectFit" @tap="downLoad({{item.url}})" src="https://static.airbob.org/admin/news_icon_download.png" class="file-download-img"/>
+            <image mode="aspectFit" @tap="downLoad(item.url)" src="https://static.airbob.org/admin/news_icon_download.png" class="file-download-img"/>
           </view>
           <view class="divide"></view>
         </repeat>
@@ -25,6 +25,7 @@
 <script>
 import wepy from "wepy";
 import filterWxs from "../wxs/filter.wxs";
+import { getNewsInformationContent } from "@/api/common";
 
 export default class extends wepy.page {
   config = {
@@ -65,9 +66,7 @@ export default class extends wepy.page {
                   .openDocument({
                     filePath: filePath
                   })
-                  .then(() => {
-                    console.info("预览成功");
-                  })
+                  .then(() => {})
                   .catch(() => {
                     wepy.showToast({
                       title: "文件打开失败！",
@@ -90,25 +89,13 @@ export default class extends wepy.page {
   };
   onLoad(data) {
     this.title = data.title;
-    let url;
     if (data.time) {
       this.date = data.time;
       this.isAds = true;
-      url = `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.getPromotionInformation}`;
     } else {
       this.isAds = false;
-      url = `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.getNewsInformationContent}?newsId=${
-        data.newsId
-      }`;
-    }
-    wepy
-      .request({
-        url
-      })
-      .then(res => {
-        if (res.data.success) {
+      getNewsInformationContent(data.newsId).then(res => {
+        if (res.data) {
           if (this.date) {
             this.content = res.data.data.content;
           } else {
@@ -117,9 +104,9 @@ export default class extends wepy.page {
             this.date = res.data.data.createTime;
           }
           this.$apply();
-          console.log(this.isAds);
         }
       });
+    }
   }
 }
 </script>
@@ -166,7 +153,7 @@ export default class extends wepy.page {
       border-radius 16rpx
       display flex
       align-items center
-      box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.1);
+      box-shadow 0px 0px 6px 0px rgba(0, 0, 0, 0.1)
     .file-type-img
       width 100rpx
       height 100rpx

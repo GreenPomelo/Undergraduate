@@ -55,6 +55,7 @@
   import wepy from "wepy";
   import GradeCard from "../components/grade-card";
   import QyModal from "../../components/qy-modal";
+  import { getUserGradeTest } from "@/api/education";
   // import QyNav from "@/components/qy-navigation";
   // import QyContainer from "@/components/qy-container";
   export default class CheckGrade extends wepy.page {
@@ -112,12 +113,9 @@
       }
     };
     async onLoad() {
-      const res = await wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getUserGradeTest}`
-      });
+      const res = await getUserGradeTest();
       // const examData = await res.json();
-      if (res.data.success) {
+      if (res.data) {
         const examData = res.data.data.gradeExam;
         this.shows = new Array(examData.length).fill(false);
         this.gradeExam = examData.map(item => {

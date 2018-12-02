@@ -1,0 +1,1191 @@
+<template>
+  <view>
+    <view class="cover" hidden="{{!showModal}}" animation="{{coverAnimation}}">
+    </view>
+    <view class="cover-modal" hidden="{{!showModal}}">
+      <view style="color:#353535;margin:40rpx 25rpx 20rpx 25rpx">当欠费满10元时还书自动扣款，若欠费未满10元将在毕业前结清。你也可以前往图书馆自行缴费。</view>
+      <view style="height:2rpx;width:540rpx;background:#E3E3E3;margin-left:-20rpx"></view>
+      <view style="color:#39C9FF;margin-top:5rpx;padding-top:30rpx" @tap="understandTip">知道了</view>
+    </view>
+    <QyModal :maskClosable="maskClosable" width="500rpx" :visible.sync="bindModalVisible">
+      <view slot="content" class="bind-container">
+        <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+      </view>
+    </QyModal>
+    <!-- <navigator style="text-align:center;"> {{navTitle}} </navigator> -->
+    <!-- <qy-container> -->
+      <!-- <view slot="qy-content"> -->
+        <view class="swiper-tab">
+          <view class="swiper-tab-list {{currentTab==0?'active':''}}" data-current="0" @tap="switchNav">已借书目</view>
+          <view class="swiper-tab-list {{currentTab==1?'active':''}}" data-current="1" @tap="switchNav">书目检索</view>
+          <view class="swiper-tab-list {{currentTab==2?'active':''}}" data-current="2" @tap="switchNav">座位查询</view>
+          <view animation="{{animationNav}}" class="swiper-line"></view>
+        </view>
+        <swiper id="hhh" class="swiper-box" current="{{currentTab}}" duration="500" display-multiple-items="1" style="height:{{winHeight-38}}px" bindchange="changeTab">
+          <!-- 已借书目 -->
+          <swiper-item>
+            <view class="books-container">
+              <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px">
+                <view class="books-head" style="margin-bottom:{{arrears==0?'80rpx':'0'}}">
+                  <view class="books-num">
+                    {{totalBooksNumber}}
+                  </view>
+                  <view class="books-cnt">
+                    次
+                  </view>
+                </view>
+                <view wx:if="{{arrears!=0}}" class="books-tip" @tap="showBooksTip">
+                  你已欠费{{arrears}}元
+                  <image class="books-question" src="https://static.airbob.org/under-graduate/library_pic_why.png" />
+                </view>
+                <view wx:if="{{curBooksNum==0}}" class="books-none-container">
+                  <image class="books-none-img" src="https://static.airbob.org/under-graduate/pic_empty.png" />
+                  <view>你当前没有借书，快去图书馆淘一淘！</view>
+                </view>
+                <view class="books-list" wx:if="{{curBooksNum>0}}">
+                  <repeat for="{{lendBooks}}" key="key" index="index" item="item">
+                    <view class="book-container" style="border-bottom-left-radius:{{isTapIndex[index]? '0rpx' : '20rpx'}};border-bottom-right-radius:{{isTapIndex[index]? '0rpx' : '20rpx'}};border-bottom:{{isTapIndex[index]? 'none' : '1rpx solid rgba(0,0,0,0.1)'}};">
+                      <view class="book-info-all">
+                        <view class="book-name">
+                          {{item.bookname}}
+                        </view>
+                        <view class="book-info">已续借{{item.renew}}次</view>
+                        <view class="book-info" style="white-space:nowrap">应还日期：{{item.DDL}} <span style="color:#FFB737" wx:if="{{item.leftDDL<=10&&item.leftDDL>=0}}">据归还还有{{item.leftDDL}}天，请及时归还！</span></view>
+                      </view>
+                      <image data-index="{{index}}" data-name="{{item.marc_no}}" class="button-updown" src="https://static.airbob.org/under-graduate/image/score/button_down.png" @tap="{{hide[index]? 'showBookDetails' : 'hideBookDetails'}}"  animation="{{spin[index]}}"/>
+                    </view>
+                    <view class="book-detail-container" animation="{{showOff[index]}}" style="border-bottom:{{isTapIndex[index]? '1rpx solid rgba(0,0,0,0.1)' : 'none'}};">
+                      <view class="book-detail-info-all" id="lendbook{{index}}">
+                        <view class="book-info">书名: {{item.bookname}}</view>
+                        <view class="book-info">作者: {{item.author}}</view>
+                        <view class="book-info">出版社: {{item.publishers}}</view>
+                        <view class="book-info">所属分类: {{item.category}}</view>
+                        <view class="book-info">ISBN: {{item.ISBN}}</view>
+                        <view class="book-info">价格: {{item.price}}</view>
+                        <view class="book-info">简介: {{item.summary}}</view>
+                      </view>
+                    </view>
+                  </repeat>
+                </view>
+                <view wx:if="{{curBooksNum>0}}" class="button-renew" style="background-image:url({{renewAll?renewbtn.highlight:renewbtn.disabled}});" @tap="renewBooks">
+                  一键续借
+                </view>
+              </scroll-view>
+            </view>
+          </swiper-item>
+          <!-- 书目检索 -->
+          <swiper-item>
+            <view class="search-container">
+              <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px" bindscrolltolower="loadMoreBooks">
+                <view class="search-bar-container">
+                  <view class="search-bar">
+                    <view class="search-placeholder-all" hidden="{{hasInput}}" @tap="clearPlaceHolder">
+                      <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon"/>
+                      <view class="search-placeholder">输入书名/作者/关键词</view>
+                    </view>
+                    <input type="text" class="search-input" confirm-type="search" focus="{{hasInput}}" @input="search" value="{{key}}" bindconfirm="confirmSearch"/>
+                  </view>
+                </view>
+                <view class="search-recommend" hidden="{{emptyResult||hasResult}}">
+                  <view class="search-recommend-title">
+                    热门推荐
+                  </view>
+                  <view class="search-recommend-content">
+                    <repeat for="{{recomends}}" key="key" index="index" item="book">
+                      <view class="search-recommend-book" @tap="quickSearch" data-name="{{book.name}}">
+                        {{book.name}}
+                      </view>
+                    </repeat>
+                  </view>
+                </view>
+                <view class="search-no-result" style="display:{{emptyResult?'flex':'none'}};flex-direction column;">
+                  <image class="search-no-result-pic" src="https://static.airbob.org/under-graduate/pic_empty.png" />
+                  <view class="search-no-result-tips">没有找到这本书，你可以推荐图书馆购买哦</view>
+                  <view class="search-no-result-recom" @tap="goToRecomened">进行读者荐购</view>
+                </view>
+                <view class="search-result" hidden="{{!hasResult}}">
+                  <repeat for="{{searchResult}}" key="key" index="index" item="item">
+                    <view class="search-result-container" style="border-bottom-left-radius:{{isTapIndexS[index]? '0rpx' : '20rpx'}};border-bottom-right-radius:{{isTapIndexS[index]? '0rpx' : '20rpx'}};border-bottom:{{isTapIndexS[index]? 'none' : '1rpx solid rgba(0,0,0,0.1)'}}">
+                      <view class="search-info-all">
+                        <view class="search-book-name">
+                          {{item.bookname}}
+                        </view>
+                        <view class="search-info-item">作者: {{item.author}}</view>
+                        <view class="search-info-item">出版社: {{item.publishers}}</view>
+                        <view class="search-info-item">索书号: {{item.callno}}</view>
+                        <view class="search-info-item">可借本数: {{item.leftBookNum}}</view>
+                      </view>
+                      <image data-index="{{index}}" data-name="{{item.marc_no}}" class="search-button-updown" src="https://static.airbob.org/under-graduate/image/score/button_down.png" @tap="{{hideS[index]? 'showSearchedBookDetails' : 'hideSearchedBookDetails'}}" animation="{{spinS[index]}}"/>
+                    </view>
+                    <view class="search-detail-container" animation = "{{showOffS[index]}}" style="border-bottom:{{isTapIndexS[index]? '1rpx solid rgba(0,0,0,0.1)' : 'none'}}">
+                      <view class="search-detail-info-all" id="searchbook{{index}}">
+                        <repeat for="{{item.positionDetail}}" key="key" item="item">
+                          <view class="search-info-item">图书位置: {{item.position}}</view>
+                          <view class="search-info-item">索书号: {{item.callno}}</view>
+                          <view class="search-info-item">状态: {{item.status}}</view>
+                          <view style="height:20rpx; width: 590rpx"></view>
+                        </repeat>
+                        <view class="search-info-divide"></view>
+                        <view class="search-info-item">所属分类: {{item.category}}</view>
+                        <view class="search-info-item">ISBN: {{item.ISBN}}</view>
+                        <view class="search-info-item">价格: {{item.price}}</view>
+                        <view class="search-info-item">简介: {{item.summary}}</view>
+                      </view>
+                    </view>
+                  </repeat>
+                </view>
+              </scroll-view>
+            </view>
+          </swiper-item>
+          <!-- 座位查询 -->
+          <swiper-item>
+            <view class="seats-container">
+              <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px">
+                <view class="seats-head"></view>
+                <view class="seats-divide"></view>
+                <view class="seats-body">
+                  <repeat for="{{floors}}" key="key" index="index" item="item">
+                    <seats-card :lib.sync="item"></seats-card>
+                  </repeat>
+                </view>
+              </scroll-view>
+            </view>
+          </swiper-item>
+        </swiper>
+      <!-- </view> -->
+    <!-- </qy-container> -->
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import {
+  librarySearch,
+  alreadyBorrowBooksSum,
+  historicalBorrow,
+  bookArrears,
+  remainSeats,
+  hotBooks,
+  bookStore,
+  bookStoreAgain,
+  bookStoreContent
+} from "@/api/library";
+import navigation from "@/components/qy-navigation";
+import container from "@/components/qy-container";
+import QyModal from "@/components/qy-modal";
+import seatsCard from "../../components/seats-card";
+import { changeSecretCode } from "@/api/common";
+
+export default class Library extends wepy.page {
+  config = {
+    navigationBarTitleText: "图书馆"
+  };
+  components = {
+    "qy-navigation": navigation,
+    "qy-container": container,
+    "seats-card": seatsCard,
+    QyModal
+  };
+  data = {
+    navTitle: "图书馆",
+    token: "",
+    phoneNumber: "",
+    studentId: "",
+    bindModalVisible: false,
+    bindInputPassword: "",
+    userInfo: {},
+    winWidth: 0,
+    winHeight: 0,
+    currentTab: 0,
+    arrears: 0,
+    totalBooksNumber: 0,
+    curBooksNum: 0,
+    searchedPage: 0,
+    showModal: false,
+    isTapIndex: [],
+    hide: [],
+    isTapIndexS: [],
+    hideS: [],
+    animationNav: {},
+    coverAnimation: {},
+    showOff: [],
+    spin: [],
+    showOffS: [],
+    spinS: [],
+    // 一件续借初始状态为可不可点击
+    renewAll: false,
+    hasInput: false,
+    hasResult: false,
+    emptyResult: false,
+    renewbtn: {
+      highlight:
+        "https://static.airbob.org/under-graduate/btn_next_highlight.png",
+      disabled: "https://static.airbob.org/under-graduate/btn_next_disable.png"
+    },
+    lendBooks: [],
+    recomends: [],
+    searchResult: [],
+    searchBookName: "",
+    floors: [
+      {
+        floor: "二",
+        rooms: []
+      },
+      {
+        floor: "三",
+        rooms: []
+      },
+      {
+        floor: "四",
+        rooms: []
+      },
+      {
+        floor: "五",
+        rooms: []
+      }
+    ],
+    placeholder: ""
+  };
+  methods = {
+    switchNav(e) {
+      let chosen = e.target.dataset.current;
+      let cur = this.data.currentTab.toString();
+      if (chosen === cur) {
+        return false;
+      } else {
+        this.currentTab = chosen;
+      }
+      this.$apply();
+    },
+    changeTab(e) {
+      this.currentTab = e.detail.current;
+      if (this.currentTab === 1) {
+        this.getHotRecommandBooks();
+      }
+      if (this.currentTab === 0) {
+        this.onLoadRequests();
+      }
+      if (this.currentTab === 2) {
+        this.queryOverplusSeats();
+      }
+      this.$apply();
+    },
+    async showBooksTip() {
+      let that = this;
+      function go() {
+        return new Promise((resolve, reject) => {
+          resolve((that.showModal = true));
+        });
+      }
+      await go();
+      let coverAnimation = wepy.createAnimation({
+        duration: 500
+      });
+      coverAnimation.opacity(0.5).step();
+      that.coverAnimation = coverAnimation.export();
+      that.$apply();
+    },
+    understandTip(e) {
+      let coverAnimation = wepy.createAnimation({
+        duration: 0
+      });
+      coverAnimation.opacity(0).step();
+      this.coverAnimation = coverAnimation.export();
+      this.showModal = false;
+      this.$apply();
+    },
+    loadMoreBooks(e) {
+      if (this.searchResult.length !== 0) {
+        wepy.showLoading({
+          title: "加载中"
+        });
+        this.searchedPage++;
+        bookStore(this.searchBookName, this.searchedPage).then(res => {
+          let results = res.data.data;
+          if (res.data) {
+            // 判断是否有更多：请求的最后一个和当前搜索结果的最后一个相同
+            if (
+              results[results.length - 1].name ===
+              this.searchResult[this.searchResult.length - 1].bookname
+            ) {
+              wepy.hideLoading();
+              wepy.showToast({
+                title: "没有更多了!",
+                icon: "none",
+                duration: 1000
+              });
+            } else {
+              for (let i = 0; i < results.length; i++) {
+                let book = {};
+                book.bookname = results[i].name;
+                book.author = results[i].author;
+                book.publishers = results[i].press;
+                book.callno = results[i].callNumber;
+                book.leftBookNum = results[i].numbers;
+                book.marc_no = results[i].marc_no;
+                this.searchResult.push(book);
+                this.spinS.push({});
+                this.showOffS.push({});
+                this.isTapIndexS.push(false);
+                this.hideS.push(true);
+              }
+              this.$apply();
+              wepy.hideLoading();
+            }
+          }
+        });
+      }
+    },
+    async showBookDetails(e) {
+      let that = this;
+      let name = e.currentTarget.dataset.name;
+      let index = e.currentTarget.dataset.index;
+      wepy.showLoading({
+        title: "加载中"
+      });
+      async function addDetails(name, index) {
+        return new Promise((resolve, reject) => {
+          bookStoreContent(name)
+            .then(res => {
+              let detail = res.data.data;
+              that.lendBooks[index].category = detail.type;
+              that.lendBooks[index].ISBN = detail.isbn;
+              that.lendBooks[index].price = detail.price;
+              that.lendBooks[index].summary = detail.summary;
+              that.lendBooks[index].author = detail.author;
+              that.lendBooks[index].publishers = detail.press;
+              that.$apply();
+              return that.lendBooks[index];
+            })
+            .then(res => {
+              let query = wepy.createSelectorQuery();
+              let book = "#lendbook" + index;
+              query.select(book).boundingClientRect();
+              that.isTapIndex[index] = true;
+              that.hide[index] = false;
+              that.$apply();
+              query.exec(function(res) {
+                let hh = (750 / that.winWidth) * res[0].height + 30;
+                let showOff = wepy.createAnimation({
+                  duration: 300,
+                  timingFunction: "ease"
+                });
+                let spin = wepy.createAnimation({
+                  duration: 300,
+                  timingFunction: "ease"
+                });
+                showOff.height(hh + "rpx").step();
+                spin.rotate(-180).step();
+                that.showOff[index] = showOff;
+                that.spin[index] = spin;
+                that.$apply();
+              });
+              that.$apply();
+            });
+          that.$apply();
+          resolve(that.lendBooks[index]);
+        });
+      }
+      await addDetails(name, index);
+      wepy.hideLoading();
+    },
+    hideBookDetails(e) {
+      const { index } = e.currentTarget.dataset;
+      this.isTapIndex[index] = false;
+      this.hide[index] = true;
+      let query = wepy.createSelectorQuery();
+      let book = "#lendbook" + index;
+      query.select(book).boundingClientRect();
+      query.exec(res => {
+        let showOff = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        let spin = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        showOff.height(0).step();
+        spin.rotate(-360).step();
+        this.spin[index] = spin.export();
+        this.showOff[index] = showOff.export();
+        this.$apply();
+      });
+      this.$apply();
+    },
+    async showSearchedBookDetails(e) {
+      let that = this;
+      // 获取请求数据后再展开
+      let name = e.currentTarget.dataset.name;
+      let index = e.currentTarget.dataset.index;
+      wepy.showLoading({
+        title: "加载中"
+      });
+      function addDetails(name, index) {
+        return new Promise((resolve, reject) => {
+          // 发送请求, if执行成功，reslove()
+          bookStoreContent(name)
+            .then(res => {
+              let detail = res.data.data;
+              that.searchResult[index].category = detail.type;
+              that.searchResult[index].ISBN = detail.ISBN;
+              that.searchResult[index].price = detail.price;
+              that.searchResult[index].summary = detail.summary;
+              that.searchResult[index].author = detail.author;
+              that.searchResult[index].publishers = detail.press;
+              that.searchResult[index].ISBN = detail.isbn;
+              that.searchResult[index].positionDetail = [];
+              let positionDetail = detail.bookPositionModels;
+              for (let i = 0; i < positionDetail.length; i++) {
+                let pos = {};
+                pos.position = positionDetail[i].position;
+                pos.callno = positionDetail[i].callNumber;
+                pos.status = positionDetail[i].status;
+                that.searchResult[index].positionDetail.push(pos);
+              }
+              that.$apply();
+              return that.searchResult[index];
+            })
+            .then(res => {
+              let query = wepy.createSelectorQuery();
+              let book = "#searchbook" + index;
+              query.select(book).boundingClientRect();
+              that.isTapIndexS[index] = true;
+              that.hideS[index] = false;
+              that.$apply();
+              query.exec(function(res) {
+                that.$apply();
+                let hh = (750 / that.winWidth) * res[0].height + 30;
+                let showOff = wepy.createAnimation({
+                  duration: 300,
+                  timingFunction: "ease"
+                });
+                let spin = wepy.createAnimation({
+                  duration: 300,
+                  timingFunction: "ease"
+                });
+                showOff.height(hh + "rpx").step();
+                spin.rotate(-180).step();
+                that.spinS[index] = spin.export();
+                that.showOffS[index] = showOff.export();
+                that.$apply();
+              });
+              that.$apply();
+            });
+          that.$apply();
+          resolve(that.searchResult[index]);
+        });
+      }
+      await addDetails(name, index);
+      wepy.hideLoading();
+    },
+    hideSearchedBookDetails(e) {
+      let that = this;
+      let index = e.currentTarget.dataset.index;
+      that.isTapIndexS[index] = false;
+      that.hideS[index] = true;
+      let query = wepy.createSelectorQuery();
+      let book = "#searchbook" + index;
+      query.select(book).boundingClientRect();
+      query.exec(function(res) {
+        let showOff = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        let spin = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        showOff.height(0).step();
+        spin.rotate(-360).step();
+        that.spinS[index] = spin.export();
+        that.showOffS[index] = showOff.export();
+        that.$apply();
+      });
+      that.$apply();
+    },
+    /**
+     * 续借 => 已借的书籍📚
+     */
+    async renewBooks(e) {
+      let that = this;
+      wepy.showLoading();
+      await bookStoreAgain()
+        .then(res => {
+          let results = res.data.data;
+          if (res.data) {
+            for (let i = 0; i < results.length; i++) {
+              let bar = results[i].bar;
+              let status = results[i].result;
+              let tip = results[i].tip;
+              for (let j = 0; j < that.lendBooks.length; j++) {
+                // 匹配图书的条形码
+                if (bar === that.lendBooks[j].bar) {
+                  if (!status) {
+                    return tip;
+                  }
+                }
+              }
+            }
+          }
+          return "200";
+        })
+        .then(res => {
+          // 请求已借书目获取that.lendBooks[j].leftDDL 和 that.lendBooks[j].newDDL
+          if (res === "200") {
+            alreadyBorrowBooksSum().then(res => {
+              let results = res.data.data;
+              for (let i = 0; i < results.length; i++) {
+                let bar = results[i].bar;
+                // 此时获取的deadline为新的应还日期
+                let newDDL = results[i].deadline;
+                let leftDDL = results[i].leftTime;
+                let renew = results[i].renew_conut;
+                for (let j = 0; j < that.lendBooks.length; j++) {
+                  if (bar === that.lendBooks[j].bar) {
+                    that.lendBooks[j].DDL = newDDL;
+                    that.lendBooks[j].leftDDL = leftDDL;
+                    that.lendBooks[j].renew = renew;
+                  }
+                }
+              }
+              wepy.hideLoading();
+              wepy.showToast({
+                title: "续借成功",
+                icon: "success",
+                duration: 2000
+              });
+              that.$apply();
+              // resolve((that.renewAll = false));
+            });
+          } else {
+            wepy.showToast({
+              title: res,
+              icon: "none",
+              duration: 2000
+            });
+          }
+        });
+      that.$apply();
+    },
+    clearPlaceHolder(e) {
+      this.hasInput = true;
+      this.$apply();
+    },
+    getPlaceHolder(e) {
+      this.hasInput = false;
+      this.$apply();
+    },
+    search(e) {
+      // 仅仅改变palceholder
+      if (e.detail.value !== "") {
+        this.hasInput = true;
+      } else this.hasInput = false;
+      this.$apply();
+    },
+    confirmSearch(e) {
+      const { value } = e.detail;
+      this.searchResult = [];
+      this.$apply();
+      this.find(value);
+      this.$apply();
+    },
+    goToRecomened(e) {
+      wepy.navigateTo({
+        url: "library-recommened"
+      });
+    },
+    quickSearch(e) {
+      const { name } = e.target.dataset;
+      this.searchResult = [];
+      // this.$apply();
+      this.find(name);
+      this.$apply();
+    },
+    bindCardPassword(e) {
+      this.bindInputPassword = e.detail.value;
+    },
+    async bindHandle() {
+      await changeSecretCode(
+        wepy.getStorageSync("User").studentId,
+        this.bindInputPassword,
+        "0"
+      ).then(res => {
+        if (res.data && res.data.data) {
+          // 绑定成功
+          this.placeholder = "";
+          this.bindModalVisible = false;
+          this.init();
+        } else {
+          wepy.showModal({
+            content: "密码错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+      });
+    }
+  };
+
+  /**
+   * 查询书籍接口
+   */
+  find(e) {
+    let name = e;
+    this.searchBookName = name;
+    // 搜索"我要荐购"则显示荐购，否则显示搜索结果
+    if (name === "我要荐购") {
+      this.hasResult = false;
+      this.emptyResult = true;
+    } else {
+      this.emptyResult = false;
+      this.hasResult = true;
+    }
+    // 请求数据
+    wepy.showLoading({
+      title: "加载中"
+    });
+    librarySearch(this.searchBookName, "1").then(res => {
+      this.searchedPage = 1;
+      const {
+        data: [...results],
+        success
+      } = res.data;
+      if (success) {
+        if (results.length === 0) {
+          this.hasResult = false;
+          this.emptyResult = true;
+          this.searchResult = [];
+          this.$apply();
+        } else {
+          for (let i = 0; i < results.length; i++) {
+            let book = {};
+            book.bookname = results[i].name;
+            book.author = results[i].author;
+            book.publishers = results[i].press;
+            book.callno = results[i].callNumber;
+            book.leftBookNum = results[i].numbers;
+            book.marc_no = results[i].marc_no;
+            this.searchResult.push(book);
+            this.spinS.push({});
+            this.showOffS.push({});
+            this.isTapIndexS.push(false);
+            this.hideS.push(true);
+          }
+          this.$apply();
+        }
+        wepy.hideLoading();
+      }
+    });
+    this.$apply();
+  }
+  watch = {
+    currentTab(newValue, oldValue) {
+      let lineAnimation = wepy.createAnimation({
+        duration: 500,
+        timingFunction: "ease-in-out"
+      });
+      let leftWidth = 40;
+      if (newValue === 0) {
+        leftWidth = 40;
+      } else if (newValue === 1) {
+        leftWidth = 312;
+      } else {
+        leftWidth = 590;
+      }
+      lineAnimation.left(leftWidth + "rpx").step();
+      this.animationNav = lineAnimation.export();
+      this.$apply();
+    },
+    bindingVisible(newValue, oldValue) {
+      if (!newValue) {
+        this.onLoadRequests();
+      }
+    }
+  };
+  computed = {
+    curBooksNum() {
+      return this.lendBooks.length;
+    }
+  };
+
+  /**
+   * 获取欠款金额（需模块绑定后使用）finish
+   */
+  getArrearMoney() {
+    bookArrears().then(res => {
+      if (res.data) {
+        if (res.data.data.charAt(0) === ".") this.arrears = "0" + res.data.data;
+        else this.arrears = res.data.data;
+      }
+      this.$apply();
+    });
+  }
+
+  /**
+   * 获取总借阅书本数（需模块绑定后使用）finish, 仅在此处判断密码更新。
+   */
+  getHistoricalBorrowing() {
+    historicalBorrow().then(res => {
+      if (!res.data) {
+        this.placeholder = "图书馆密码（默认学号）";
+        this.bindModalVisible = true;
+        this.$apply();
+      } else {
+        this.totalBooksNumber = res.data.data;
+      }
+      this.$apply();
+    });
+  }
+
+  /**
+   * 获取用户已借书目（需模块绑定后使用）
+   */
+  getAlreadyBorrowBooks() {
+    alreadyBorrowBooksSum().then(res => {
+      let results = res.data.data;
+      this.lendBooks = [];
+      this.$apply();
+      if (res.data) {
+        for (let i = 0; i < results.length; i++) {
+          let lend = {};
+          lend.bookname = results[i].name;
+          lend.renew = results[i].renew_conut;
+          lend.DDL = results[i].deadline;
+          lend.leftDDL = results[i].leftTime;
+          lend.marc_no = results[i].marc_no;
+          lend.bar = results[i].bar;
+          this.lendBooks.push(lend);
+          this.spin.push({});
+          this.showOff.push({});
+          this.isTapIndex.push(false);
+          this.hide.push(true);
+        }
+        this.$apply();
+        for (let i = 0; i < this.lendBooks.length; i++) {
+          if (this.lendBooks[i].leftDDL <= 0) {
+            this.renewAll = false;
+            break;
+          } else if (
+            parseInt(this.lendBooks[i].leftDDL) <= 10 &&
+            this.lendBooks[i].renew === "0" &&
+            parseInt(this.lendBooks[i].leftDDL) > 0
+          ) {
+            // 续借次数为0，且剩余天数小于10大于0存在可借图书。续借按钮高亮
+            this.renewAll = true;
+            break;
+          }
+        }
+      }
+      this.$apply();
+    });
+  }
+
+  /**
+   * 获取热门推荐
+   */
+  getHotRecommandBooks() {
+    wepy.showLoading({
+      title: "加载中"
+    });
+    hotBooks().then(res => {
+      const { data } = res.data;
+      data.map((item, index) => {
+        this.recomends[index] = {
+          name: item,
+          id: index + 1
+        };
+      });
+      this.$apply();
+      wepy.hideLoading();
+    });
+  }
+
+  /**
+   * 获取剩余座位
+   */
+  queryOverplusSeats() {
+    wepy.showLoading({
+      title: "加载中"
+    });
+    remainSeats().then(res => {
+      let results = res.data.data;
+      for (let i = 0; i < 4; i++) {
+        this.floors[i].rooms = [];
+        this.$apply();
+      }
+      for (let i = 0; i < results.length; i++) {
+        let room = {};
+        room.name = results[i].place;
+        room.totalSeats = results[i].total;
+        room.curSeats = results[i].available;
+        if (results[i].location === "二层") {
+          this.floors[0].rooms.push(room);
+        } else if (results[i].location === "三层") {
+          this.floors[1].rooms.push(room);
+        } else if (results[i].location === "四层") {
+          this.floors[2].rooms.push(room);
+        } else if (results[i].location === "五层") {
+          this.floors[3].rooms.push(room);
+        }
+      }
+      this.$apply();
+      wepy.hideLoading();
+    });
+  }
+
+  /**
+   * 页面绑定模块后的一些请求
+   */
+  async onLoadRequests() {
+    wepy.showLoading({
+      title: "加载中"
+    });
+    await this.getHistoricalBorrowing();
+    await this.getAlreadyBorrowBooks();
+    await this.getArrearMoney();
+    wepy.hideLoading();
+  }
+  async onLoad(option) {
+    wepy.getSystemInfo().then(res => {
+      this.winWidth = parseInt(res.windowWidth);
+      this.winHeight = parseInt(res.windowHeight);
+      this.$apply();
+    });
+    this.token = wepy.getStorageSync("token");
+    this.$apply();
+    let userInfomations = wepy.getStorageSync("User");
+    this.phoneNumber = userInfomations.nativeInformation.phoneNumber;
+    this.studentId = userInfomations.nativeInformation.studentId;
+    this.userId = userInfomations.nativeInformation.userId;
+    // 用于模块绑定
+    // this.bindingDomainUserName = this.studentId;
+    this.$apply();
+    if (option.page === "search") {
+      this.currentTab = 1;
+    } else if (option.page === "seats") {
+      this.currentTab = 2;
+    } else {
+      this.currentTab = 0;
+      this.onLoadRequests();
+    }
+    this.$apply();
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+.cover
+  position fixed
+  width 100vw
+  height 100vh
+  background rgb(0, 0, 0)
+  opacity 0
+  z-index 1000
+.cover-modal
+  position absolute
+  margin 0 auto
+  width 500rpx
+  left 105rpx
+  padding 20rpx
+  top 40vh
+  background #fff
+  z-index 1000
+  border-radius 10rpx
+  font-size 28rpx
+  text-align center
+.swiper-tab
+  display flex
+  position relative
+  justify-content space-between
+  align-items center
+  text-align center
+  height 44rpx
+  padding 0 40rpx
+  padding-top 8.5rpx
+  padding-bottom 24rpx
+  border-bottom 2rpx solid #dddddd
+  .swiper-tab-list
+    font-size 30rpx
+    color #353535
+    transition color 0.5s
+  .active
+    color #39c9ff
+  .swiper-line
+    background-color #39c9ff
+    width 120rpx
+    height 5rpx
+    border-radius 8rpx
+    position absolute
+    bottom 16rpx
+    left 40rpx
+.swiper-box
+  .books-container
+    .books-head
+      width 750rpx
+      height 300rpx
+      text-align center
+      background-position center
+      background-image url('https://static.airbob.org/under-graduate/library_pic_banner.png')
+      background-repeat no-repeat
+      background-size contain
+      color #fff
+      display flex
+      justify-content center
+      align-items flex-end
+      .books-num
+        font-size 70rpx
+        margin-right 30rpx
+        margin-bottom 30rpx
+      .books-cnt
+        font-size 30rpx
+        margin-bottom 40rpx
+    .books-tip
+      color #E64340
+      font-size 24rpx
+      width 250rpx
+      margin-left 60rpx
+      margin-top 20rpx
+      margin-bottom 30rpx
+      .books-question
+        width 25rpx
+        height 25rpx
+        margin-left 10rpx
+    .books-none-container
+      width 750rpx
+      height 700rpx
+      padding-top 180rpx
+      text-align center
+      font-size 28rpx
+      color #999CA0
+      .books-none-img
+        width 400rpx
+        height 291rpx
+        margin-bottom 50rpx
+    .books-list
+      display flex
+      flex-direction column
+      align-items center
+      width 750rpx
+      .book-container
+        width 675rpx
+        min-height 180rpx
+        border-top 1rpx solid rgba(0, 0, 0, 0.1)
+        border-right 1rpx solid rgba(0, 0, 0, 0.1)
+        border-left 1rpx solid rgba(0, 0, 0, 0.1)
+        border-radius 20rpx
+        margin-bottom 29rpx
+        display flex
+        align-items center
+        .book-info-all
+          width 590rpx
+          display flex
+          flex-direction column
+          align-items flex-start
+          font-size 24rpx
+          color #353535
+          line-height 45rpx
+          margin 30rpx 0rpx 30rpx 30rpx
+          .book-name
+            font-size 30rpx
+            font-weight bold
+        .button-updown
+          width 35rpx
+          height 20rpx
+      .book-detail-container
+        width 675rpx
+        height 0
+        overflow hidden
+        border-right 1rpx solid rgba(0, 0, 0, 0.1)
+        border-left 1rpx solid rgba(0, 0, 0, 0.1)
+        border-radius 0 0 20rpx 20rpx
+        font-size 24rpx
+        color #353535
+        margin-top -29rpx
+        margin-bottom 29rpx
+        z-index 1000
+        .book-detail-info-all
+          width 590rpx
+          border-top 2rpx solid #dddddd
+          display flex
+          flex-direction column
+          align-items flex-start
+          line-height 45rpx
+          margin 0rpx 30rpx 30rpx 30rpx
+          padding-top 30rpx
+    .button-renew
+      background-repeat no-repeat
+      background-position top center
+      background-size 605rpx 80rpx
+      width 605rpx
+      height 80rpx
+      font-size 30rpx
+      text-align center
+      line-height 80rpx
+      color #fff
+      margin 50rpx auto 15% auto
+  .search-container
+    .search-bar-container
+      width 750rpx
+      height 300rpx
+      .search-bar
+        height 60rpx
+        font-size 30rpx
+        position relative
+        top 50%
+        transform translateY(-50%)
+        .search-placeholder-all
+          color #999CA0
+          text-align center
+          height 60rpx
+          width 630rpx
+          position absolute
+          top 12rpx
+          left 50rpx
+          z-index 2
+          .search-icon
+            width 25rpx
+            height 25rpx
+            display inline-block
+          .search-placeholder
+            height 60rpx
+            padding 0 20rpx
+            display inline-block
+        .search-input
+          height 60rpx
+          width 630rpx
+          margin 0 auto
+          background #F5F5F5
+          color #353535
+          border-radius 60rpx
+          padding 0 30rpx
+    .search-recommend
+      width 750rpx
+      .search-recommend-title
+        text-align center
+        font-size 30rpx
+        font-weight bolder
+      .search-recommend-content
+        .search-recommend-book
+          width 630rpx
+          text-align center
+          margin 30rpx auto
+          color #39c9ff
+          font-size 24rpx
+          line-height 1.5em
+    .search-no-result
+      font-size 30rpx
+      display flex
+      flex-direction column
+      justify-content center
+      .search-no-result-pic
+        width 400rpx
+        height 300rpx
+        margin 100rpx auto
+      .search-no-result-tips
+        color #999CA0
+        width 630rpx
+        height 60rpx
+        margin 10rpx auto
+      .search-no-result-recom
+        background-color #39c9ff
+        width 260rpx
+        height 60rpx
+        margin 30rpx auto
+        border-radius 8rpx
+        text-align center
+        line-height 60rpx
+        color #fff
+    .search-result
+      width 750rpx
+      margin-bottom 120rpx
+      .search-result-container
+        width 675rpx
+        min-height 180rpx
+        border-radius 20rpx
+        margin 29rpx auto
+        border-top 1rpx solid rgba(0, 0, 0, 0.1)
+        border-right 1rpx solid rgba(0, 0, 0, 0.1)
+        border-left 1rpx solid rgba(0, 0, 0, 0.1)
+        font-size 24rpx
+        color #353535
+        display flex
+        align-items center
+        .search-info-all
+          width 590rpx
+          display flex
+          flex-direction column
+          align-items flex-start
+          font-size 24rpx
+          color #353535
+          line-height 45rpx
+          margin 30rpx 0rpx 30rpx 30rpx
+          .search-book-name
+            font-size 30rpx
+            font-weight bold
+        .search-button-updown
+          width 34rpx
+          height 20rpx
+      .search-detail-container
+        width 675rpx
+        height 0rpx
+        overflow hidden
+        border-right 1rpx solid rgba(0, 0, 0, 0.1)
+        border-left 1rpx solid rgba(0, 0, 0, 0.1)
+        border-radius 0 0 20rpx 20rpx
+        font-size 24rpx
+        color #353535
+        margin -29rpx auto 29rpx auto
+        .search-detail-info-all
+          width 590rpx
+          border-top 2rpx solid #dddddd
+          display flex
+          flex-direction column
+          align-items flex-start
+          line-height 45rpx
+          margin 0rpx 30rpx 30rpx 30rpx
+          padding-top 30rpx
+          .search-info-divide
+            width 590rpx
+            border 1rpx dashed #dddddd
+            margin-top 10rpx
+            margin-bottom 30rpx
+  .seats-container
+    .seats-head
+      width 750rpx
+      height 300rpx
+      background-position center
+      background-image url('https://static.airbob.org/under-graduate/library_seat_banner.png')
+      background-repeat no-repeat
+      background-size contain
+    .seats-divide
+      width 750rpx
+      height 20rpx
+      background-color rgb(245, 245, 245)
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
+</style>

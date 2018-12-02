@@ -29,6 +29,7 @@ import wepy from "wepy";
 import GpaCard from "../components/GpaCard";
 import GpaCustomScore from "../components/GpaCustomScore";
 import GpaMixin from "../../mixins/Gpa/Gpa.js";
+import { getUserGrade } from "@/api/education";
 
 export default class GPACalculator extends wepy.page {
   config = {
@@ -141,11 +142,7 @@ export default class GPACalculator extends wepy.page {
 
   // 获取成绩
   getScore() {
-    return wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.getUserGrade
-    });
+    return getUserGrade();
   }
 
   // 初始化成绩数据
@@ -289,7 +286,6 @@ export default class GPACalculator extends wepy.page {
   .card-wrapper
     margin 0 20rpx
     padding-bottom 120rpx
-
 .footer
   display flex
   position fixed
@@ -297,8 +293,7 @@ export default class GPACalculator extends wepy.page {
   bottom 0
   width 100%
   height 100rpx
-  .add-btn,
-  .calculate-btn
+  .add-btn, .calculate-btn
     display flex
     flex 1
     font-size 36rpx

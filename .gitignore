@@ -5,3 +5,4 @@ src/config/*
 .idea/*
 .vscode/*
 .wepycache
+src/api/*

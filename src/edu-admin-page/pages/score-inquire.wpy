@@ -2,7 +2,7 @@
   <view>
     <qy-modal width="500rpx">
 			<view slot="content" class="bind-container">
-				<input class="bind-input" placeholder="正方密码" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+				<input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
 				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
 			</view>
 		</qy-modal>
@@ -34,7 +34,7 @@
         </view>
         <repeat for="{{terms}}" index="index" key="key" item="item">
           <view class="term-card" data-index="{{index}}" @tap="{{hide[index] ? 'showDetails' : 'hideDetails'}}"><view class="term-card-item">{{item.term}}</view>
-            <image data-index="{{index}}" hidden = "{{Loading[index]}}" src="{{hide[index] ? 'https://static.airbob.org/under-graduate/image/score/button_down.png' : 'https://static.airbob.org/under-graduate/image/score/button_up.png'}}" mode="aspectFill"/>
+            <image data-index="{{index}}" hidden = "{{Loading[index]}}" animation="{{spinS[index]}}" src="https://static.airbob.org/under-graduate/image/score/button_down.png" mode="aspectFill"/>
             <i class="weui-loading" wx:if="{{Loading[index]}}"/>
             <view class="detail-cover" id="detail{{index}}" animation="{{animationData[index]}}">
               <repeat for="{{item.course}}" index="INDEX" key="KEY" item="ITEM">
@@ -66,7 +66,8 @@
 <script>
 import wepy from "wepy";
 import modal from "../../components/qy-modal";
-
+import { changeSecretCode } from "@/api/common";
+import { getUserGrade, rankingSelf } from "@/api/education";
 export default class Score extends wepy.page {
   config = {
     navigationBarTitleText: "成绩查询"
@@ -87,7 +88,9 @@ export default class Score extends wepy.page {
     dealedHeight: 0,
     collegeNumber: 0,
     rank: "",
-    loadHide: false
+    loadHide: false,
+    spinS: [],
+    placeholder: ""
   };
   components = {
     "qy-modal": modal
@@ -104,32 +107,25 @@ export default class Score extends wepy.page {
       this.bindInputPassword = e.detail.value;
     },
     async bindHandle() {
-      await wepy
-        .request({
-          url: `${this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.changeSecretCode}`,
-          method: "POST",
-          data: {
-            domainType: "1",
-            username: wepy.getStorageSync("userInfo").studentId,
-            password: this.bindInputPassword
-          }
-        })
-        .then(res => {
-          if (res.data.success && res.data.data) {
-            // 绑定成功
-            this.bindModalVisible = false;
-            this.$invoke("qy-modal", "close");
-            this.init();
-          } else {
-            wepy.showModal({
-              content: "密码错误",
-              confirmText: "知道了",
-              showCancel: false,
-              confirmColor: "#353535"
-            });
-          }
-        });
+      await changeSecretCode(
+        wepy.getStorageSync("User").studentId,
+        this.bindInputPassword,
+        "1"
+      ).then(res => {
+        if (res.data && res.data.data) {
+          // 绑定成功
+          this.placeholder = "";
+          this.$invoke("qy-modal", "close");
+          this.init();
+        } else {
+          wepy.showModal({
+            content: "密码错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+      });
     },
     async rankQuestion() {
       let that = this;
@@ -175,7 +171,13 @@ export default class Score extends wepy.page {
             duration: 1000,
             timingFunction: "ease"
           });
+          let spin = wepy.createAnimation({
+            duration: 300,
+            timingFunction: "ease"
+          });
           setTimeout(() => {
+            spin.rotate(-180).step();
+            that.spinS[index] = spin.export();
             showOff.height(transHeight + "rpx").step();
             that.animationData[index] = showOff.export();
             that.$apply();
@@ -191,7 +193,13 @@ export default class Score extends wepy.page {
         duration: 500,
         timingFunction: "ease-out"
       });
+      let spin = wepy.createAnimation({
+        duration: 300,
+        timingFunction: "ease"
+      });
       showAnimation.height(0 + "rpx").step();
+      spin.rotate(-360).step();
+      this.spinS[index] = spin.export();
       this.animationData[index] = showAnimation.export();
       this.$apply();
       this.animationData = [];
@@ -251,21 +259,13 @@ export default class Score extends wepy.page {
     await wepy.getSystemInfo().then(res => {
       that.screenWidth = parseFloat(res.screenWidth / 750);
     });
-    let res = await wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.getUserGrade
-    });
-    if (!res.data.data || !res.data.success) {
-      wepy.showModal({
-        content: "密码已经更新请重新绑定",
-        confirmText: "知道了",
-        showCancel: false,
-        confirmColor: "#353535"
-      });
+    let res = await getUserGrade();
+    if (!res.data) {
+      this.placeholder = "正方密码";
       this.$invoke("qy-modal", "open");
+      this.$apply();
     }
-    if (res.data.success) {
+    if (res.data) {
       that.loadHide = true;
       let data = res.data.data;
       let allScore = data.score;
@@ -275,11 +275,7 @@ export default class Score extends wepy.page {
       that.creditRetake = data.creditRetake === "" ? "0" : data.creditRetake;
       that.creditSelected = data.creditSelected;
     }
-    const rankRes = await wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.rankingSelf
-    });
+    const rankRes = await rankingSelf();
     this.rank = rankRes.data.data.rank;
     this.collegeNumber = rankRes.data.data.total;
     if (this.terms.length === 0) {
@@ -301,12 +297,9 @@ export default class Score extends wepy.page {
 
 <style lang="stylus" scoped>
 vendors = official
-
 @import '../../css/loading'
-
 .hide-container
   margin 200rpx auto
-
 .cover
   position fixed
   width 100vw
@@ -314,7 +307,6 @@ vendors = official
   background rgb(0, 0, 0)
   opacity 0
   z-index 100000
-
 .cover-modal
   position absolute
   margin 0 auto
@@ -327,7 +319,6 @@ vendors = official
   border-radius 10rpx
   font-size 28rpx
   text-align center
-
 .weui-loading
   margin 0 5px
   width 20px
@@ -342,7 +333,6 @@ vendors = official
       transform rotate(0deg)
     to
       transform rotate(1turn)
-
 .top-container
   width 750rpx
   height 350rpx
@@ -378,11 +368,9 @@ vendors = official
       background-position center
       background-repeat no-repeat
       background-size contain
-
 .rank-question-modal
   text-align center
   margin 0 auto
-
 .credit-column
   padding 24rpx 60rpx
   display flex
@@ -397,12 +385,10 @@ vendors = official
     .credit-item-score
       color #353535
       font-size 36rpx
-
 .divide
   height 25rpx
   width 750rpx
   background #F5F5F5
-
 .term-card
   position relative
   background #FFFFFF
@@ -448,15 +434,13 @@ vendors = official
     font-size 50rpx
     font-weight bold
   image
-    width 30rpx
-    height 30rpx
-
+    width 34rpx
+    height 20rpx
 .image-container
   padding-top 120rpx
   width 400rpx
   height 300rpx
   margin 0 auto
-
 .words
   margin-top 50rpx
   text-align center
@@ -464,7 +448,6 @@ vendors = official
   font-size 28rpx
   color #999CA0
   letter-spacing 0.11rpx
-
 .bind-container
   display flex
   flex-direction column

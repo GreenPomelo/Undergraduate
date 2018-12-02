@@ -1,0 +1,151 @@
+<template>
+  <view class="nicp-vote">
+    <view class="content">
+      <view class="logo">
+        <image class="logo-image" src="https://static.airbob.org/nicp/cxb_logo.png"/>
+      </view>
+      <view class="header">投票成功</view>
+      <view class="check">✔</view>
+      <view>
+        <image class="pomelo" src="https://static.airbob.org/report-2018-06/logo-min.png"/>
+      </view>
+    </view>
+  </view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+import qs from "qs";
+
+export default class NicpVote extends wepy.page {
+  config = {
+    navigationBarTitleText: "创新杯投票",
+    navigationBarBackgroundColor: "#ecd6e8"
+  };
+
+  ejectParamsFromPath(path) {
+    return path
+      .split("?")[1]
+      .split("&")
+      .map(item => ({
+        key: item.split("=")[0],
+        value: item.split("=")[1]
+      }));
+  }
+
+  handleCodeRes(path) {
+    const params = this.ejectParamsFromPath(path);
+    this.handleScene(params.find(({ key }) => key === "scene").value);
+  }
+
+  checkLogin() {
+    if (wepy.getStorageSync("token") === "") {
+      wepy.redirectTo({ url: "/others-page/pages/login" });
+    }
+  }
+
+  async handleScene(sceneValue) {
+    console.log(sceneValue);
+    if (sceneValue === "undefined") {
+      return;
+    }
+    const type = sceneValue.split("@")[1];
+    const sessionId = wepy.getStorageSync("token");
+    const timestamp = Math.floor(Date.now() / 1000);
+    const params = { type, scene: sceneValue, timestamp };
+    console.log(params);
+
+    try {
+      const {
+        data: { success, ...err }
+      } = await this.$parent.axios.post(
+        "https://wechat.njupt.edu.cn/nicp/addEntry",
+        qs.stringify(params),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        }
+      );
+
+      if (success) {
+        console.log("投票成功");
+        this.handleOpen();
+      } else {
+        if (err.errCode === 8) {
+          wepy.redirectTo({ url: "../../pages/login" });
+        }
+        console.error(err);
+        wepy.showToast({
+          title: err.errMsg,
+          icon: "none",
+          duration: 2000
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  methods = {
+    scanCode() {
+      wepy
+        .scanCode()
+        .then(res => {
+          console.log(res);
+          this.handleCodeRes(res.path);
+        })
+        .catch(err => console.error(err));
+    }
+  };
+
+  onLoad(options) {
+    this.checkLogin();
+    const scene = decodeURIComponent(options.scene);
+    this.handleScene(scene);
+  }
+}
+</script>
+
+
+<style lang="stylus" scoped>
+vendors = official
+
+.nicp-vote
+  .content
+    position relative
+    width 100vw
+    height 100vh
+    background url('https://static.airbob.org/nicp/bg.png')
+    background-size cover
+    background-position bottom
+    .logo,
+    .header,
+    .check
+      text-align center
+    .logo
+      padding-top 10vh
+      width 100%
+      .logo-image
+        width 24vw
+        height 24vw
+    .header
+      padding-top 4vh
+      font-size 60rpx
+    .check
+      font-size 100rpx
+      color #2ba246
+    .pomelo
+      position absolute
+      right 2vw
+      bottom 2vw
+      width 50rpx
+      height 50rpx
+      animation rotating 5s linear infinite
+      @keyframes rotating
+        from
+          transform rotate(0deg)
+        to
+          transform rotate(360deg)
+</style>

@@ -32,6 +32,7 @@ import wepy from "wepy";
 // import QyNav from "@/components/qy-navigation";
 // import QyContainer from "@/components/qy-container";
 import PayFlow from "../components/pay-flow";
+import { campusCardRequestInfo } from "@/api/campusCard";
 export default class CampusCardCharge extends wepy.page {
   data = {
     accountBalance: 0, // 账户余额
@@ -62,11 +63,7 @@ export default class CampusCardCharge extends wepy.page {
     this.getRemain();
   }
   async getRemain() {
-    const { data: balance } = await wepy.request({
-      url: `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.yourCampus}`,
-      method: "POST"
-    });
+    const { data: balance } = await campusCardRequestInfo();
     if (balance.success) {
       this.accountBalance =
         (Number(balance.data.db_balance) +

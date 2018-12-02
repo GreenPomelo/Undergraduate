@@ -1,124 +1,138 @@
 <template>
   <view>
     <qy-modal width="500rpx">
-			<view slot="content" class="bind-container">
-				<input class="bind-input" placeholder="正方密码" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
-				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
-			</view>
-		</qy-modal>
-    <view slot="qy-content">
-      <view class="course">
-        <view class="hide-page" @tap.stop="hideDetailCourse" hidden="{{swiperHide}}" @touchmove.stop="stopDrag">
-        <scroll-view scroll-x="{{detailCourseScroll}}" style="width:100%;z-index:-10;">              
-            <view class="swiper-thing">
-                <view class="swiper-item" style="background:{{swiperCourse[0].bgc}};" @tap.stop="errorBind" @touchstart="startTouching" @touchend="endTouching" animation="{{firstCourseAnimation}}">
-                  <view class="course-container">
-                    <view class="course-name">{{swiperCourse[0].name}}</view>
-                    <view class="course-info">
-                      <view class="detail-info"><span>教师：</span>{{swiperCourse[0].teacher}}</view>              
-                      <view class="detail-info"><span>教室：</span>{{swiperCourse[0].locale}}</view>
-                      <view class="detail-info"><span>周数：</span>{{swiperCourse[0].week}}</view>
-                    </view>    
+      <view slot="content" class="bind-container">
+        <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword"
+               placeholder-style="color: #999CA0"/>
+        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+      </view>
+    </qy-modal>
+    <view class="course">
+      <view class="hide-page" @tap.stop="hideDetailCourse" hidden="{{swiperHide}}" @touchmove.stop="stopDrag">
+        <scroll-view scroll-x="{{detailCourseScroll}}">
+          <view class="swiper-thing">
+            <view class="swiper-item" style="background:{{swiperCourse[0].bgc}};" @tap.stop="errorBind"
+                  @touchstart="startTouching" @touchend="endTouching" animation="{{firstCourseAnimation}}">
+              <view class="course-container">
+                <view class="course-name">{{swiperCourse[0].name}}</view>
+                <view class="course-info">
+                  <view class="detail-info"><span>教师：</span>{{swiperCourse[0].teacher}}</view>
+                  <view class="detail-info"><span>教室：</span>{{swiperCourse[0].locale}}</view>
+                  <view class="detail-info"><span>周数：</span>{{swiperCourse[0].week}}</view>
+                </view>
+              </view>
+            </view>
+            <repeat for="{{swiperCourse}}" index="index" key="key" item="item">
+              <view wx:if="{{index !== 0}}" class="swiper-behind" @tap.stop="errorBind"
+                    style="left:{{90 * index}}rpx;background:{{item.bgc}};z-index:{{-index}};"
+                    @touchstart="startTouching" @touchend="endTouching" animation="{{otherCourseAnimation[index-1]}}">
+                <view class="course-container">
+                  <view class="course-name">{{item.name}}</view>
+                  <view class="course-info">
+                    <view class="detail-info"><span>教师：</span>{{item.teacher}}</view>
+                    <view class="detail-info"><span>教室：</span>{{item.locale}}</view>
+                    <view class="detail-info"><span>周数：</span>{{item.week}}</view>
                   </view>
                 </view>
-                <repeat for="{{swiperCourse}}" index="index" key="key" item="item"> 
-                  <view wx:if="{{index !== 0}}" class="swiper-behind" @tap.stop="errorBind" style="left:{{90 * index}}rpx;background:{{item.bgc}};z-index:{{-index}};" @touchstart="startTouching" @touchend="endTouching" animation="{{otherCourseAnimation[index-1]}}"> 
-                    <view class="course-container">
-                      <view class="course-name">{{item.name}}</view>
-                      <view class="course-info">
-                        <view class="detail-info"><span>教师：</span>{{item.teacher}}</view>              
-                        <view class="detail-info"><span>教室：</span>{{item.locale}}</view>
-                        <view class="detail-info"><span>周数：</span>{{item.week}}</view>
-                      </view>
-                    </view>
-                  </view>
-                  <view wx:if="{{index === swiperCourse.length - 1}}" class="swiper-behind" style="opacity:0;left:{{90 * index + 90}}rpx;background:{{item.bgc}};z-index:-300;" animation="{{otherCourseAnimation[index-1]}}"> 
-                  </view>     
-                </repeat>
-            </view>
+              </view>
+              <view wx:if="{{index === swiperCourse.length - 1}}" class="swiper-behind"
+                    style="opacity:0;left:{{90 * index + 90}}rpx;background:{{item.bgc}};z-index:-300;"
+                    animation="{{otherCourseAnimation[index-1]}}">
+              </view>
+            </repeat>
+          </view>
         </scroll-view>
-        </view>
-       <view class="animation-button" @tap="putAway">
+      </view>
+      <view class="animation-button" @tap="putAway">
         <view class="animation-button-image"></view>
       </view>
-        <view animation="{{animationData}}" class="chooseItem" hidden="{{packup ? true : false}}">
-            <view class="choose-item-container">
-              <view class="change-choose">
-                <view class="change-container">更改学期</view>            
+      <view class="chooseItem" hidden="{{packup}}">
+        <view class="choose-item-container">
+          <view class="change-choose">
+            <view class="change-container">更改学期</view>
+          </view>
+          <scroll-view class="topScroll" scroll-x="true">
+            <repeat for="{{terms}}" key="key" index="index" item="item">
+              <view @tap="changeTerm" class="course-choose" data-item="{{item}}" id="{{item}}"
+                    style="background-image:url({{chosenTerm === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_term_selected.png' : ''}});border-radius:25rpx;">
+                {{item}}
               </view>
-              <scroll-view class="topScroll" scroll-x="true">
-                <repeat for="{{terms}}" key="key" index="index" item="item">
-                  <view @tap="changeTerm" class="course-choose" data-item="{{item}}" id="{{item}}" style="background-image:url({{chosenTerm === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_term_selected.png' : ''}});border-radius:25rpx;">{{item}}</view>
-                </repeat>
-              </scroll-view>
-            </view>
-            <view class="choose-item-container" style="border:none;">
-              <view class="change-choose">
-                <view class="change-container">更改周次</view>            
-              </view>
-              <scroll-view class="topScroll" scroll-x="true">
-                <repeat for="{{weeks}}" key="key" index="index" item="item">
-                  <view @tap="changeWeek" data-index="{{index}}" class="course-choose-circle" id="{{item}}" style="background-image:url({{chosenWeek === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_week_selected.png' : ''}})">{{index + 1}}</view>
-                </repeat>
-              </scroll-view>
-            </view>
+            </repeat>
+          </scroll-view>
         </view>
-        <view class="main" animation="{{animationData}}">  
-          <scroll-view class="main-scroll" scroll-x="true">
-            <view class="column_1">
-              <repeat for="{{classNumber}}" index="index" key="key" item="item">
-                <view class="left-column">{{item}}</view>
-              </repeat>
-            </view>
-            <view hidden="{{!isExam}}" class="cover-column" style="width:750rpx;left:0rpx;">
-              <view class="is-exam">
-                <image src="{{chooseWeek <= 20 ? 'https://static.airbob.org/under-graduate/image/course/pic_exam.png' :'https://static.airbob.org/under-graduate/image/course/pic_celebrate.png'}}" mode="aspectFit"/>
-                <view class="is-exam-text" wx:if="{{chooseWeek <= 20}}">考试周啦，不如去看看考试倒计时</view>
-                <view class="is-exam-text" wx:else>放假啦也要合理安排时间哦</view>
-                <view class="is-exam-nav" wx:if="{{chooseWeek <= 20}}">前往考试倒计时</view>
+        <view class="choose-item-container" style="border:none;">
+          <view class="change-choose">
+            <view class="change-container">更改周次</view>
+          </view>
+          <scroll-view class="topScroll" scroll-x="true">
+            <repeat for="{{weeks}}" key="key" index="index" item="item">
+              <view @tap="changeWeek" data-index="{{index}}" class="course-choose-circle" id="{{item}}"
+                    style="background-image:url({{chosenWeek === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_week_selected.png' : ''}})">
+                {{index + 1}}
               </view>
-            </view>                
-            <view class="cover-column" hidden="{{isExam}}">
-              <repeat for="{{nowCourse}}" index="index" key="key" item="item">
-                <view class="column">
-                  <repeat for="{{item}}" index="courseIndex" item="dailyCourse">
-                    <view class="course-item" style="top:{{dailyCourse.elementTop}};height:{{dailyCourse.elementHeight}};background:{{dailyCourse.bgc}}" @tap="showCourse" data-index="{{index}}" data-id="{{courseIndex}}">
-                        <view class="class-name">
-                          {{dailyCourse.name}}
-                        </view>
-                        <view class="class-teacher">
-                          {{dailyCourse.locale}}
-                        </view>
-                        <view wx:if="{{dailyCourse.withMoreCourse}}">
-                          <view class="bottom-angel" style="border-top:22rpx solid {{dailyCourse.bgc === '#D8D8D8' ? '#8e8e8e' : dailyCourse.borderColor}}"></view>
-                          <view class="bottom-angel-2"></view>
-                        </view>
-                      </view>
-                  </repeat>              
-                </view>
-              </repeat>
-            </view>
-            <view class="lines_1">
-              <repeat for="{{days}}" index="index" key="key" item="item">
-                <view class="top-line">{{item}}</view>
-              </repeat>
-            </view>
-            <repeat for="{{classNumber}}" index="index" key="key" item="item">
-              <view class="lines" style="border-top:{{index === 0 ? '1rpx solid #E3E3E3' : '1rpx dotted #E3E3E3'}}"></view>
             </repeat>
           </scroll-view>
         </view>
       </view>
+      <view class="main" animation="{{animationData}}">
+        <view class="lines_1">
+          <view class="row">
+            <repeat for="{{days}}" index="index" key="key" item="item">
+              <view class="top-line">{{item}}</view>
+            </repeat>
+          </view>
+          <repeat for="{{classNumber}}" index="index" key="key" item="item">
+            <view class="lines" style="border-top-style:{{index === 0 ? 'solid' : 'dotted'}}"></view>
+          </repeat>
+        </view>
+        <view class="column_1">
+          <repeat for="{{classNumber}}" index="index" key="key" item="item">
+            <view class="left-column">{{item}}</view>
+          </repeat>
+        </view>
+        <view hidden="{{!isExam}}" class="cover-column" style="width:750rpx;left:0rpx;">
+          <view class="is-exam">
+            <image
+              src="{{chooseWeek <= 20 ? 'https://static.airbob.org/under-graduate/image/course/pic_exam.png' :'https://static.airbob.org/under-graduate/image/course/pic_celebrate.png'}}"
+              mode="aspectFit"/>
+            <view class="is-exam-text" wx:if="{{chooseWeek <= 20}}">考试周啦，不如去看看考试倒计时</view>
+            <view class="is-exam-text" wx:else>放假啦也要合理安排时间哦</view>
+            <view class="is-exam-nav" wx:if="{{chooseWeek <= 20}}">前往考试倒计时</view>
+          </view>
+        </view>
+          <view class="cover-column" hidden="{{isExam}}">
+            <repeat for="{{nowCourse}}" index="index" key="key" item="item">
+              <view class="column">
+                <repeat for="{{item}}" index="courseIndex" item="dailyCourse">
+                  <view class="course-item"
+                        style="top:{{dailyCourse.elementTop}};height:{{dailyCourse.elementHeight}};background:{{dailyCourse.bgc}}"
+                        @tap="showCourse" data-index="{{index}}" data-id="{{courseIndex}}">
+                    <view class="class-name">
+                      {{dailyCourse.name}}
+                    </view>
+                    <view class="class-teacher">
+                      {{dailyCourse.locale}}
+                    </view>
+                    <view wx:if="{{dailyCourse.withMoreCourse}}">
+                    <view class="bottom-angel" style="border-top:22rpx solid {{dailyCourse.bgc === '#D8D8D8' ? '#8e8e8e' : dailyCourse.borderColor}}"></view>
+                    <view class="bottom-angel-2"></view>
+                  </view>
+                </view>
+              </repeat>
+            </view>
+          </repeat>
+        </view>
+      </view>
     </view>
-    </view>
+  </view>
 </template>
 
 <script>
 import wepy from "wepy";
 import ClassMixin from "../../mixins/class.js";
-import navigation from "../../components/qy-navigation";
-import container from "../../components/qy-container";
 import QyModal from "../../components/qy-modal";
+import { changeSecretCode, commonInformation } from "@/api/common";
+import { classSchedule } from "@/api/education";
 
 export default class Course extends wepy.page {
   config = {
@@ -149,11 +163,10 @@ export default class Course extends wepy.page {
     detailCourseScroll: false,
     trueCourses: [],
     chosenRequestYear: "",
-    chosenRequestTerm: ""
+    chosenRequestTerm: "",
+    placeholder: ""
   };
   components = {
-    "qy-navigation": navigation,
-    "qy-container": container,
     "qy-modal": QyModal
   };
   mixins = [ClassMixin];
@@ -162,59 +175,42 @@ export default class Course extends wepy.page {
       this.bindInputPassword = e.detail.value;
     },
     async bindHandle() {
-      await wepy
-        .request({
-          url: `${this.$parent.globalData.requestUrl +
-            this.$parent.globalData.config.changeSecretCode}`,
-          method: "POST",
-          data: {
-            domainType: "1",
-            username: wepy.getStorageSync("userInfo").studentId,
-            password: this.bindInputPassword
-          }
-        })
-        .then(res => {
-          if (res.data.success && res.data.data) {
-            // 绑定成功
-            this.bindModalVisible = false;
-            this.$invoke("qy-modal", "close");
-            this.init();
-          } else {
-            wepy.showModal({
-              content: "密码错误",
-              confirmText: "知道了",
-              showCancel: false,
-              confirmColor: "#353535"
-            });
-          }
-        });
+      await changeSecretCode(
+        wepy.getStorageSync("User").studentId,
+        this.bindInputPassword,
+        "1"
+      ).then(res => {
+        if (res.data && res.data.data) {
+          // 绑定成功
+          this.placeholder = "";
+          this.$invoke("qy-modal", "close");
+          this.init();
+        } else {
+          wepy.showModal({
+            content: "密码错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+      });
     },
-    stopDrag() {},
     putAway() {
       if (!this.swiperHide) {
         return;
       }
-      let that = this;
-      that.chosenWeek = `第${this.chooseWeek}周`;
-      const tap = async function() {
-        let animation = wepy.createAnimation({
-          duration: 100
-        });
-        let screenWidth;
-        if (that.packup === true) {
-          await wepy.getSystemInfo().then(res => {
-            screenWidth = parseInt(res.screenWidth / 750 * 178);
-          });
-          animation.translate(0, screenWidth).step();
-          that.packup = false;
-        } else {
-          animation.translate(0, 0).step();
-          that.packup = true;
-        }
-        that.animationData = animation.export();
-        that.$apply();
-      };
-      tap();
+      this.chosenWeek = `第${this.chooseWeek}周`;
+      const animation = wepy.createAnimation({
+        duration: 100
+      });
+      if (this.packup) {
+        animation.translate(0, 90).step();
+        this.packup = false;
+      } else {
+        animation.translate(0, 0).step();
+        this.packup = true;
+      }
+      this.animationData = animation.export();
     },
     showCourse(e) {
       let index = e.currentTarget.dataset.index;
@@ -241,7 +237,6 @@ export default class Course extends wepy.page {
       });
       firstCourseAnimation.translate(0, 0).step();
       this.firstCourseAnimation = firstCourseAnimation.export();
-      this.$apply();
       for (let i = 0; i < this.swiperCourse.length - 1; i++) {
         let otherCourseAnimation = wepy.createAnimation({
           duration: 0
@@ -267,16 +262,7 @@ export default class Course extends wepy.page {
       }
       this.chosenRequestYear = requestYear;
       this.chosenRequestTerm = requestTerm;
-      let changedTermCourse = await wepy.request({
-        url:
-          this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.classSchedule,
-        data: {
-          year: requestYear,
-          term: requestTerm
-        },
-        method: "GET"
-      });
+      let changedTermCourse = await classSchedule(requestYear, requestTerm);
       if (changedTermCourse.data.success) {
         that.trueCourses = changedTermCourse.data.data.timetable;
         let dealedCourse = that.handleCourses(
@@ -304,11 +290,13 @@ export default class Course extends wepy.page {
       this.detailCourseScroll = true;
     }
   };
+
   startTouching(e) {
     if (e.touches.length === 1) {
       this.startX = e.touches[0].clientX;
     }
   }
+
   async endTouching(e) {
     if (e.changedTouches.length === 1) {
       this.endX = e.changedTouches[0].clientX;
@@ -353,10 +341,11 @@ export default class Course extends wepy.page {
       }
     }
   }
+
   getTerms() {
     let that = this;
     return new Promise(resolve => {
-      let userInfo = wepy.getStorageSync("userInfo");
+      let userInfo = wepy.getStorageSync("User");
       let nowYear = parseInt(
         new Date()
           .getFullYear()
@@ -376,16 +365,14 @@ export default class Course extends wepy.page {
       resolve();
     });
   }
+
   async init() {
-    let Day = new Date().getDay() === 0 ? 7 : new Date().getDay();
-    this.Day = parseInt(Day - 1);
+    const date = new Date();
+    const day = date.getDay() === 0 ? 7 : date.getDay();
+    this.Day = parseInt(day - 1);
     let common = wepy.getStorageSync("common");
     if (!common) {
-      common = await wepy.request({
-        url:
-          this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.commonInformation
-      });
+      common = await commonInformation();
       common = common.data.data;
     }
     this.chooseWeek = parseInt(common.week);
@@ -399,16 +386,15 @@ export default class Course extends wepy.page {
       this.unshowCourse = dealedCourse[2];
       this.$apply();
     }
-    let that = this;
     await this.getTerms();
     if (common.nextTerm) {
       this.terms.unshift(
         common.semester.substr(-1) === "1"
           ? common.year + " 第二学期"
           : common.semester.substr(0, 4) +
-            "-" +
-            parseInt(Number(common.semester.substr(0, 4)) + 1).toString() +
-            " 第一学期"
+              "-" +
+              parseInt(Number(common.semester.substr(0, 4)) + 1).toString() +
+              " 第一学期"
       );
     }
     if (this.chooseWeek > 18 || this.chooseWeek < 1) {
@@ -417,59 +403,50 @@ export default class Course extends wepy.page {
     }
     for (let i = 1; i <= 18; i++) {
       this.weeks.push(`第${i}周`);
+      if (i <= 12) {
+        this.classNumber.push(i);
+      }
     }
-    for (let i = 1; i <= 12; i++) {
-      this.classNumber.push(i);
-    }
-    let res = await wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.classSchedule
-    });
-    if (!res.data.data || !res.data.success) {
-      wepy.showModal({
-        content: "密码已经更新请重新绑定",
-        confirmText: "知道了",
-        showCancel: false,
-        confirmColor: "#353535"
-      });
+    let res = await classSchedule();
+    if (!res.data) {
+      this.placeholder = "正方密码";
       this.$invoke("qy-modal", "open");
     } else {
-      that.trueCourses = res.data.data.timetable;
+      this.trueCourses = res.data.data.timetable;
       if (wepy.getStorageSync("common")) {
-        that.chosenTerm = `${wepy.getStorageSync("common").year} 第${
+        this.chosenTerm = `${wepy.getStorageSync("common").year} 第${
           wepy.getStorageSync("common").semester.substr(-1) === "1"
             ? "一"
             : "二"
         }学期`;
       } else {
-        that.chosenTerm = `2018-2019 第一学期`;
+        this.chosenTerm = `2018-2019 第一学期`;
       }
-      let dealedCourse = this.handleCourses(this.trueCourses, common.week);
+      const dealedCourse = this.handleCourses(this.trueCourses, common.week);
       this.nowCourse = dealedCourse[0];
       this.elseCourse = dealedCourse[1];
       this.unshowCourse = dealedCourse[2];
       this.$apply();
     }
   }
+
   async onLoad() {
     this.init();
   }
+
   async onPullDownRefresh() {
     const data = {
-      type: "jzwzn"
+      type: "coursePullRefresh"
     };
     if (this.chosenRequestTerm !== "") {
       data.year = this.chosenRequestYear;
       data.term = this.chosenRequestTerm;
     }
-    let changedTermCourse = await wepy.request({
-      url:
-        this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config.classSchedule,
-      data: data,
-      method: "GET"
-    });
+    let changedTermCourse = await classSchedule(
+      data.year,
+      data.term,
+      data.type
+    );
     if (changedTermCourse.data.success) {
       this.trueCourses = changedTermCourse.data.data.timetable;
       let dealedCourse = this.handleCourses(this.trueCourses, this.chooseWeek);
@@ -478,11 +455,36 @@ export default class Course extends wepy.page {
       this.unshowCourse = dealedCourse[2];
       this.$apply();
     }
+    wepy.stopPullDownRefresh();
   }
 }
 </script>
 
-<style lang="stylus" scoped>
+<style lang="stylus" type="text/stylus" scoped>
+.lines_1
+  position absolute
+  z-index 0
+  top 0
+  width 670rpx
+  padding-left 80rpx
+  font-size 26rpx
+  color #353535
+  text-align center
+  .row
+    display flex
+    justify-content center
+    align-items center
+  .top-line
+    height 90rpx
+    width 750rpx
+    line-height 90rpx
+  .lines
+    width 750rpx
+    height 107rpx
+    border-top 1rpx dotted #E3E3E3
+    display flex
+    align-items center
+
 .nav
   display flex
   align-items center
@@ -561,8 +563,6 @@ export default class Course extends wepy.page {
           flex-direction column
 
 .course
-  position absolute
-  width 750rpx
   min-height 100vh
   .animation-button
     position absolute
@@ -579,18 +579,16 @@ export default class Course extends wepy.page {
       background-position center
       background-size contain
   .chooseItem
-    position absolute
-    top -180rpx
     background #EEEEEE
-    width 750rpx
     height 180rpx
     font-size 26rpx
+    margin 0 0 -180rpx 0
     .choose-item-container
-      margin-left 80rpx
       width 670rpx
       height 90rpx
       display flex
       align-items center
+      margin 0 0 0 80rpx
       border-bottom 1rpx solid #E3E3E3
       .change-choose
         display flex
@@ -640,37 +638,15 @@ export default class Course extends wepy.page {
           background-size contain
           border-radius 50%
   .main
-    position absolute
     width 750rpx
     .main-scroll
-      position relative
       width 100%
       font-size 26rpx
-      font-family PingFangSC-Light
+      height 1280rpx
       color rgb(139, 139, 139)
-      .lines
-        width 750rpx
-        height 107rpx
-        border-top 1rpx dotted #E3E3E3
-        display flex
-        align-items center
-    .lines_1
-      width 670rpx
-      padding-left 80rpx
-      height 90rpx
-      display flex
-      align-items center
-      justify-content center
-      text-align center
-      .top-line
-        height 90rpx
-        width 750rpx
-        line-height 90rpx
     .cover-column
-      position absolute
-      left 80rpx
+      margin-left 80rpx
       width 670rpx
-      height 1296rpx
       .is-exam
         position absolute
         width 750rpx
@@ -749,7 +725,6 @@ export default class Course extends wepy.page {
       position absolute
       top 90rpx
       width 80rpx
-      height 1296rpx
       display flex
       flex-direction column
       justify-content center

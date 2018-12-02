@@ -14,7 +14,7 @@
     <view class="loss-content">
       <view class="input-container" wx:if="{{cardIndex===0||cardIndex===4}}">
         <view class="input-text">校园卡密码</view>
-        <input placeholder="输入你的校园卡密码" @input="inputCampusPassword" value="{{campusPassword}}"/>
+        <input placeholder="输入你的校园卡密码" type="password" @input="inputCampusPassword" value="{{campusPassword}}"/>
       </view>
       <view class="input-container" wx:if="{{cardIndex===1}}">
         <view class="input-text">校园卡卡号</view>
@@ -64,6 +64,13 @@
 <script>
 import wepy from "wepy";
 import QyModal from "@/components/qy-modal";
+import {
+  campusLostCard,
+  campusFindCard,
+  campusUnlostCard,
+  getLossInfo,
+  getLossObject
+} from "@/api/campusCard";
 export default class CampusCardLoss extends wepy.page {
   components = {
     QyModal
@@ -111,13 +118,8 @@ export default class CampusCardLoss extends wepy.page {
       if (this.cardIndex === 0) {
         let psd = this.campusPassword;
         let des = this.campusDescription;
-        const res = await wepy.request({
-          url: `${
-            this.$parent.globalData.requestUrl
-          }crawl/ykt/lost?password=${psd}&remark=${des}`,
-          method: "POST"
-        });
-        if (res.data.success) {
+        const res = await campusLostCard(psd, des);
+        if (res.data) {
           await wepy.showModal({
             content: res.data.data,
             confirmText: "知道了",
@@ -131,18 +133,11 @@ export default class CampusCardLoss extends wepy.page {
       } else if (this.cardIndex === 1) {
         let num = this.campusNumber;
         let des = this.campusDescription;
-        const res = await wepy.request({
-          url: `${this.$parent.globalData.requestUrl}crawl/ykt/find`,
-          data: {
-            cardNo: num,
-            remark: des
-          },
-          method: "POST"
-        });
+        const res = await campusFindCard(num, des);
         this.campusPassword = "";
         this.campusDescription = "";
         this.campusNumber = "";
-        if (res.data.success) {
+        if (res.data) {
           await wepy.showToast({
             title: "提交成功",
             icon: "success",
@@ -175,13 +170,8 @@ export default class CampusCardLoss extends wepy.page {
         this.$invoke("UpLoadModal", "close");
       } else if (this.cardIndex === 4) {
         let psd = this.campusPassword;
-        const res = await wepy.request({
-          url: `${
-            this.$parent.globalData.requestUrl
-          }crawl/ykt/unlost?password=${psd}`,
-          method: "POST"
-        });
-        if (res.data.success) {
+        const res = await campusUnlostCard(psd);
+        if (res.data) {
           await wepy.showModal({
             content: res.data.data,
             confirmText: "知道了",
@@ -204,17 +194,10 @@ export default class CampusCardLoss extends wepy.page {
     if (page === 1) {
       this.lossInfoData = [];
       // 初次请求的时候请求20条
-      const resArr = ["1", "2"].map(page =>
-        wepy.request({
-          url: `${
-            this.$parent.globalData.requestUrl
-          }crawl/ykt/lost/list?page=${page}`,
-          method: "POST"
-        })
-      );
+      const resArr = ["1", "2"].map(page => getLossInfo(page));
       await Promise.all(resArr).then(resDatas => {
         for (let res of resDatas) {
-          if (res.data.success && res.data.data.length > 0) {
+          if (res.data && res.data.data.length > 0) {
             this.lossInfoData = [...this.lossInfoData, ...res.data.data];
           }
         }
@@ -223,13 +206,8 @@ export default class CampusCardLoss extends wepy.page {
       wepy.hideLoading();
     } else {
       // 非初始状态
-      const res = await wepy.request({
-        url: `${
-          this.$parent.globalData.requestUrl
-        }crawl/ykt/lost/list?page=${page}`,
-        method: "POST"
-      });
-      if (res.data.success && res.data.data.length > 0) {
+      const res = await getLossInfo(page);
+      if (res.data && res.data.data.length > 0) {
         this.lossInfoData = [...this.lossInfoData, ...res.data.data];
         this.lossInfoPage = this.lossInfoPage + 1;
         wepy.hideLoading();
@@ -253,18 +231,10 @@ export default class CampusCardLoss extends wepy.page {
     });
     if (page === 1) {
       this.lossObjectData = [];
-
-      const resArr = ["1", "2"].map(page =>
-        wepy.request({
-          url: `${
-            this.$parent.globalData.requestUrl
-          }crawl/ykt/find/list?page=${page}`,
-          method: "POST"
-        })
-      );
+      const resArr = ["1", "2"].map(page => getLossObject(page));
       await Promise.all(resArr).then(resDatas => {
         for (let res of resDatas) {
-          if (res.data.success && res.data.data.length > 0) {
+          if (res.data && res.data.data.length > 0) {
             this.lossObjectData = [
               ...this.lossObjectData,
               ...res.data.data.map(_ => {
@@ -282,13 +252,8 @@ export default class CampusCardLoss extends wepy.page {
       this.lossObjectPage = 3;
       wepy.hideLoading();
     } else {
-      const res = await wepy.request({
-        url: `${
-          this.$parent.globalData.requestUrl
-        }crawl/ykt/find/list?page=${page}`,
-        method: "POST"
-      });
-      if (res.data.success && res.data.data.length > 0) {
+      const res = await getLossObject(page);
+      if (res.data && res.data.data.length > 0) {
         this.lossObjectData = [
           ...this.lossObjectData,
           ...res.data.data.map(_ => {
@@ -315,7 +280,6 @@ export default class CampusCardLoss extends wepy.page {
     this.$apply();
   }
   loadMoreLossInfoList() {
-    console.log(123);
     if (!this.lossInfoLoading) {
       this.lossInfoLoading = true;
       this.getLossInfoList();
@@ -425,6 +389,7 @@ button:after
     color rgb(156, 153, 153)
   .info-content
     font-size 36rpx
+    margin 0 30rpx
   .info-button
     width 204rpx
     height 51rpx

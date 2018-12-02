@@ -6,7 +6,7 @@
       <text class="search-cancel" @tap="goBack">取消</text>
     </view>
     <view hidden="{{noSearch}}">
-      <view class="hot-search" style="border-bottom:1rpx solid #F5F5F5">
+      <!-- <view class="hot-search" style="border-bottom:1rpx solid #F5F5F5">
         <view class="search-title">热门搜索</view>
         <view class="hot-search-item">        
           <repeat for="{{hotSearch}}" index="index" item="item" key="key">
@@ -16,7 +16,7 @@
             </navigator>
           </repeat>
         </view>
-      </view>
+      </view> -->
       <view class="hot-search">
         <view class="search-title">
           <view class="get-rid" @tap="clearHistory"></view>
@@ -52,7 +52,7 @@
 <script>
 import wepy from "wepy";
 import allSearch from "../mixins/all-search-thing";
-
+import { findIcons } from "@/api/common";
 export default class extends wepy.page {
   data = {
     isFocus: false,
@@ -134,29 +134,23 @@ export default class extends wepy.page {
     let that = this;
     this.searchHistory = wepy.getStorageSync("searchHistory");
     this.allSearches = this.allSearchThing();
-    wepy
-      .request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.findIcons}`
-      })
-      .then(res => {
-        that.hotSearch.push(...res.data.data);
-        that.hotSearch.forEach((item, index) => {
-          if (index <= 2) {
-            that.hotSearch[index].hotIcon = true;
-          } else {
-            that.hotSearch[index].hotIcon = false;
-          }
-        });
-        that.$apply();
+    findIcons().then(res => {
+      that.hotSearch.push(...res.data.data);
+      that.hotSearch.forEach((item, index) => {
+        if (index <= 2) {
+          that.hotSearch[index].hotIcon = true;
+        } else {
+          that.hotSearch[index].hotIcon = false;
+        }
       });
+      that.$apply();
+    });
   }
 }
 </script>
 
 <style lang="stylus" scoped>
 @import '../../css/search-input'
-
 .search-bar
   box-shadow 0 10rpx 8rpx 0 rgba(0, 0, 0, 0.05)
   padding 20rpx
@@ -173,7 +167,6 @@ export default class extends wepy.page {
     margin-top 10rpx
     float right
     color #47CFF5
-
 .hot-search
   position relative
   width 700rpx
@@ -215,7 +208,6 @@ export default class extends wepy.page {
         width 40rpx
         height 40rpx
         margin-right 10rpx
-
 .result-page
   position relative
   padding-top 30rpx

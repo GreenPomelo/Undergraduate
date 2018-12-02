@@ -30,6 +30,8 @@
 <script>
 import wepy from "wepy";
 import PayFlow from "../components/pay-flow";
+import { internetRemain } from "@/api/campusCard";
+
 export default class NetCharge extends wepy.page {
   data = {
     balance: "0.00",
@@ -62,19 +64,13 @@ export default class NetCharge extends wepy.page {
     wepy.stopPullDownRefresh();
   }
   getRemain() {
-    wepy
-      .request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.internetRemain}`,
-        method: "POST"
-      })
-      .then(res => {
-        if (res.data.success) {
-          this.balance = res.data.data / 100;
-          this.sno = wepy.getStorageSync("sno");
-          this.$apply();
-        }
-      });
+    internetRemain().then(res => {
+      if (res.data) {
+        this.balance = res.data.data / 100;
+        this.sno = wepy.getStorageSync("sno");
+        this.$apply();
+      }
+    });
   }
   methods = {
     openPayModal() {

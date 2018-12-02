@@ -30,8 +30,14 @@
 			<view class="no-text">还没参加过体测，但要多运动哦</view>
 		</view>
     </block>
-		<QyBinding :isGet="isGet" :visible.sync="bindingVisible" :zIndex="bindingZIndex" :width="bindingWidth" :height="bindingHeight" :top="bindingTop" :mockURL.sync="bindingURL" :domainType.sync="bindingDomainType" :domainUserName.sync="studentId" :VerifyURL.sync="bindingDomainVerifyURL"></QyBinding>
+		<!-- <QyBinding :isGet="isGet" :visible.sync="bindingVisible" :zIndex="bindingZIndex" :width="bindingWidth" :height="bindingHeight" :top="bindingTop" :mockURL.sync="bindingURL" :domainType.sync="bindingDomainType" :domainUserName.sync="studentId" :VerifyURL.sync="bindingDomainVerifyURL"></QyBinding> -->
 		<!-- <QyBinding :visible.sync="bindingVisible"  :mockURL.sync="URL" :domainType.sync="bindingDomainType" :domainUserName="studentId" :VerifyURL="bindingDomainVerifyURL"></QyBinding> -->
+    <QyModal :maskClosable="maskClosable" width="500rpx" :visible.sync="bindModalVisible">
+      <view slot="content" class="bind-container">
+        <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+      </view>
+    </QyModal>
 	</view>
 </template>
 
@@ -40,14 +46,15 @@ import wepy from "wepy";
 // import QyNav from "@/components/qy-navigation";
 // import QyContainer from "@/components/qy-container";
 import PeCard from "../components/pe-card";
-import QyBinding from "@/components/qy-binding-modal";
+import QyModal from "../../components/qy-modal";
+import { getUserPEGrade } from "@/api/common";
+import { changeSecretCode } from "@/api/common";
+
 export default class PeScore extends wepy.page {
   components = {
-    // QyNav,
-    // QyContainer,
     PeCard1: PeCard,
     PeCard2: PeCard,
-    QyBinding
+    QyModal
   };
   data = {
     current: "class", // or test
@@ -59,16 +66,9 @@ export default class PeScore extends wepy.page {
     peTestAnimations: [],
     titleBgColor: ["rgb(20,126,232)", "rgb(239,90,97)"],
     winWidth: 750,
-    studentId: "",
-    bindingZIndex: 2000,
-    bindingWidth: "500rpx",
-    bindingTop: "35vh",
-    bindingHeight: "500rpx",
-    bindingDomainType: 2,
-    bindingVisible: false,
-    bindingURL: "",
-    bindingDomainVerifyURL: "",
-    isGet: true
+    bindModalVisible: false,
+    bindInputPassword: "",
+    placeholder: ""
   };
   config = {
     navigationBarTitleText: "体育部"
@@ -76,13 +76,6 @@ export default class PeScore extends wepy.page {
   async onLoad() {
     const { studentId } = wepy.getStorageSync("userInfo");
     this.studentId = studentId;
-    this.bindingURL = `${this.$parent.globalData.requestUrl +
-      this.$parent.globalData.config.changeSecretCode}`;
-    this.bindingDomainVerifyURL = `${this.$parent.globalData.requestUrl +
-      this.$parent.globalData.config.getUserPEGrade}?semester=${studentId.slice(
-      1,
-      3
-    )}00`;
     this.check();
   }
   methods = {
@@ -95,10 +88,34 @@ export default class PeScore extends wepy.page {
       if (this.current !== "class") {
         this.current = "class";
       }
+    },
+    bindCardPassword(e) {
+      this.bindInputPassword = e.detail.value;
+    },
+    async bindHandle() {
+      await changeSecretCode(
+        wepy.getStorageSync("User").studentId,
+        this.bindInputPassword,
+        "2"
+      ).then(res => {
+        if (res.data) {
+          // 绑定成功
+          this.placeholder = "";
+          this.bindModalVisible = false;
+          this.$apply();
+        } else {
+          wepy.showModal({
+            content: "密码错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+      });
     }
   };
   watch = {
-    bindingVisible(next) {
+    bindModalVisible(next) {
       if (next === false) {
         this.getData();
         this.$apply();
@@ -106,18 +123,18 @@ export default class PeScore extends wepy.page {
     }
   };
   async check() {
-    const { data: check } = await wepy.request({
-      url: `${this.$parent.globalData.requestUrl +
-        this.$parent.globalData.config
-          .getUserPEGrade}?semester=20${this.studentId.slice(1, 3)}00`
-    });
-    if (check.success) {
+    const { data: check } = await getUserPEGrade(
+      `20${this.studentId.slice(1, 3)}`,
+      "00"
+    );
+    if (check) {
       wepy.showLoading();
       // 校验成功
       this.getData();
     } else {
       wepy.hideLoading();
-      this.bindingVisible = true;
+      this.placeholder = "请输入体育部密码";
+      this.bindModalVisible = true;
       this.$apply();
       // this.getData();
     }
@@ -132,12 +149,7 @@ export default class PeScore extends wepy.page {
       `20${parseInt(studentYear) + 2}`,
       `20${parseInt(studentYear) + 3}`
     ]; // 四年
-    const allTestReq = tempYear.map(item =>
-      wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getUserPEGrade}?semester=${item}00`
-      })
-    );
+    const allTestReq = tempYear.map(item => getUserPEGrade(item, "00"));
     // 获取体侧数据
     let total1;
     Promise.all(allTestReq).then(Tests => {
@@ -168,18 +180,12 @@ export default class PeScore extends wepy.page {
       this.$apply();
     });
     // 获取体育成绩 大一大二
-    const allClassReq1 = tempYear.slice(0, 2).map(item =>
-      wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getUserPEGrade}?semester=${item}01`
-      })
-    );
-    const allClassReq2 = tempYear.slice(0, 2).map(item =>
-      wepy.request({
-        url: `${this.$parent.globalData.requestUrl +
-          this.$parent.globalData.config.getUserPEGrade}?semester=${item}02`
-      })
-    );
+    const allClassReq1 = tempYear
+      .slice(0, 2)
+      .map(item => getUserPEGrade(item, "01"));
+    const allClassReq2 = tempYear
+      .slice(0, 2)
+      .map(item => getUserPEGrade(item, "02"));
     let total2;
     Promise.all([...allClassReq1, ...allClassReq2]).then(Classes => {
       Classes.forEach((item, index) => {
@@ -233,7 +239,7 @@ export default class PeScore extends wepy.page {
           .select(`#Class-${index}`)
           .boundingClientRect();
         query.exec(res => {
-          const real = (res[0].height + 50) * 750 / this.winWidth + "rpx";
+          const real = ((res[0].height + 50) * 750) / this.winWidth + "rpx";
           this.peClassAnimations[index] = animation
             .height(real)
             .step()
@@ -261,7 +267,7 @@ export default class PeScore extends wepy.page {
           .select(`#Test-${index}`)
           .boundingClientRect();
         query.exec(res => {
-          const real = (res[0].height + 50) * 750 / this.winWidth + "rpx";
+          const real = ((res[0].height + 50) * 750) / this.winWidth + "rpx";
           this.peTestAnimations[index] = animation
             .height(real)
             .step()
@@ -276,59 +282,82 @@ export default class PeScore extends wepy.page {
 </script>
 <style lang="stylus" scoped>
 .container
-	display flex
-	flex-direction column
-	align-items center
-	.no-container
-		.no-image
-			width 400rpx
-			margin-top 129rpx
-		.no-text
-			color #999CA0
-			font-size 28rpx
-			margin-top 55rpx
-			text-align center
-	.background
-		position fixed
-		width 100vw
-		height 100vh
-		background-color rgb(#C2D8F8)
-		z-index -1000
-	.head-container
-		display flex
-		flex-direction column
-		align-items  center
-		width 100%
-		height 284rpx
-		background-size cover
-		background-position-y -116rpx
-		background-image url("https://static.airbob.org/under-graduate/%E4%BD%93%E8%82%B2%E6%88%90%E7%BB%A9/Half.png")
-		.button-list
-			display flex
-			margin-top 58rpx
-			justify-content space-between
-			width 381rpx
-			.button-common
-				width 157rpx
-				height 63rpx
-				line-height 63rpx
-				font-size 30rpx
-				text-align center
-				border-radius 33rpx
-				font-family 'SimHei'
-				background-color white
-				background-image url("https://static.airbob.org/under-graduate/supplementary/%E6%8C%89%E9%92%AE%E8%99%9A%E7%BA%BF.png")
-				background-size contain
-				background-repeat no-repeat
-				color rgb(53, 53, 53)
-				cursor pointer
-			.button-active
-				background-color rgb(101, 205, 230)
-				color rgb(255, 255, 255)
-				background-image none
-		.head-icon
-			width 102rpx
-			margin-top 23rpx
+  display flex
+  flex-direction column
+  align-items center
+  .no-container
+    .no-image
+      width 400rpx
+      margin-top 129rpx
+    .no-text
+      color #999CA0
+      font-size 28rpx
+      margin-top 55rpx
+      text-align center
+  .background
+    position fixed
+    width 100vw
+    height 100vh
+    background-color rgb(#C2D8F8)
+    z-index -1000
+  .head-container
+    display flex
+    flex-direction column
+    align-items center
+    width 100%
+    height 284rpx
+    background-size cover
+    background-position-y -116rpx
+    background-image url('https://static.airbob.org/under-graduate/%E4%BD%93%E8%82%B2%E6%88%90%E7%BB%A9/Half.png')
+    .button-list
+      display flex
+      margin-top 58rpx
+      justify-content space-between
+      width 381rpx
+      .button-common
+        width 157rpx
+        height 63rpx
+        line-height 63rpx
+        font-size 30rpx
+        text-align center
+        border-radius 33rpx
+        font-family 'SimHei'
+        background-color white
+        background-image url('https://static.airbob.org/under-graduate/supplementary/%E6%8C%89%E9%92%AE%E8%99%9A%E7%BA%BF.png')
+        background-size contain
+        background-repeat no-repeat
+        color rgb(53, 53, 53)
+        cursor pointer
+      .button-active
+        background-color rgb(101, 205, 230)
+        color rgb(255, 255, 255)
+        background-image none
+    .head-icon
+      width 102rpx
+      margin-top 23rpx
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
 </style>
 
 
