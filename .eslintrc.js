@@ -8,7 +8,7 @@ module.exports = {
     browser: true
   },
   // https://github.com/feross/standard/blob/master/RULES.md#javascript-standard-style
-  extends: ["standard", "prettier"],
+  extends: ["prettier"],
   // required to lint *.wpy files
   plugins: ["html", "prettier"],
   settings: {

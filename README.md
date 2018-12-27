@@ -1,23 +1,38 @@
-### 南京邮电大学小程序 `Wepy` 版本
+## 南京邮电大学小程序
 
 南京邮电大学小程序是由南京邮电大学青柚工作室开发，一款方便快捷，无需下载安装即可在微信客户端即开即用的 APP，有别于一般需要下载安装的 APP，也不同于微信公众号，具有方便快捷的特点。
 
+<p align="center">
+<img src="https://static.airbob.org/under-graduate/undergraduate-qrcode.jpg" alt="菊花码" width="200" height="200">
+</p>
+
+### 学习本项目
+
 整套前端使用 [Wepy](https://github.com/tencent/wepy) 开发，提倡前端组件化工程化，高效的完成前端项目。
 
-#### 学习本项目
+### Pre-installation
 
-安装并启动
+> node >= 8.9
 
-使用`yarn`或者`npm`包管理器
-
-```
-yarn install
-yarn run dev
+```bash
+$ npm install -g wepy-cli
 ```
 
----
+### Usage
 
-#### 青柚工作室
+```
+$ cd [project]
+
+$ npm install
+
+$ npm run dev
+```
+
+------
+
+### 青柚工作室
+
+[青柚工作室的主页](https://qingyou.njupt.edu.cn)
 
 青柚工作室是由南京邮电大学信息办指导建设，以学生开发为核心的互联网工作团队。
 
@@ -25,27 +40,29 @@ yarn run dev
 
 本项目至少会持续维护到南京邮电大学本科生 3.x 版本结束。
 
-[青柚工作室的主页](https://qingyou.njupt.edu.cn)
+------
 
----
-
-#### 开源许可
+### 开源许可
 
 本项目使用开源许可证 `License AGPLv3` ，代码开源仅供学习。
 
-##### 青柚工作室开源计划：
+请认真阅读并遵守以下开源协议
+
+`AGPLv3` [GNU Affero General Public License v3.0](https://github.com/GreenPomelo/Undergraduate/blob/master/LICENSE)
+
+#### 青柚工作室开源计划：
 
 希望能够将实战中的技术成果回报社区，并且鼓励社区为这个项目做出贡献，大家可以通过 `pr` 的方式帮我们解决目前存在的不足，或者通过 `issue` 告知我们。
 
----
+------
 
-#### 青柚工作室招新计划：
+### 青柚工作室招新计划：
 
 青柚工作室持续招新，对象为南京邮电大学全日制本科生，主要以大二大三在校学生为主，大一能力强者亦可。招新岗位为技术、外联、运营、办公、程序员鼓励师......希望有兴趣的同学能投递简历至`qingyou@njupt.edu.cn`，一起来用爱发电，为南邮做出更多方便师生的项目。
 
----
+------
 
-#### 更新日志
+### 更新日志
 
 **2018-11-10 (V3.4.0)**
 
@@ -53,7 +70,6 @@ yarn run dev
 - 资讯TabBar的小红点
 - 拦截器的API替换
 - 校园卡拾取的匿名
-
 
 **2018-10-23 (V3.3.4)**
 
@@ -136,64 +152,13 @@ yarn run dev
 - 完善更新密码的方式
 - 完善课表查询功能
 
----
+------
 
-#### Core Team
+### Core Team(Contributors)
 
-<table align="center">
-  <tbody align="center">
-    <tr>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/solojiang.png?s=64">
-        <br>
-        <a href="https://github.com/solojiang">@SoloJiang</a>
-        <p>Leader & News</p>
-      </td>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/Bosspwn.png?s=64">
-        <br>
-        <a href="https://github.com/Bosspwn">@Bosspwn</a>
-        <p>Core</p>
-      </td>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/flytam.png?s=64">
-        <br>
-        <a href="https://github.com/flytam">@flytam</a>
-        <p>Campus-card-page</p>
-        <p> Examination</p>
-      </td>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/niffler-bkkkkk.png?s=64">
-        <br>
-        <a href="https://github.com/
-niffler-bkkkkk">@
-niffler-bkkkkk</a>
-        <p style="max-width:64">Questionnaire</p>
-      </td>
-     </tr>
-     <tr>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/UZIhuhuhu.png?s=64">
-        <br>
-        <a href="https://github.com/UZIhuhuhu">@UZIhuhuhu</a>
-        <p>Association</p>
-      </td>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/GooeyNyan.png?s=64">
-        <br>
-        <a href="https://github.com/GooeyNyan">@GooeyNyan</a>
-        <p>GPA calculator & Authentication</p>
-      </td>
-      <td align="center" valign="middle">
-        <img width="148" height="148" src="https://github.com/kishivn.png?s=64">
-        <br>
-        <a href="https://github.com/kishivn">@kishivn</a>
-        <p>Information</p>
-      </td>
-     </tr>
-  </tbody>
-</table>
+| [<img src="https://github.com/solojiang.png?s=64" width="100px;"/><br /><sub><b>SoloJiang</b></sub>](https://github.com/solojiang)<br />Leader & News   | [<img src="https://github.com/Bosspwn.png?s=64" width="100px;"/><br /><sub><b>BossPwn</b></sub>](https://github.com/Bosspwn)<br />Core<br />  | [<img src="https://github.com/flytam.png?s=64" width="100px;"/><br /><sub><b>Flytam</b></sub>](https://github.com/flytam)<br />Campus-card  | [<img src="https://github.com/GooeyNyan.png?s=64" width="100px;"/><br /><sub><b>Gooey Nyan</b></sub>](https://github.com/GooeyNyan)<br />GPA calculator | [<img src="https://github.com/UZIhuhuhu.png?s=64" width="100px;"/><br /><sub><b>WynnXin</b></sub>](https://github.com/UZIhuhuhu)<br />Association | [<img src="https://github.com/niffler-bkkkkk.png?s=64" width="100px;"/><br /><sub><b>niffler-bkkkk</b></sub>](https://github.com/niffler-bkkkkk)<br />Questionnaire   |  [<img src="https://github.com/kishivn.png?s=64" width="100px;"/><br /><sub><b>kishivn</b></sub>](https://github.com/kishivn)<br />Information |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 
----
+------
 
-**[⬆ back to middle](#top)**
+**[⬆ back to top](#top)**
