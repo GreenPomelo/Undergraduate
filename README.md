@@ -10,6 +10,70 @@
 
 整套前端使用 [Wepy](https://github.com/tencent/wepy) 开发，提倡前端组件化工程化，高效的完成前端项目。
 
+#### 项目文件结构
+
+```
+project
+│
+└───src
+│   │   assets 静态图片
+│   │
+│   └───campus-card-page
+│   │    │   components 校园卡模块组件
+│   │    │   pages      校园卡模块页面
+│   │
+│   └───components 全局组件
+│   │    │   qy-container.wpy 
+│   │    │   qy-navigation.wpy
+│   │    │   ...
+│   │
+│   └───css 全局样式
+│   │    │   global-style.styl
+│   │    │   loading.styl
+│   │    │   ...
+│   │
+│   └───edu-admin-page
+│   │    │   components 正方模块组件
+│   │    │   pages      正方模块页面
+│   │
+│   └───mixins 混入
+│   │    │   Gpa                  Gpa 计算器的 mixin
+│   │    │   class.js             课表的 mixin
+│   │    │   all-search-thing.js  模块开关的控制
+│   │    │   ...
+│   │
+│   └───others-edu-page
+│   │    │   components 体育部模块组件
+│   │    │   pages      体育部模块页面
+│   │
+│   └───others-page
+│   │    │   components 其他模块组件
+│   │    │   pages      其他模块页面
+│   │
+│   └───pages 三个主页面
+│   │    │   index.wpy     首页
+│   │    │   news-list.wpy 资讯页
+│   │    │   profile.wpy   个人中心页
+│   │
+│   └───store 状态管理
+│   │
+│   └───utils 工具辅助函数
+│   │
+│   └───app.wpy 项目配置
+│       
+│   .editorconfig
+│   .eslintignore
+│   .eslintrc.js
+│   .gitignore
+│   .prettierrc
+│   CHANGELOG.md
+│   LICENSE   
+│   README.md
+│   package.json
+│   wepy.config.js
+
+```
+
 #### 安装（更新） wepy 命令行工具
 
 > node >= 8.9
