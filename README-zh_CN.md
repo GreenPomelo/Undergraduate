@@ -134,12 +134,19 @@ $ npm run dev
 
 [CHANGELOG](./CHANGELOG.md)
 
------
 
-### Core Team(Contributors)
-
-| [<img src="https://github.com/solojiang.png?s=64" width="100px;"/><br /><sub><b>SoloJiang</b></sub>](https://github.com/solojiang)| [<img src="https://github.com/Bosspwn.png?s=64" width="100px;"/><br /><sub><b>BossPwn</b></sub>](https://github.com/Bosspwn)<br />  | [<img src="https://github.com/flytam.png?s=64" width="100px;"/><br /><sub><b>Flytam</b></sub>](https://github.com/flytam)| [<img src="https://github.com/GooeyNyan.png?s=64" width="100px;"/><br /><sub><b>Gooey Nyan</b></sub>](https://github.com/GooeyNyan)| [<img src="https://github.com/UZIhuhuhu.png?s=64" width="100px;"/><br /><sub><b>WynnXin</b></sub>](https://github.com/UZIhuhuhu)| [<img src="https://github.com/niffler-bkkkkk.png?s=64" width="100px;"/><br /><sub><b>niffler-bkkkk</b></sub>](https://github.com/niffler-bkkkkk)|
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-  |  [<img src="https://github.com/kishivn.png?s=64" width="100px;"/><br /><sub><b>kishivn</b></sub>](https://github.com/kishivn)| [<img src="https://github.com/ChenKS12138.png?s=64" width="100px;"/><br /><sub><b>ChenKS12138</b></sub>](https://github.com/ChenKS12138) | [<img src="https://github.com/cucu6.png?s=64" width="100px;"/><br /><sub><b>cucu6</b></sub>](https://github.com/cucu6)<br />
-
-------
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/solojiang"><img src="https://github.com/solojiang.png?s=64" width="100px;"/><br /><sub><b>狒狒神</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/Bosspwn"><img src="https://github.com/Bosspwn.png?s=64" width="100px;"/><br /><sub><b>Boss Pwn</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/flytam"><img src="https://github.com/flytam.png?s=64" width="100px;"/><br /><sub><b>Flytam</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/GooeyNyan"><img src="https://github.com/GooeyNyan.png?s=64" width="100px;"/><br /><sub><b>GooeyNyan</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/UZIhuhuhu"><img src="https://github.com/UZIhuhuhu.png?s=64" width="100px;"/><br /><sub><b>WynnXin</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/niffler-bkkkk"><img src="https://github.com/niffler-bkkkkk.png?s=64" width="100px;"/><br /><sub><b>niffler-bkkkk</b></sub></a><br /></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/kishivn"><img src="https://github.com/kishivn.png?s=64" width="100px;"/><br /><sub><b>kishivn</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/ChenKS12138"><img src="https://github.com/ChenKS12138.png?s=64" width="100px;"/><br /><sub><b>ChenKS12138</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/cucu6"><img src="https://github.com/cucu6.png?s=64" width="100px;"/><br /><sub><b>cucu6</b></sub></a><br /></td>
+  </tr>
+</table>
