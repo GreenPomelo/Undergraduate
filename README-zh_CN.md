@@ -27,7 +27,7 @@ project
 │   │    │   pages      校园卡模块页面
 │   │
 │   └───components 全局组件
-│   │    │   qy-container.wpy 
+│   │    │   qy-container.wpy
 │   │    │   qy-navigation.wpy
 │   │    │   ...
 │   │
@@ -64,14 +64,14 @@ project
 │   └───utils 工具辅助函数
 │   │
 │   └───app.wpy 项目配置
-│       
+│
 │   .editorconfig
 │   .eslintignore
 │   .eslintrc.js
 │   .gitignore
 │   .prettierrc
 │   CHANGELOG.md
-│   LICENSE   
+│   LICENSE
 │   README.md
 │   package.json
 │   wepy.config.js
@@ -138,8 +138,8 @@ $ npm run dev
 
 ### Core Team(Contributors)
 
-| [<img src="https://github.com/solojiang.png?s=64" width="100px;"/><br /><sub><b>SoloJiang</b></sub>](https://github.com/solojiang)<br />Leader & News   | [<img src="https://github.com/Bosspwn.png?s=64" width="100px;"/><br /><sub><b>BossPwn</b></sub>](https://github.com/Bosspwn)<br />Core<br />  | [<img src="https://github.com/flytam.png?s=64" width="100px;"/><br /><sub><b>Flytam</b></sub>](https://github.com/flytam)<br />Campus-card  | [<img src="https://github.com/GooeyNyan.png?s=64" width="100px;"/><br /><sub><b>Gooey Nyan</b></sub>](https://github.com/GooeyNyan)<br />GPA calculator | [<img src="https://github.com/UZIhuhuhu.png?s=64" width="100px;"/><br /><sub><b>WynnXin</b></sub>](https://github.com/UZIhuhuhu)<br />Association | [<img src="https://github.com/niffler-bkkkkk.png?s=64" width="100px;"/><br /><sub><b>niffler-bkkkk</b></sub>](https://github.com/niffler-bkkkkk)<br />Questionnaire   |  [<img src="https://github.com/kishivn.png?s=64" width="100px;"/><br /><sub><b>kishivn</b></sub>](https://github.com/kishivn)<br />Information |
+| [<img src="https://github.com/solojiang.png?s=64" width="100px;"/><br /><sub><b>SoloJiang</b></sub>](https://github.com/solojiang)| [<img src="https://github.com/Bosspwn.png?s=64" width="100px;"/><br /><sub><b>BossPwn</b></sub>](https://github.com/Bosspwn)<br />  | [<img src="https://github.com/flytam.png?s=64" width="100px;"/><br /><sub><b>Flytam</b></sub>](https://github.com/flytam)| [<img src="https://github.com/GooeyNyan.png?s=64" width="100px;"/><br /><sub><b>Gooey Nyan</b></sub>](https://github.com/GooeyNyan)| [<img src="https://github.com/UZIhuhuhu.png?s=64" width="100px;"/><br /><sub><b>WynnXin</b></sub>](https://github.com/UZIhuhuhu)| [<img src="https://github.com/niffler-bkkkkk.png?s=64" width="100px;"/><br /><sub><b>niffler-bkkkk</b></sub>](https://github.com/niffler-bkkkkk)|
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| [<img src="https://github.com/ChenKS12138.png?s=64" width="100px;"/><br /><sub><b>ChenKS12138</b></sub>](https://github.com/ChenKS12138)<br />3.x maintainer   | [<img src="https://github.com/cucu6.png?s=64" width="100px;"/><br /><sub><b>cucu6</b></sub>](https://github.com/cucu6)<br />3.x maintainer
+  |  [<img src="https://github.com/kishivn.png?s=64" width="100px;"/><br /><sub><b>kishivn</b></sub>](https://github.com/kishivn)| [<img src="https://github.com/ChenKS12138.png?s=64" width="100px;"/><br /><sub><b>ChenKS12138</b></sub>](https://github.com/ChenKS12138) | [<img src="https://github.com/cucu6.png?s=64" width="100px;"/><br /><sub><b>cucu6</b></sub>](https://github.com/cucu6)<br />
 
 ------
