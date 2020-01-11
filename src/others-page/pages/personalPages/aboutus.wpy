@@ -1,12 +1,13 @@
 <template>
   <view>
+    <qy-navigation :title="navTitle"></qy-navigation>
     <view class="header">
       <image mode="aspectFit" src="https://static.airbob.org/admin/about_pic_logo.png" class="header-logo"/>
     </view>
     <view class="body">
       <view class="body-head">- 南邮小程序 -</view>
       <view class="body-content">
-        南京邮电大学小程序是由南京邮电大学青柚工作室开发，一款方便快捷，无需下载安装即可在微信客户端即开即用的APP，有别于一般需要下载安装的APP，也不同于微信公众号，具有方便快捷的特点。
+        南京邮电大学小程序是由南京邮电大学青柚工作室开发，一款方便快捷，无需下载安装即可在{{isFromQQ ? 'QQ客户端' : '微信客户端'}}即开即用的APP，有别于一般需要下载安装的APP，也不同于微信公众号，具有方便快捷的特点。
       </view>
       <view class="body-content">
         南京邮电大学小程序具有许多方便柚子们的功能，服务于广大的南京邮电大学学生们。小程序可以用来查询课表、跑操次数，图书馆、一卡通、校内外资讯、校历等等，集多种功能于一身。还在担心期末图书馆没有座位？那还不赶紧使用我们的小程序。
@@ -36,10 +37,18 @@
 
 <script>
 import wepy from "wepy";
+import navigation from "@/components/qy-navigation";
 
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "关于我们"
+  };
+  components = {
+    "qy-navigation": navigation
+  };
+  data = {
+    navTitle: "关于我们",
+    isFromQQ: wepy.$appConfig.fromQQ
   };
   methods = {
     goProtocol() {

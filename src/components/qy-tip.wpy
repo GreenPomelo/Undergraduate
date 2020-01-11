@@ -4,9 +4,7 @@
 -->
 <template>
   <view class="tips-container" style="z-index:{{showIndex}}">
-    <view class="tip-content" animation="{{animationData}}" on="{{on}}">
-      {{content}}
-    </view>
+    <view class="tip-content" animation="{{animationData}}" on="{{on}}">{{content}}</view>
   </view>
 </template>
 

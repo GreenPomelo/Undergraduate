@@ -1,12 +1,11 @@
 <template>
   <view class="container">
-    <image src="{{ adDetail.adPicUrl }}" class="head-image"/>
+    <qy-navigation :title="navTitle"></qy-navigation>
+    <image src="{{ adDetail.adPicUrl }}" class="head-image">
     <view class="news-title">{{ adDetail.adTitle }}</view>
     <view class="news-date">
       发布时间：{{ date }}
-      <view class="ads-tip" wx-if="{{adType === 1}}">
-        推广资讯
-      </view>
+      <view class="ads-tip" wx-if="{{adType === 1}}">推广资讯</view>
     </view>
     <view class="news-content">
       <rich-text nodes="{{ content }}"></rich-text>
@@ -17,14 +16,18 @@
 <script>
 import wepy from "wepy";
 import filterWxs from "../wxs/filter.wxs";
+import navigation from "@/components/qy-navigation";
 import { getNewsAdvertisementDetail } from "@/api/common";
 
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: ""
   };
-
+  components = {
+    "qy-navigation": navigation
+  };
   data = {
+    navTitle: "资讯详情",
     adDetail: {},
     date: "",
     content: ""

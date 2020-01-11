@@ -1,69 +1,74 @@
 <template>
-  <view class="container">
-    <QyModal height="329rpx" width="434rpx">
-      <view slot="content" class="info-container">
-        <view class="info-title">你可以通过下面的方式联系{{cardIndex===2?"失主":"拾卡人"}}</view>
-        <view class="info-content">{{info}}</view>
-        <button class="info-button" style="color:{{cardIndex===2?'#408175':'#e66c10'}};" @tap.stop="copy">复制信息</button>
-      </view>
-    </QyModal>
-    <view class="loss-header">
-        <image class="card-pic" mode="aspectFit" src="{{cardUrl}}"/>
-        <view class="card-text">{{ items[cardIndex] }}</view>
-    </view>
-    <view class="loss-content">
-      <view class="input-container" wx:if="{{cardIndex===0||cardIndex===4}}">
-        <view class="input-text">校园卡密码</view>
-        <input placeholder="输入你的校园卡密码" type="password" @input="inputCampusPassword" value="{{campusPassword}}"/>
-      </view>
-      <view class="input-container" wx:if="{{cardIndex===1}}">
-        <view class="input-text">校园卡卡号</view>
-        <input placeholder="输入你拾到的校园卡卡号" @input="inputCampusNumber" value="{{campusNumber}}"/>
-      </view>
-      <view class="input-container" wx:if="{{cardIndex===0||cardIndex===1}}">
-        <view class="input-text">备注</view>
-        <input placeholder="你的联系方式" @input="inputCampusDescription" value="{{description}}"/>
-      </view>
-      <scroll-view class="table-container" wx:if="{{cardIndex===2}}" scroll-y @scrolltolower="loadMoreLossInfoList">
-        <view class="tr" style="background:#6bdec9;">
-          <view class="th">挂失时间</view>
-          <view class="th">姓名</view>
-          <view class="th">卡号后四位</view>
-          <view class="th">备注</view>
-        </view>
-        <repeat for="{{ lossInfoData }}" index="index" key="key" item="item">
-          <view class="tr">
-            <view class="td">{{ item.times }}</view>
-            <view class="td">{{ item.name }}</view>
-            <view class="td">{{ item.card }}</view>
-            <view class="td" style="color:#408175;" @tap.stop="showModal" data-tips="{{item.remark?item.remark:'无'}}">详情</view>
+  <BaseContainer navTitle="校园卡挂失">
+    <view slot="qy-content">
+      <view class="container">
+        <QyModal height="329rpx" width="434rpx">
+          <view slot="content" class="info-container">
+            <view class="info-title">你可以通过下面的方式联系{{cardIndex===2?"失主":"拾卡人"}}</view>
+            <view class="info-content">{{info}}</view>
+            <button class="info-button" style="color:{{cardIndex===2?'#408175':'#e66c10'}};" @tap.stop="copy">复制信息</button>
           </view>
-        </repeat>
-      </scroll-view>
-      <scroll-view class="table-container" wx:if="{{cardIndex===3}}" scroll-y @scrolltolower="loadMoreLossObjectList">
-        <view class="tr" style="background:#fc9d57;">
-          <view class="th">挂失时间</view>
-          <view class="th">姓名</view>
-          <view class="th">卡号后四位</view>
-          <view class="th">备注</view>
+        </QyModal>
+        <view class="loss-header">
+            <image class="card-pic" mode="aspectFit" src="{{cardUrl}}"/>
+            <view class="card-text">{{ items[cardIndex] }}</view>
         </view>
-        <repeat for="{{ lossObjectData }}" index="index" key="key" item="item">
-          <view class="tr">
-            <view class="td">{{ item.times }}</view>
-            <view class="td">{{ item.name }}</view>
-            <view class="td">{{ item.card }}</view>
-            <view class="td" style="color:#e66c10;" @tap.stop="showModal" data-tips="{{item.remark?item.remark:'无'}}">详情</view>
+        <view class="loss-content">
+          <view class="input-container" wx:if="{{cardIndex===0||cardIndex===4}}">
+            <view class="input-text">校园卡密码</view>
+            <input placeholder="输入你的校园卡密码" type="password" @input="inputCampusPassword" value="{{campusPassword}}"/>
           </view>
-        </repeat>
-      </scroll-view>
+          <view class="input-container" wx:if="{{cardIndex===1}}">
+            <view class="input-text">校园卡卡号</view>
+            <input placeholder="输入你拾到的校园卡卡号" @input="inputCampusNumber" value="{{campusNumber}}"/>
+          </view>
+          <view class="input-container" wx:if="{{cardIndex===0||cardIndex===1}}">
+            <view class="input-text">备注</view>
+            <input placeholder="你的联系方式" @input="inputCampusDescription" value="{{description}}"/>
+          </view>
+          <scroll-view class="table-container" wx:if="{{cardIndex===2}}" scroll-y @scrolltolower="loadMoreLossInfoList">
+            <view class="tr" style="background:#6bdec9;">
+              <view class="th">挂失时间</view>
+              <view class="th">姓名</view>
+              <view class="th">卡号后四位</view>
+              <view class="th">备注</view>
+            </view>
+            <repeat for="{{ lossInfoData }}" index="index" key="key" item="item">
+              <view class="tr">
+                <view class="td">{{ item.times }}</view>
+                <view class="td">{{ item.name }}</view>
+                <view class="td">{{ item.card }}</view>
+                <view class="td" style="color:#408175;" @tap.stop="showModal" data-tips="{{item.remark?item.remark:'无'}}">详情</view>
+              </view>
+            </repeat>
+          </scroll-view>
+          <scroll-view class="table-container" wx:if="{{cardIndex===3}}" scroll-y @scrolltolower="loadMoreLossObjectList">
+            <view class="tr" style="background:#fc9d57;">
+              <view class="th">挂失时间</view>
+              <view class="th">姓名</view>
+              <view class="th">卡号后四位</view>
+              <view class="th">备注</view>
+            </view>
+            <repeat for="{{ lossObjectData }}" index="index" key="key" item="item">
+              <view class="tr">
+                <view class="td">{{ item.times }}</view>
+                <view class="td">{{ item.name }}</view>
+                <view class="td">{{ item.card }}</view>
+                <view class="td" style="color:#e66c10;" @tap.stop="showModal" data-tips="{{item.remark?item.remark:'无'}}">详情</view>
+              </view>
+            </repeat>
+          </scroll-view>
+        </view>
+        <button class="submitBtn" style="background:{{colors[cardIndex]}};" wx:if="{{cardIndex===0||cardIndex===1||cardIndex===4}}" @tap="submitInformation">提交</button>
+      </view>
     </view>
-    <button class="submitBtn" style="background:{{colors[cardIndex]}};" wx:if="{{cardIndex===0||cardIndex===1||cardIndex===4}}" @tap="submitInformation">提交</button>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
 import QyModal from "@/components/qy-modal";
+import BaseContainer from "@/components/baseContainer";
 import {
   campusLostCard,
   campusFindCard,
@@ -71,9 +76,11 @@ import {
   getLossInfo,
   getLossObject
 } from "@/api/campusCard";
+
 export default class CampusCardLoss extends wepy.page {
   components = {
-    QyModal
+    QyModal,
+    BaseContainer
   };
   config = {
     navigationBarTitleText: "校园卡挂失"
@@ -115,6 +122,9 @@ export default class CampusCardLoss extends wepy.page {
       this.$invoke("QyModal", "open");
     },
     async submitInformation() {
+      if (this.visitorModeStatus) {
+        return this.$invoke("BaseContainer", "showVisitorTips");
+      }
       if (this.cardIndex === 0) {
         let psd = this.campusPassword;
         let des = this.campusDescription;
@@ -292,6 +302,7 @@ export default class CampusCardLoss extends wepy.page {
     }
   }
   onLoad(options) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
     let cardIndex = Number(options.index);
     this.cardUrl =
       "https://static.airbob.org/loss/card" + Number(cardIndex + 1) + ".png";
@@ -364,7 +375,7 @@ export default class CampusCardLoss extends wepy.page {
       .tr:first-child
         color #fff
         border none
-        border-radius 12rpx
+        border-radius 6rpx
         white-space nowrap
       .tr:last-child
         margin-bottom 30rpx

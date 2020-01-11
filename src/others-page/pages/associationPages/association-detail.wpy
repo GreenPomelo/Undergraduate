@@ -1,93 +1,156 @@
 <template>
   <view class="container">
-    <view class="header" animation="{{animation2}}">
-      <view class="header-container">
-        <view class="association-avatar">
-        <image animation="{{animation4}}" src="{{associationAvatar}}" />
-      </view>
-      <view class="association-info">
-        <view animation="{{animation5}}" class="association-name">{{associationInfo.fullname}}</view>
-        <view class="association-hot" animation="{{animation3}}">
-          <image class="heat-icon" src="https://static.airbob.org/under-graduate/hot.png" />
-          <view class="heat-degree">校谈热度{{associationInfo.heat}}>></view>
-        </view>
-      </view>
-      </view>
-    </view>
-    <view animation="{{animation1}}" class="{{buttonStatus}}" @tap="signUp">
-      <view>立即报名</view>
-    </view>
-    <view class="body">
-      <!--校谈中无话题-->
-      <view class="school-talk-title" style="margin:34px 0 10px 23px">校谈在聊</view>
-      <view class="school-talk">
-        <view class="school-talk-card">
-          <view class="card-body card-body-background" wx:if="{{topicLength === 0}}"></view>
-          <view class="card-body" wx:if="{{topicLength < 2}}">
-            <navigator open-type="navigate" hover-class="none" path="/pages/index&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-content" wx:if="{{topicLength === 0}}">
-              <view style="font-weight:700">快去校谈发起第一篇话题吧</view>
-              <view>南邮事，校谈说</view>
-            </navigator>
-            <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{topicArray[0].id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-content" wx:if="{{topicLength === 1}}">
-              <view style="padding-bottom:4px;font-weight:700">{{topicArray[0].name}}</view>
-              <view>{{topicArray[0].visitors}}人查看>></view>
-            </navigator>
+    <BaseContainer :navTitle="navTitle">
+      <view slot="qy-content">
+        <view class="header" animation="{{animation2}}">
+          <view class="header-container">
+            <view class="association-avatar">
+              <image animation="{{animation4}}" src="{{associationAvatar}}">
+            </view>
+            <view class="association-info">
+              <view animation="{{animation5}}" class="association-name">{{associationInfo.fullName}}</view>
+              <!-- <view class="association-hot" animation="{{animation3}}">
+                <image class="heat-icon" src="https://static.airbob.org/under-graduate/hot.png">
+                <view class="heat-degree">校谈热度{{associationInfo.heat}}>></view>
+              </view> -->
+            </view>
           </view>
-          <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{topicArray[0].id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-body-two" style="z-index:1" wx:if="{{topicLength >= 2}}">
-            <view class="card-content-two">
-              <view style="padding-bottom:4px;font-weight:700">{{topicArray[0].name}}</view>
-              <view>{{topicArray[0].visitors}}人查看>></view>
+        </view>
+        <view animation="{{animation1}}" class="{{buttonStatus}}" @tap="signUp">
+          <view>立即报名</view>
+        </view>
+        <view class="body">
+          <!--校谈中无话题-->
+          <!-- <view class="school-talk-title" style="margin:34px 0 10px 23px">校谈在聊</view>
+          <view class="school-talk">
+            <view class="school-talk-card">
+              <view class="card-body card-body-background" wx:if="{{topicLength === 0}}"></view>
+              <view class="card-body" wx:if="{{topicLength < 2}}">
+                <navigator
+                  open-type="navigate"
+                  hover-class="none"
+                  path="/pages/index&token={{schoolTalkToken}}"
+                  target="miniProgram"
+                  app-id="wxa16acae9f9d131fb"
+                  class="card-content"
+                  wx:if="{{topicLength === 0}}"
+                >
+                  <view style="font-weight:700">快去校谈发起第一篇话题吧</view>
+                  <view>南邮事，校谈说</view>
+                </navigator>
+                <navigator
+                  open-type="navigate"
+                  hover-class="none"
+                  path="/other-pages/topic?id={{topicArray[0].id}}&token={{schoolTalkToken}}"
+                  target="miniProgram"
+                  app-id="wxa16acae9f9d131fb"
+                  class="card-content"
+                  wx:if="{{topicLength === 1}}"
+                >
+                  <view style="padding-bottom:4px;font-weight:700">{{topicArray[0].name}}</view>
+                  <view>{{topicArray[0].visitors}}人查看>></view>
+                </navigator>
+              </view>
+              <navigator
+                open-type="navigate"
+                hover-class="none"
+                path="/other-pages/topic?id={{topicArray[0].id}}&token={{schoolTalkToken}}"
+                target="miniProgram"
+                app-id="wxa16acae9f9d131fb"
+                class="card-body-two"
+                style="z-index:1"
+                wx:if="{{topicLength >= 2}}"
+              >
+                <view class="card-content-two">
+                  <view style="padding-bottom:4px;font-weight:700">{{topicArray[0].name}}</view>
+                  <view>{{topicArray[0].visitors}}人查看>></view>
+                </view>
+              </navigator>
+              <navigator
+                open-type="navigate"
+                hover-class="none"
+                path="/other-pages/topic?id={{topicArray[1].id}}&token={{schoolTalkToken}}"
+                target="miniProgram"
+                app-id="wxa16acae9f9d131fb"
+                class="card-body-two card-body-background-two"
+                style="z-index:0"
+                wx:if="{{topicLength >= 2}}"
+              >
+                <view class="card-content-two">
+                  <view style="padding-bottom:4px;font-weight:700">{{topicArray[1].name}}</view>
+                  <view>{{topicArray[1].visitors}}人查看>></view>
+                </view>
+              </navigator>
             </view>
-          </navigator>
-          <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{topicArray[1].id}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-body-two card-body-background-two" style="z-index:0" wx:if="{{topicLength >= 2}}">
-            <view class="card-content-two">
-              <view style="padding-bottom:4px;font-weight:700">{{topicArray[1].name}}</view>
-              <view>{{topicArray[1].visitors}}人查看>></view>
+          </view> -->
+          <!-- <navigator
+            open-type="navigate"
+            hover-class="none"
+            path="/other-pages/tag?id={{tagId}}&token={{schoolTalkToken}}"
+            target="miniProgram"
+            app-id="wxa16acae9f9d131fb"
+            class="card-footer"
+          >
+            <view>{{cardFooter}}</view>
+          </navigator> -->
+          <!--校谈中更多的话题-->
+          <view class="school-talk-more" wx:if="{{false}}"></view>
+          <view class="school-talk-title">社团印象</view>
+          <view class="association-impression">
+            <!--没有图片-->
+            <view class="no-photo" wx:if="{{!photoWallStatus}}">
+              <image src="https://static.airbob.org/under-graduate/notfound.png">
             </view>
-          </navigator>
+            <!--图片scroll-->
+            <scroll-view scroll-x class="photo-wall" wx:if="{{photoWallStatus}}">
+              <image
+                wx:for="{{impressionPhotos}}"
+                wx:key="index"
+                class="scroll-img"
+                src="{{item}}"
+                index="index"
+                data-idx="{{index}}"
+                @tap="previewImpressionImage"
+              >
+            </scroll-view>
+          </view>
+          <view class="school-talk-title">社团简介</view>
+          <view class="association-intro">
+            <view class="no-photo" wx:if="{{!introductionStatus}}">
+              <image src="https://static.airbob.org/under-graduate/notfound.png">
+            </view>
+            <view
+              class="description"
+              wx:if="{{introductionStatus}}"
+              wx:for="{{introArray}}"
+              index="index"
+              item="item"
+              wx:key="index"
+            >
+              <view>{{item}}</view>
+            </view>
+          </view>
         </view>
       </view>
-      <navigator open-type="navigate" hover-class="none" path="/other-pages/tag?id={{tagId}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="card-footer">
-        <view>{{cardFooter}}</view>
-      </navigator>
-      <!--校谈中更多的话题-->
-      <view class="school-talk-more" wx:if="{{false}}"></view>
-      <view class="school-talk-title">社团印象</view>
-      <view class="association-impression">
-        <!--没有图片-->
-        <view class="no-photo" wx:if="{{!photoWallStatus}}">
-         <image src="https://static.airbob.org/under-graduate/notfound.png" />
-        </view>
-        <!--图片scroll-->
-        <scroll-view scroll-x class="photo-wall" wx:if="{{photoWallStatus}}">
-          <image wx:for="{{impressionPhotos}}" wx:key="index" class="scroll-img" src="{{item}}" index="index" data-idx="{{index}}" @tap="previewImpressionImage"/>
-        </scroll-view>
-      </view>
-      <view class="school-talk-title">社团简介</view>
-      <view class="association-intro">
-        <view class="no-photo" wx:if="{{!introductionStatus}}">
-          <image src="https://static.airbob.org/under-graduate/notfound.png" />
-        </view>
-        <view class="description" wx:if="{{introductionStatus}}" wx:for="{{introArray}}" index="index" item="item" wx:key="index">
-          <view>{{item}}</view>
-        </view>
-      </view>
-    </view>
+    </BaseContainer>
   </view>
+
 </template>
 
 <script>
 import wepy from "wepy";
-import {
-  assoicationDetail,
-  schoolTaklAssociation,
-  associationMembers
-} from "@/api/recruit";
+import BaseContainer from "@/components/baseContainer";
+import { associationDetail, associationMembers } from "@/api/recruit";
+import CryptoJS from "crypto-js";
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "社团招新"
   };
+  components = {
+    BaseContainer
+  };
   data = {
+    navTitle: "社团招新",
     associationAvatar: ``,
     associationInfo: {},
     impressionPhotos: [],
@@ -136,19 +199,19 @@ export default class extends wepy.page {
       });
     }
   };
-  schoolTalkTopic(requestData) {
-    this.commandData = requestData.assoInfo;
-    schoolTaklAssociation(requestData.assoInfo.tagId).then(res => {
-      if (res.statusCode === 200 || res.code === 200) {
-        const requestData = res.data.data;
-        this.topicArray = requestData.topics;
-        this.associationInfo.heat =
-          requestData.heat === null ? 0 : requestData.heat;
-        this.topicLength = requestData.topics_count;
-        this.$apply();
-      }
-    });
-  }
+  // schoolTalkTopic(requestData) {
+  //   this.commandData = requestData.assoInfo;
+  //   schoolTaklAssociation(requestData.assoInfo.tagId).then(res => {
+  //     if (res.statusCode === 200 || res.code === 200) {
+  //       const requestData = res.data.data;
+  //       this.topicArray = requestData.topics;
+  //       this.associationInfo.heat =
+  //         requestData.heat === null ? 0 : requestData.heat;
+  //       this.topicLength = requestData.topics_count;
+  //       this.$apply();
+  //     }
+  //   });
+  // }
   getAssociationInfo(requestData) {
     this.commandData = requestData.assoInfo;
     let impressionPhotos = [];
@@ -164,134 +227,152 @@ export default class extends wepy.page {
       this.photoWallStatus = false;
     }
     // 社团简介
-    this.associationIntro = requestData.assoInfoDetails.filter(
-      x => x.type === 0
-    )[0].message;
-    const associationIntro = this.associationIntro;
-    this.introArray = associationIntro
+
+    const associationIntro = requestData.assoInfoDetails.find(
+      item => item.type === 0
+    );
+    this.associationIntro =
+      associationIntro !== undefined ? associationIntro.message : "";
+    this.introArray = this.associationIntro
       .replace(/^"|"$/g, "")
       .trim()
       .split("\n");
-    if (this.associationIntro !== undefined) {
+    if (this.associationIntro.length) {
       this.introductionStatus = true;
     } else {
       this.introductionStatus = false;
     }
+
     // 社团头像
-    this.associationAvatar = requestData.assoInfoDetails.filter(
-      x => x.type === 1
-    )[0].picUrl;
+    const associationAvatar = requestData.assoInfoDetails.find(
+      item => item.type === 1
+    );
+    this.associationAvatar =
+      associationAvatar !== undefined ? associationAvatar.picUrl : undefined;
+
     this.$apply();
   }
-  onLoad(option) {
-    if (option.clubPersonalStatus) {
-      this.associationInfo.description = JSON.parse(option.info);
-      if (JSON.parse(option.fullname)) {
-        this.associationInfo.fullname = JSON.parse(option.fullname);
+  async onLoad(option) {
+    let { scene, associationName, koulingStatus, command, fullname } = option;
+    if (scene) {
+      const words = CryptoJS.enc.Base64.parse(decodeURIComponent(option.scene));
+      associationName = CryptoJS.enc.Utf8.stringify(words);
+    }
+    this.associationInfo = { associationName };
+
+    this.$apply();
+
+    if (Boolean(koulingStatus) === true) {
+      // 通过口令获取热度
+      wepy.showLoading({
+        title: "加载社团详情中..."
+      });
+
+      try {
+        const associationDetailResponse = await associationDetail(command);
+        if (associationDetailResponse.data) {
+          const requestData = associationDetailResponse.data.data;
+          this.associationInfo.fullName = fullname;
+          this.getAssociationInfo(requestData);
+        }
+      } finally {
+        this.$apply();
+        wepy.hideLoading();
       }
     } else {
-      this.associationInfo = JSON.parse(option.info);
-    }
-    this.schoolTalkToken = wepy.getStorageSync("token");
-    this.$apply();
-    wepy.showLoading({
-      title: `加载社团信息中`
-    });
-    // 口令获取信息
-    if (Boolean(option.koulingStatus) === true) {
-      // 通过口令获取热度
-      assoicationDetail(option.command).then(res => {
-        if (res.data) {
-          wepy.hideLoading();
-          const requestData = res.data.data;
-          // 校谈的话题
-          this.schoolTalkTopic(requestData);
-          // 社团的信息
-          this.getAssociationInfo(requestData);
-        } else {
-          if (res.data.errCode === 52) {
-            wepy.showModal({
-              content: "学号或密码错误",
-              confirmText: "知道了",
-              showCancel: false,
-              confirmColor: "#47CFF5"
-            });
-          }
-        }
-      });
-    } else {
       // 普通的获取信息
-      associationMembers(this.associationInfo.description).then(res => {
-        if (res.data) {
-          wepy.hideLoading();
-          this.associationInfo.fullname = res.data.data.assoInfo.fullname;
-          const requestData = res.data.data;
-          this.tagId = requestData.assoInfo.tagId;
-          // 社团话题
-          this.schoolTalkTopic(requestData);
-          // 社团的信息
-          this.getAssociationInfo(requestData);
-        }
+      wepy.showLoading({
+        title: "加载社团详情中..."
       });
+
+      try {
+        const associationMembersResponse = await associationMembers(
+          this.associationInfo.associationName
+        );
+        if (
+          associationMembersResponse.data &&
+          associationMembersResponse.data.data
+        ) {
+          const {
+            assoInfo: {
+              associationName,
+              fullname,
+              genDate,
+              id,
+              modifiedDate,
+              tagId
+            },
+            assoInfoDetails
+          } = associationMembersResponse.data.data;
+          this.associationInfo.associationName = associationName;
+          this.associationInfo.fullName = fullname;
+          this.tagId = tagId;
+          const requestData = associationMembersResponse.data.data;
+          this.getAssociationInfo(requestData);
+          this.$apply();
+        }
+      } finally {
+        wepy.hideLoading();
+      }
     }
   }
   onPageScroll(e) {
-    this.distance = e.scrollTop;
-    if (this.distance >= 0) {
-      if (this.distance <= 104) {
-        this.fixStatus = false;
-        // 报名按钮的动画
-        const animation1 = wepy.createAnimation({
-          duration: 0
-        });
-        this.animation1 = animation1
-          .scale(1 - this.distance * 0.0022)
-          .right(`${23 - this.distance * 0.2}px`)
-          .step()
-          .export();
-        // 卡片宽度的动画
-        const animation2 = wepy.createAnimation({
-          duration: 0
-        });
-        this.animation2 = animation2
-          .height(`${136 - this.distance * 0.7}px`)
-          .step()
-          .export();
-        // 热度消失的动画
-        const animation3 = wepy.createAnimation({
-          duration: 0
-        });
-        this.animation3 = animation3
-          .scale(1 - this.distance * 0.01)
-          .opacity(1 - this.distance * 0.01)
-          .step()
-          .export();
-        // 社团头像的动画
-        const animation4 = wepy.createAnimation({
-          duration: 0
-        });
-        this.animation4 = animation4
-          .width(`${50 - this.distance * 0.15}px`)
-          .height(`${49 - this.distance * 0.15}px`)
-          .left(`${31 - this.distance * 0.15}px`)
-          .top(`${42 - this.distance * 0.27}px`)
-          .step()
-          .export();
-        // 社团名称的动画
-        const animation5 = wepy.createAnimation({
-          duration: 0
-        });
-        this.animation5 = animation5
-          .top(`${46 - this.distance * 0.27}px`)
-          .left(`${95 - this.distance * 0.3}px`)
-          .step()
-          .export();
-        this.$apply();
-      } else {
-        this.fixStatus = true;
-        this.$apply();
-      }
-    }
+    // this.distance = e.scrollTop;
+    // if (this.distance >= 0) {
+    //   if (this.distance <= 104) {
+    //     this.fixStatus = false;
+    //     // 报名按钮的动画
+    //     const animation1 = wepy.createAnimation({
+    //       duration: 0
+    //     });
+    //     this.animation1 = animation1
+    //       .scale(1 - this.distance * 0.0022)
+    //       .right(`${23 - this.distance * 0.2}px`)
+    //       .step()
+    //       .export();
+    //     // 卡片宽度的动画
+    //     const animation2 = wepy.createAnimation({
+    //       duration: 0
+    //     });
+    //     this.animation2 = animation2
+    //       .height(`${136 - this.distance * 0.7}px`)
+    //       .step()
+    //       .export();
+    //     // 热度消失的动画
+    //     const animation3 = wepy.createAnimation({
+    //       duration: 0
+    //     });
+    //     this.animation3 = animation3
+    //       .scale(1 - this.distance * 0.01)
+    //       .opacity(1 - this.distance * 0.01)
+    //       .step()
+    //       .export();
+    //     // 社团头像的动画
+    //     const animation4 = wepy.createAnimation({
+    //       duration: 0
+    //     });
+    //     this.animation4 = animation4
+    //       .width(`${50 - this.distance * 0.15}px`)
+    //       .height(`${49 - this.distance * 0.15}px`)
+    //       .left(`${31 - this.distance * 0.15}px`)
+    //       .top(`${42 - this.distance * 0.27}px`)
+    //       .step()
+    //       .export();
+    //     // 社团名称的动画
+    //     const animation5 = wepy.createAnimation({
+    //       duration: 0
+    //     });
+    //     this.animation5 = animation5
+    //       .top(`${46 - this.distance * 0.27}px`)
+    //       .left(`${95 - this.distance * 0.3}px`)
+    //       .step()
+    //       .export();
+    //     this.$apply();
+    //   } else {
+    //     this.fixStatus = true;
+    //     this.$apply();
+    //   }
+    // }
   }
 }
 </script>
@@ -304,13 +385,11 @@ export default class extends wepy.page {
     height 136px
     background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)
     background-blend-mode normal, normal
-    position fixed
+    position relative
     top 0
     z-index 10
   .header-container
-    width 100%
     height 136px
-    margin-left 31px
     display flex
     align-items center
     .association-avatar
@@ -322,12 +401,13 @@ export default class extends wepy.page {
         height 49px
         border 3px solid rgb(255, 255, 255)
         border-radius 50%
+        left 31px
     .association-info
       display flex
       flex-direction column
       .association-name
         position absolute
-        top 46px
+        top 55px
         left 95px
         width 202px
         height 28px
@@ -373,8 +453,9 @@ export default class extends wepy.page {
   height 49px
   background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
   box-shadow 0px 0px 44px 0px rgba(168, 168, 168, 0.5)
-  position absolute
-  top 114px
+  position relative
+  top -20px
+  float right
   right 23px
   border-radius 14px
   display flex
@@ -388,7 +469,7 @@ export default class extends wepy.page {
     font-weight 700
     color rgb(255, 255, 255)
 .body
-  margin-top 170px
+  margin-top 30px
   .no-photo
     width 329px
     height 100px

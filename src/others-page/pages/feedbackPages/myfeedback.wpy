@@ -1,6 +1,7 @@
 <template>
   <view>
     <qy-tip :content.sync="errMsg" :on.sync="errRequest"/>
+    <qy-navigation :title="navTitle"></qy-navigation>
     <view>
       <view class="feedback-container" animation="{{animationTop}}">
         <view class="main-title">选择反馈类型</view>
@@ -33,7 +34,7 @@
                         style="width:40rpx;height:40rpx;"
                         src="https://static.airbob.org/under-graduate/more/icon_fail.png"
                         mode="aspectFit"
-                      />
+                      >
                     </view>
                   </view>
                   <view wx:if="{{item.feedtype === 'content'}}">{{item.content}}</view>
@@ -43,7 +44,7 @@
                       class="feed-image"
                       src="{{item.content}}"
                       mode="aspectFit"
-                    />
+                    >
                   </view>
                   <view class="my-content-arrow"></view>
                 </view>
@@ -51,12 +52,25 @@
               <view class="my-portrait">
                 <open-data type="userAvatarUrl"></open-data>
               </view>
+              <!-- <image class="my-portrait" mode="aspectFit" src="{{portrait}}"/> -->
             </view>
           </repeat>
         </view>
         <view class="type-in">
           <view class="type-in-image" @tap="chooseImage"></view>
-          <textarea value="{{content}}" class="type-in-word" auto-height cursor-spacing="8" placeholder="{{placeholder}}" placeholder-style="color:#888888;font-size:28rpx;" @input="inputWord" @confirm="searchSubmit"/>
+          <textarea
+            value="{{content}}"
+            class="type-in-word"
+            style="min-height:36rpx;line-height:36rpx;"
+            cursor-spacing="8"
+            placeholder="{{placeholder}}"
+            placeholder-style="color:#888888;font-size:28rpx;"
+            @input="inputWord"
+            @confirm="searchSubmit"
+            focus="{{inputFocus}}"
+            auto-height="{{true}}"
+            fixed="{{true}}"
+          />
         </view>
       </view>
     </view>
@@ -68,20 +82,37 @@ import wepy from "wepy";
 import tip from "@/components/qy-tip";
 import { feedbackReactionContent, feedbackChooseType } from "@/api/feedback";
 import { REQUEST_URL } from "@/api/url";
+import navigation from "@/components/qy-navigation";
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "帮助与反馈"
   };
   data = {
+    navTitle: "历史反馈",
     errRequest: false,
     errMsg: "",
     feedbackId: "",
     titles: [
-      { title: "账号问题", show: false },
-      { title: "功能反馈", show: false },
-      { title: "建议反馈", show: false },
-      { title: "使用帮助", show: false },
-      { title: "其他", show: false }
+      {
+        title: "账号问题",
+        show: false
+      },
+      {
+        title: "功能反馈",
+        show: false
+      },
+      {
+        title: "建议反馈",
+        show: false
+      },
+      {
+        title: "使用帮助",
+        show: false
+      },
+      {
+        title: "其他",
+        show: false
+      }
     ],
     animationTop: {},
     winWidth: 0,
@@ -93,59 +124,70 @@ export default class extends wepy.page {
     tag: "",
     LoadingHide: [],
     sendErr: [],
-    portrait: "",
-    placeholder: ""
+    // portrait: "",
+    placeholder: "",
+    inputFocus: false,
+    typeChosed: false
   };
   components = {
-    "qy-tip": tip
+    "qy-tip": tip,
+    "qy-navigation": navigation
   };
   methods = {
     chooseType(e) {
-      let index = e.currentTarget.dataset.index;
-      this.titles[index].show = true;
-      this.tag = this.titles[index].title;
-      let that = this;
-      feedbackChooseType(that.tag).then(res => {
-        let response = res.data;
-        if (response.success) {
-          that.feedbackId = response.data.id;
-          let animation = wepy.createAnimation({
-            duration: "500",
-            delay: "300"
-          });
-          animation.translate(0, -that.winHeight).step();
-          that.animationTop = animation.export();
-          setTimeout(() => {
-            that.pullUp = true;
-            that.placeholder = "编辑好按Enter键直接发送哦";
-            that.navTitle = "我要反馈";
-            that.$apply();
-          }, 800);
-          that.$apply();
-        } else {
-          that.errRequest = true;
-          that.errMsg = response.errMsg;
-          that.titles.forEach(element => {
-            element.show = false;
-          });
-          that.$apply();
-        }
-      });
+      if (!this.typeChosed) {
+        this.typeChosed = true;
+        wepy.showLoading({
+          title: "正在加载中"
+        });
+        let index = e.currentTarget.dataset.index;
+        this.titles[index].show = true;
+        this.tag = this.titles[index].title;
+        feedbackChooseType(this.tag).then(res => {
+          let response = res.data;
+          if (response.success) {
+            this.feedbackId = response.data.id;
+            let animation = wepy.createAnimation({
+              duration: "500",
+              delay: "300"
+            });
+            animation.translate(0, -this.winHeight).step();
+            this.animationTop = animation.export();
+            setTimeout(() => {
+              wepy.hideLoading();
+              this.pullUp = true;
+              this.placeholder = "编辑好按enter键直接发送哦";
+              this.navTitle = "我要反馈";
+              this.$apply();
+              this.inputFocus = true;
+              this.$apply();
+            }, 800);
+            this.$apply();
+          } else {
+            wepy.hideLoading();
+            this.errRequest = true;
+            this.errMsg = response.errMsg;
+            this.titles.forEach(element => {
+              element.show = false;
+            });
+            this.$apply();
+          }
+        });
+      }
     },
     inputWord(e) {
       this.content = e.detail.value;
     },
     async chooseImage() {
-      let that = this;
       await wepy
         .chooseImage({
           count: 1
         })
         .then(e => {
           let tempFilePaths = e.tempFilePaths[0];
-          that.LoadingHide[this.LoadingHide.length] = false;
+          this.LoadingHide[this.LoadingHide.length] = false;
           this.sendErr[this.sendErr.length] = false;
-          that.myFeed.push({
+          this.myFeed.push({
             content: tempFilePaths,
             feedtype: "image",
             status: "user"
@@ -165,25 +207,25 @@ export default class extends wepy.page {
             .then(res => {
               let response = JSON.parse(res.data);
               if (!response.success) {
-                that.errRequest = true;
-                that.errMsg = response.errMsg;
-                that.LoadingHide[that.LoadingHide.length - 1] = true;
-                that.sendErr[this.sendErr.length - 1] = true;
-                that.$apply();
+                this.errRequest = true;
+                this.errMsg = response.errMsg;
+                this.LoadingHide[this.LoadingHide.length - 1] = true;
+                this.sendErr[this.sendErr.length - 1] = true;
+                this.$apply();
               } else {
-                that.LoadingHide[that.LoadingHide.length - 1] = true;
-                that.$apply();
+                this.LoadingHide[this.LoadingHide.length - 1] = true;
+                this.$apply();
               }
             });
-          that.$apply();
+          this.$apply();
           setTimeout(() => {
             let animation = wepy.createAnimation({
               duration: 200
             });
             animation.translate(-this.winWidth, 0).step();
-            that.animationPush = animation.export();
-            that.$apply();
-            that.animationPush = {};
+            this.animationPush = animation.export();
+            this.$apply();
+            this.animationPush = {};
           }, 0);
           wepy.pageScrollTo({
             scrollTop: 9999999
@@ -200,17 +242,16 @@ export default class extends wepy.page {
           status: "user"
         });
       }
-      let that = this;
-      await feedbackReactionContent(this.feedbackId, that.content).then(res => {
+      await feedbackReactionContent(this.feedbackId, this.content).then(res => {
         let response = res.data;
         if (!response.success) {
-          that.errRequest = true;
-          that.errMsg = response.errMsg;
-          that.LoadingHide[that.LoadingHide.length - 1] = true;
-          that.sendErr[this.sendErr.length - 1] = true;
-          that.$apply();
+          this.errRequest = true;
+          this.errMsg = response.errMsg;
+          this.LoadingHide[this.LoadingHide.length - 1] = true;
+          this.sendErr[this.sendErr.length - 1] = true;
+          this.$apply();
         } else {
-          that.LoadingHide[that.LoadingHide.length - 1] = true;
+          this.LoadingHide[this.LoadingHide.length - 1] = true;
         }
       });
       this.content = "";
@@ -230,7 +271,7 @@ export default class extends wepy.page {
   };
   async onLoad() {
     await wepy.getSystemInfo().then(res => {
-      this.portrait = wepy.getStorageSync("User").nativeInformation.avatar;
+      // this.portrait = wepy.getStorageSync("User").nativeInformation.avatar;
       this.winWidth = parseInt(res.windowWidth);
       this.winHeight = parseInt(res.windowHeight);
     });

@@ -1,0 +1,85 @@
+<template>
+  <view>
+    <view class="background">
+      <view class="content">
+        <view class="content-text">
+          <view class="content-title">记忆模式</view>
+          <p>你已开启记忆模式。</p>
+          <view>记忆模式可在“个人中心”中关闭，关闭操作将清空数据，操作不可逆。</view>
+          <view>请点击下一步，进行登录。</view>
+        </view>
+        <button class="next-btn" @tap="next"><span>下一步</span></button>
+        <view class="reselect" @tap="reselect">重新选择</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  import { chooseMemoryMode } from "@/api/graduateMode";
+  export default class Login extends wepy.page {
+    data = {};
+    methods = {
+      reselect() {
+        wepy.navigateBack();
+      },
+      async next() {
+        const {
+          data: { success }
+        } = await chooseMemoryMode(1);
+        if (success) {
+          wepy.switchTab({ url: "../../pages/index" });
+        }
+      }
+    };
+    onLoad() {}
+  }
+</script>
+
+<style lang="stylus" scoped>
+.background
+  position absolute
+  top 0
+  left 0
+  width 100vw
+  height 100vh
+  z-index 0
+  background url('https://static.airbob.org/under-graduate/memory/memory2.jpg') no-repeat
+  background-size cover
+  overflow hidden
+  display flex
+  justify-content center
+  .content
+    width 623rpx
+    margin-top 570rpx
+    color #000
+    .content-text
+      font-size 26rpx
+      color #4a4a4a
+      margin-bottom 75rpx
+      view
+        margin-bottom 20rpx
+      p
+        font-weight 700
+      .content-title
+        font-size 36rpx
+        font-weight 700
+        line-height 54rpx
+    .next-btn
+      width 630rpx
+      height 80rpx
+      border-radius 80rpx
+      color #fff
+      background-image linear-gradient(82deg, #94e6f4 0%, #68d5f2 86%, #3bc3f0 100%),linear-gradient(#f2f2f2, #f2f2f2)
+      display flex
+      align-items center
+      justify-content center
+      margin-bottom 32rpx
+    .reselect
+      font-size 24rpx
+      color #282828
+      text-align center
+button:after
+  border none
+</style>

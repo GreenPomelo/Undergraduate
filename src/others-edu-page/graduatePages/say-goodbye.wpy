@@ -1,0 +1,58 @@
+<template>
+  <view>
+    <view class="background"></view>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  export default class Login extends wepy.page {
+    data = {};
+    onLoad() {
+      setTimeout(() => {
+        wepy.clearStorage();
+      }, 10000);
+    }
+  }
+</script>
+
+<style lang="stylus" scoped>
+.background
+  position absolute
+  top 0
+  left 0
+  width 100vw
+  height 100vh
+  z-index 0
+  background url('https://static.airbob.org/under-graduate/memory/goodbye.jpg') no-repeat
+  background-size auto 100%
+  background-position center
+  overflow hidden
+  display flex
+  flex-direction column
+  align-items center
+  .content
+    height 256rpx
+    font-size 36rpx
+    opacity 0.8
+    color #fff
+    margin-top 472rpx
+    writing-mode vertical-rl
+    writing-mode tb-rl
+  .farewell-btn
+    width 360rpx
+    height 80rpx
+    background-color #ffffff
+    border-radius 80rpx
+    border solid 4rpx #fff
+    display flex
+    align-items center
+    justify-content center
+    margin-top 455rpx
+    span
+      color #070f4a
+      font-size 36rpx
+
+button:after
+  border none
+</style>

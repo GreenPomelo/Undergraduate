@@ -1,0 +1,368 @@
+<template>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <view class="cover-container {{isModalOpen ? 'active' : ''}}" hidden="{{!isModalOpen}}" @tap.stop="changeModalStatus" catchtouchmove="stopTouchMove">
+        <view class="cover-modal" hidden="{{!isModalOpen}}" @tap.stop="prevent">
+          <view class="text margin">1、所有人员均凭智慧校园卡刷卡乘车，每次2元。</view>
+          <view class="text">2、仙林校区内停靠站点。①由市区进入仙林校区的站点依次为：1号楼、行政楼、2号楼、5号楼、西门配电房、2食堂、大学生活动中心转盘、学科楼转盘、青教公寓；</view>
+          <view class="text margin">②仙林校区返回市区的交通车均由学科楼转盘始发，仙林校区内站点依次为：大活转盘、2食堂、西门配电房、5号楼、2号楼、行政楼、1号楼、市区。</view>
+          <view class="text margin">3、后勤管理处根据交通车运行情况做以上调整。车队杨调度电话：13913976262；监督电话：85866708。</view>
+          <view class="known" @tap.stop="changeModalStatus">知道了</view>
+        </view>
+      </view>
+      <view class="tab-wrapper">
+        <view class="tabs-container">
+          <repeat for="{{busTabs}}" key="index" item="item" index="index">
+            <view class="tab {{index === currentRoute ? 'active' : ''}}" style="background-color: {{item.backgroundColor}}" @tap="changeRoute" data-route="{{index}}">{{item.text}}</view>
+          </repeat>
+        </view>
+        <view class="tab-card">
+          <swiper class="tab-card-wrapper" current="{{currentRoute}}" duration="400" easing-function="easeOutCubic">
+            <repeat for="{{tabsDetail}}" key="index" index="index" item="item">
+              <swiper-item class="card-inner" style="background-image: url({{item.backgroundImage}})" catchtouchmove="stopTouchMove">
+                <view class="question-mark" wx:if="{{index <= 1}}" @tap.stop="changeModalStatus"/>
+                <view class="bus-route">
+                  <view class="destination start">{{item.startAddress}}</view>
+                  <image class="arrow" src="{{item.arrow}}" mode="aspectFit" />
+                  <view class="destination end">{{item.endAddress}}</view>
+                </view>
+                <view class="tips">
+                  更新于：{{updateTime}}
+                </view>
+              </swiper-item>
+            </repeat>
+          </swiper>
+        </view>
+      </view>
+      <view class="divider" />
+      <view class="wrapper-container" style="height : {{currentHeight ? currentHeight + 'rpx' : 'auto'}}">
+        <view class="stop-site-wrapper" animation="{{animationData}}">
+          <repeat for="{{busInfo}}" key="index" index="index" item="item">
+            <view class="stop-site-contanier" id="site-container{{index}}">
+              <repeat for="{{item.buses}}" key="innerIndex" index="innerIndex" item="bus">
+                <BusCard
+                  :stopSites.sync="bus.stops"
+                  :departureTime.sync="bus.departureTime"
+                  :start.sync="bus.start"
+                  :destination.sync="bus.destination"
+                  :during.sync="bus.days"
+                  :index.sync="innerIndex"
+                  :cardAnimation.sync="cardAnimationData[index][innerIndex]"
+                  :color.sync="bus.color"
+                  :showStop.sync="bus.showStop"
+                >
+                <view class="divider" />
+              </repeat>
+            </view>
+          </repeat>
+        </view>
+      </view>
+    </view>
+  </BaseContainer>
+</template>
+
+<script>
+import wepy from "wepy";
+import BaseContainer from "@/components/baseContainer";
+import { getSchoolBus } from "@/mock/common";
+import BusCard from "../components/bus-card";
+export default class SchoolBus extends wepy.page {
+  components = {
+    BaseContainer,
+    BusCard
+  };
+  data = {
+    navTitle: "车次表",
+    busTabs: [
+      {
+        text: "往仙林",
+        backgroundColor: "#82FBB3"
+      },
+      {
+        text: "往市区",
+        backgroundColor: "#64E0FD"
+      },
+      {
+        text: "往扬州",
+        backgroundColor: "#FF9D6C"
+      },
+      {
+        text: "往南京",
+        backgroundColor: "#FF8991"
+      }
+    ],
+    tabsDetail: [
+      {
+        startAddress: "三牌楼",
+        endAddress: "仙林",
+        arrow:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LeeureWktDEucG5n",
+        backgroundImage:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3Lei9puasoeihqOS7meaely5wbmc="
+      },
+      {
+        startAddress: "仙林",
+        endAddress: "三牌楼",
+        arrow:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LeeureWktDIucG5n",
+        backgroundImage:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LXNjaG9vbC1idXMyLnBuZw=="
+      },
+      {
+        startAddress: "南京",
+        endAddress: "通达",
+        arrow:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LeeureWktDMucG5n",
+        backgroundImage:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LXNjaG9vbC1idXMzLnBuZw=="
+      },
+      {
+        startAddress: "通达",
+        endAddress: "南京",
+        arrow:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LeeureWktDQucG5n",
+        backgroundImage:
+          "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LXNjaG9vbC1idXM0LnBuZw=="
+      }
+    ],
+    isModalOpen: false,
+    busInfo: [],
+    updateTime: "",
+    currentRoute: 0,
+    currentHeight: 0,
+    animationData: {},
+    cardAnimationData: [],
+    screenWidth: 0
+  };
+  methods = {
+    changeRoute(e) {
+      const { route } = e.currentTarget.dataset;
+      if (this.currentRoute != route) {
+        const animation = wepy.createAnimation({
+          duration: 400,
+          timingFunction: "ease-out"
+        });
+        this.animationData = animation
+          .right(`${100 * route}%`)
+          .step()
+          .export();
+        this.dealHeight(route);
+        this.currentRoute = route;
+      }
+    },
+    changeModalStatus() {
+      this.isModalOpen = !this.isModalOpen;
+    },
+    stopTouchMove() {
+      return false;
+    },
+    prevent() {}
+  };
+  events = {
+    showStopSites(index) {
+      const animation = wepy.createAnimation({
+        duration: 400,
+        timingFunction: "ease-out",
+        transformOrigin: "50% 0 0"
+      });
+      const tapBus = this.busInfo[this.currentRoute].buses[index];
+      const { length } = tapBus.stops;
+      this.cardAnimationData[this.currentRoute][index] = tapBus.showStop
+        ? animation
+            .height(`0rpx`)
+            .step()
+            .export()
+        : animation
+            .height(`${110 * length}rpx`)
+            .step()
+            .export();
+      this.dealHeight(this.currentRoute);
+      tapBus.showStop = !tapBus.showStop;
+      this.$apply();
+    }
+  };
+  dealHeight(index, delay) {
+    const query = wepy.createSelectorQuery();
+    const selector = `#site-container${index}`;
+    setTimeout(() => {
+      query
+        .select(selector)
+        .boundingClientRect(rect => {
+          this.currentHeight = rect.height / this.screenWidth;
+          this.$apply();
+        })
+        .exec();
+    }, 450);
+  }
+  prefixInteger(obj) {
+    Object.keys(obj).forEach(
+      key => (obj[key] = obj[key].toString().padStart(2, "0"))
+    );
+  }
+  randomInteger(min, max, pre) {
+    let randomInt = Math.floor(Math.random() * (max - min + 1) + min);
+    while (randomInt === pre) {
+      randomInt = Math.floor(Math.random() * (max - min + 1) + min);
+    }
+    return randomInt;
+  }
+  async onLoad() {
+    this.screenWidth = parseFloat(wepy.getSystemInfoSync().screenWidth / 750);
+    const res = await getSchoolBus();
+    if (res.data.data) {
+      this.updateTime = res.data.data.updateTime;
+      this.busInfo = res.data.data.busInfo;
+      const colorArray = ["#FF8181", "#FFC24E", "#4ABEFF"];
+      const animation = wepy.createAnimation({
+        duration: 400,
+        timingFunction: "ease-out"
+      });
+      this.animationData = animation
+        .right(`0%`)
+        .step()
+        .export();
+      this.busInfo.forEach((route, routeIndex) => {
+        this.cardAnimationData[routeIndex] = new Array(route.buses.length);
+        route.buses.forEach((bus, busIndex) => {
+          const randomIndex = this.randomInteger(
+            0,
+            2,
+            busIndex !== 0
+              ? colorArray.indexOf(route.buses[busIndex - 1].color)
+              : -1
+          );
+          bus.color = colorArray[randomIndex];
+          bus.showStop = false;
+          this.prefixInteger(bus.departureTime);
+          this.cardAnimationData[routeIndex][busIndex] = animation
+            .height(`0rpx`)
+            .step()
+            .export();
+          bus.stops.forEach(site => {
+            if (site.time) {
+              this.prefixInteger(site.time);
+            }
+          });
+        });
+      });
+      this.dealHeight(0);
+    }
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.cover-container
+  width 100vw
+  height 0
+  position fixed
+  background-color rgba(0, 0, 0, 0.4)
+  z-index 10000
+  display flex
+  justify-content center
+  align-items center
+  &.active
+    height calc(100vh - 128rpx)
+  .cover-modal
+    width 75%
+    border-radius 20rpx
+    background-color #fff
+    padding-top 40rpx
+    .text
+      padding 0 50rpx
+      letter-spacing 2rpx
+      margin-bottom 10rpx
+      &.margin
+        margin-bottom 25rpx
+    .known
+      height 80rpx
+      line-height 80rpx
+      border-top 1px solid #e5e5e5
+      text-align center
+      color #48C8FD
+.divider
+  width 100vw
+  height 30rpx
+  background-color #F5F5F5
+.tab-wrapper
+  display flex
+  flex-direction column
+  justify-content flex-end
+  align-items center
+  width 100vw
+  height 400rpx
+  .tabs-container
+    width 80%
+    display flex
+    flex-direction row
+    transform translateY(35rpx)
+    .tab
+      width 25%
+      height 85rpx
+      display flex
+      justify-content center
+      align-items center
+      border-radius 20rpx 20rpx 0 0
+      font-size 30rpx
+      transition transform 0.3s ease-out
+      transform translateY(0rpx)
+      &.active
+        transition transform 0.3s ease-out
+        transform translateY(-15rpx)
+  .tab-card
+    width 90%
+    height 80%
+    border-radius 35rpx
+    overflow hidden
+    .tab-card-wrapper
+      width 100%
+      height 100%
+      overflow hidden
+      display flex
+      position relative
+      .card-inner
+        width 100%
+        height 100%
+        display flex
+        flex-direction column
+        justify-content space-around
+        align-items center
+        background-size 100% 100%
+        position relative
+        .question-mark
+          width 40rpx
+          height 40rpx
+          position absolute
+          top 30rpx
+          right 40rpx
+          background-image url("https://static.airbob.org/under-graduate/QjE2MDEyMzI3LemXruWPt+Wkh+S7vS5wbmc=")
+          background-size 100% 100%
+        .bus-route
+          width 90%
+          height 60%
+          display flex
+          justify-content space-around
+          align-items center
+          .arrow
+            width 200rpx
+            height 50rpx
+          .destination
+            font-size 1.6rem
+            letter-spacing .2rem
+        .tips
+          width 100%
+          height 56rpx
+          line-height 45rpx
+          font-size 24rpx
+          text-align center
+.wrapper-container
+  width 100vw
+  position absolute
+  overflow hidden
+  .stop-site-wrapper
+    position relative
+    width 400vw
+    display flex
+    align-items flex-start
+</style>

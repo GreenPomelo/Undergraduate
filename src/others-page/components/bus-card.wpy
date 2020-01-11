@@ -1,0 +1,205 @@
+<template>
+  <view class="bus-container">
+    <view class="bus-during">{{during}}</view>
+    <view class="bus-sites-wrapper">
+      <view class="sites-container">
+        <view class="site start">
+          <view class="tips">始发站 {{departureTime.hour}}:{{departureTime.minute}}</view>
+          <view class="site-text">
+            <view class="circle-container">
+              <view class="ring" style="border-color: {{color}}">
+                <view class="vertical-line start" style="background-color: {{color}}" hidden="{{!showStop}}"/>
+              </view>    
+            </view>
+            <view class="text">{{start}}</view>
+          </view>
+        </view>
+        <view class="site-via-container" animation="{{cardAnimation}}">
+          <repeat for="{{stopSites}}" key="index" index="siteIndex" item="item">
+            <view class="site via">
+              <view class="tips via" wx:if="{{item.time}}">预计到达 {{item.time.hour}}:{{item.time.minute}}</view>
+              <view class="site-text">
+                <view class="circle-container">
+                  <view class="round" style="background-color: {{color}}">
+                    <view class="vertical-line via" style="background-color: {{color}}"/>
+                  </view>
+                </view>
+                <view class="text via">{{item.name}}</view>
+              </view>
+            </view>
+          </repeat>
+        </view>
+        <view class="site end">
+          <view class="tips">终点站</view>
+          <view class="site-text">
+            <view class="circle-container">
+              <view class="ring" style="border-color: {{color}}">
+                <view class="vertical-line end" style="background-color: {{color}}" hidden="{{!showStop}}"/>
+              </view>
+            </view>
+            <view class="text">{{destination}}</view>
+          </view>
+        </view>
+      </view>
+      <view class="arrow-container" @tap.stop="showStopSites" data-index="{{index}}">
+        <view class="text">途经站</view>
+        <view class="arrow-down {{showStop ? 'active' : ''}}"/>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class BusCard extends wepy.component {
+  props = {
+    stopSites: {
+      type: Array,
+      default: []
+    },
+    departureTime: {
+      type: Object,
+      default: {}
+    },
+    start: {
+      type: String,
+      default: ""
+    },
+    destination: {
+      type: String,
+      default: ""
+    },
+    during: {
+      type: String,
+      default: ""
+    },
+    index: {
+      type: Number,
+      default: -1
+    },
+    cardAnimation: {
+      type: Object,
+      default: {}
+    },
+    color: {
+      type: String,
+      default: ""
+    },
+    showStop: {
+      type: Boolean,
+      default: false
+    }
+  };
+  methods = {
+    showStopSites(e) {
+      const { index } = e.currentTarget.dataset;
+      this.$emit("showStopSites", index);
+    }
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+.bus-container
+  padding 40rpx
+  .bus-during
+    text-align right
+  .bus-sites-wrapper
+    display flex
+    justify-content space-between
+    .sites-container
+      min-height 250rpx
+      display flex
+      flex-direction column
+      justify-content space-between
+      .site-via-container
+        display flex
+        flex-direction column
+        justify-content space-around
+        overflow hidden
+        height 0
+      .site
+        margin 22.5rpx 0
+        &.start
+          margin-top 0
+        &.end
+          margin-bottom 20rpx
+        .tips
+          min-width 150rpx
+          font-size 28rpx
+          border-bottom 1px solid #ccc
+          margin-left 52rpx
+          padding-bottom 3rpx
+          color #353535
+          &.via
+            opacity 0.8
+            font-size 22rpx
+        .site-text
+          width 100%
+          display flex
+          align-items center
+          .text
+            margin-left 16rpx
+            &.via
+              font-size 25rpx
+          .circle-container
+            width 36rpx
+            height 36rpx
+            display flex
+            justify-content center
+            align-items center
+            .ring
+              width 20rpx
+              height 20rpx
+              background-color #ffffff
+              border-radius 50%
+              border 8rpx solid
+            .round
+              width 20rpx
+              height 20rpx
+              border-radius 50%
+              border 8rpx solid #fff
+            .vertical-line
+              width 8rpx
+              height 120rpx
+              margin 0 auto
+              &.start
+                transform translateY(20rpx)
+              &.via
+                // height 120rpx
+                transform translateY(16rpx)
+              &.end
+                transform translateY(-100%)
+    .arrow-container
+      display flex
+      justify-content center
+      align-items center
+      .arrow-down
+        display inline-block
+        position relative
+        width 60rpx
+        height 30rpx
+        margin-left 10rpx
+        transition transform 0.4s
+        transform-origin center
+        transform rotate(0)
+        &::after
+          display inline-block
+          content " "
+          height 18rpx
+          width 18rpx
+          border-width 0 2px 2px 0
+          border-color #999999
+          border-style solid
+          transform matrix(0.71, 0.71, -0.71, 0.71, 0, 0)
+          transform-origin center
+          transition transform 0.3s
+          position absolute
+          top 50%
+          right 10px
+          margin-top -14rpx
+        &.active
+          transition transform 0.4s
+          transform-origin center
+          transform rotate(-180deg)
+</style>

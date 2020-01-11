@@ -1,35 +1,82 @@
 <template>
-  <view>
-    <view style="width:750rpx;margin-bottom:120rpx;">
-      <view class="feedback-container">
-        <view class="main-title">南邮小程序相关问题</view>
-        <repeat for="{{titles}}" index="index" item="item">
-          <view class="detail-title" @tap="showDetail" data-index="{{index}}" animation="{{showOff[index]}}">{{item.title}}
-            <view class="arrow-image" animation="{{arrowAnimation[index]}}"></view>
-            <view class="main-info" id="hidden{{index}}">{{Para[index]}}</view>
-          </view>
-          <view class="main-title" wx:if="{{item.change}}">{{item.next}}</view>
-        </repeat>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <view style="width:750rpx;margin-bottom:120rpx;">
+        <view class="feedback-container">
+          <view class="main-title">近期热门话题</view>
+          <repeat for="{{titles}}" index="index" item="item">
+            <view class="detail-title" @tap="showDetail" data-index="{{index}}" animation="{{showOff[index]}}">{{item.title}}
+              <view class="arrow-image" animation="{{arrowAnimation[index]}}"></view>
+              <view class="main-info" id="hidden{{index}}">{{Para[index]}}</view>
+            </view>
+            <view class="main-title" wx:if="{{item.change}}">{{item.next}}</view>
+          </repeat>
+        </view>
+      </view>
+      <view class="bottom">
+        <view class="to-feedback" @tap="myFeedback">我要反馈</view>
+        <view class="history-feedback" @tap="historyFeedback">历史反馈</view>
       </view>
     </view>
-    <view class="bottom">
-      <view class="to-feedback" @tap="myFeedback">我要反馈</view>
-      <view class="history-feedback" @tap="historyFeedback">历史反馈</view>
-    </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
+import BaseContainer from "@/components/baseContainer";
 
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "帮助与反馈"
   };
+  components = {
+    BaseContainer
+  };
   data = {
+    navTitle: "帮助与反馈",
     titles: [
-      { title: "南邮小程序如何获取我的信息？", show: false },
-      { title: "为什么我的反馈没有回复？", show: false },
+      {
+        title: "图书馆功能为什么暂停服务？",
+        show: false
+      },
+      {
+        title: "为什么食堂刷卡机上余额与小程序上不一致",
+        show: false
+      },
+      {
+        title: "小程序显示充值成功但刷卡时仍然余额不足？",
+        show: false
+      },
+      {
+        title: "水控无法自动扣费/扣费异常",
+        show: false
+      },
+      {
+        title: "无法在小程序上更新正方密码",
+        show: false
+      },
+      {
+        title: "需要更新自主化学分系统密码",
+        show: false
+      },
+      {
+        title: "需要更新体育部密码",
+        show: false
+      },
+      {
+        title: "成绩排名是从0开始还是1开始排？",
+        show: false,
+        change: true,
+        next: "南邮小程序相关问题"
+      },
+      {
+        title: "南邮小程序如何获取我的信息？",
+        show: false
+      },
+      {
+        title: "为什么我的反馈没有回复？",
+        show: false
+      },
       {
         title: "为什么我进入小程序后所有功能都不能使用？",
         show: false
@@ -40,64 +87,111 @@ export default class extends wepy.page {
         change: true,
         next: "课表功能相关问题"
       },
-      { title: "课表为什么是空的？", show: false },
-      { title: "课表为什么部分课程没有显示？", show: false },
-      { title: "课表为什么不显示实习周的安排？", show: false },
+      {
+        title: "课表为什么是空的？",
+        show: false
+      },
+      {
+        title: "课表为什么部分课程没有显示？",
+        show: false
+      },
+      {
+        title: "课表为什么不显示实习周的安排？",
+        show: false
+      },
       {
         title: "如何查看其它学期/周的课程？",
         show: false,
         change: true,
         next: "成绩查询功能相关问题"
       },
-      { title: "为什么绩点排名和辅导员给的的不一致？", show: false },
+      {
+        title: "为什么绩点排名和辅导员给的的不一致？",
+        show: false
+      },
       {
         title: "成绩显示的是最新的吗？",
         show: false,
         change: true,
         next: "考试/重修和辅导课功能相关问题"
       },
-      { title: "为什么部分科目的考试安排看不到？", show: false },
-      { title: "为什么部分科目的重修辅导课看不到？", show: false },
+      {
+        title: "为什么部分科目的考试安排看不到？",
+        show: false
+      },
+      {
+        title: "为什么部分科目的重修辅导课看不到？",
+        show: false
+      },
       {
         title: "体育部密码忘记了怎么办？",
         show: false,
         change: true,
         next: "图书馆功能相关问题"
       },
-      { title: "图书借期到了怎么办？", show: false },
-      { title: "图书馆的座位查询准确吗？", show: false },
+      {
+        title: "图书借期到了怎么办？",
+        show: false
+      },
+      {
+        title: "图书馆的座位查询准确吗？",
+        show: false
+      },
       {
         title: "图书馆页显示我欠费是怎么回事？",
         show: false,
         change: true,
         next: "校园卡相关问题"
       },
-      { title: "充值后显示到账，为什么圈存机显示依然没有？", show: false },
-      { title: "我捡到别人校卡后怎么办？", show: false },
+      {
+        title: "充值后显示到账，为什么圈存机显示依然没有？",
+        show: false
+      },
+      {
+        title: "我捡到别人校卡后怎么办？",
+        show: false
+      },
       {
         title: "我丢了校卡后怎么办？",
         show: false,
         change: true,
         next: "跑操相关问题"
       },
-      { title: "为什么我某一天的跑操记录只有一次？", show: false },
-      { title: "为什么我跑完操后次数没有立即更新？", show: false },
-      { title: "小程序里面显示的跑操记录准确吗？", show: false }
+      {
+        title: "为什么我某一天的跑操记录只有一次？",
+        show: false
+      },
+      {
+        title: "为什么我跑完操后次数没有立即更新？",
+        show: false
+      },
+      {
+        title: "小程序里面显示的跑操记录准确吗？",
+        show: false
+      }
     ],
     arrowAnimation: [],
     translateHeight: 30,
     winWidth: 0,
     Para: [
+      "由于学校的原因，我们获取图书馆信息时出现问题，无法正常提供图书馆小程序服务，不得不暂停，还请谅解。青柚工作室致力于带给柚子们更好的南邮校园小程序服务，正在竭力修复图书馆功能，敬请期待。",
+      "因为有时部分刷卡机未联网，暂时无法同步充值记录，请到图书馆大学生事务中心一卡通窗口校对余额，或者在圈存机上再充值1元使余额恢复正常。",
+      "因为有时部分刷卡机未联网，暂时无法同步充值记录，请到图书馆大学生事务中心一卡通窗口校对余额，或者在圈存机上再充值1元使余额恢复正常。",
+      "水控与南邮小程序无关，相关问题需联系南邮水控解决。若无法扣费，可以先确认一卡通有无充足余额，如果有则水控坏了，请找宿管阿姨报修，或者直接联系南邮水控18951691953 学校的技术老师来处理。",
+      "发起小程序反馈或者加青柚官方QQ2092313702，发送新的正方密码附上学生证等身份证明申请人工更新密码。",
+      "自主化学分系统密码即http://202.119.225.55/zzxff/ 网站的密码，初始账号密码均为大写的学号，请及时登陆该网站在右下方“个人学分查询”中修改密码并牢记，返回小程序自主学分页面输入更改后的密码即可正常使用。",
+      "体育部密码即http://180.209.98.44 体质管理系统iFit网站的密码，初始账号密码均为大写的学号，请及时登陆该网站修改密码并牢记，返回小程序体育部页面根据提示输入更改后的密码即可正常使用。若忘记密码，请发起小程序反馈、加青柚官方QQ2092313702，发送学号附上学生证等身份证明申重置密码。",
+      "2019年起，从1开始排，成绩排名数字即排名位次。（2019年之前是从0开始排，排名数字＋1才是真实位次）肖辰旭提醒您不要过分在意自己的名次，不断超越往日的自己就很好了。",
       "南邮小程序由青柚工作室开发，其直属于南邮信息办，故南邮小程序的所有用户信息直接来自南邮信息办。",
       "反馈区的反馈需要人工回复，我们的所有运营成员均为南邮在校生且义务为大家服务，因此，同学们的反馈内容可能无法得到及时的回复，但会尽快处理告知情况。如果有紧急情况，请联系青柚官Q：2092313702.",
       `造成小程序所有功能都无法使用的原因可能有：
 1.微信版本过低，当前小程序不支持。解决：升级微信版本
-2.你更新了正方系统的密码，小程序密码未更新。解决：在“我的”中选择“解除绑定”，然后使用新密码重新登录小程序。
-3.部分未知原因。解决：尝试在后台中退出南邮小程序和微信App，然后重新进入。如果仍有问题请进行反馈或联系官Q：2092313702.`,
+2.你更新了正方系统的密码，小程序密码未更新。解决：根据小程序弹出的更新正方密码提示输入新的正方密码，或者发起小程序反馈、加青柚官方QQ2092313702，发送新的正方密码附上学生证等身份证明申请人工更新密码
+3.部分未知原因。解决：尝试在后台中退出南邮小程序和微信App，然后重新进入。如果仍有问题请进行反馈或联系官Q2092313702.`,
       `造成小程序所有功能都无法使用的原因可能有：
 1.微信版本过低，当前小程序不支持。解决：升级微信版本
-2.你更新了正方系统的密码，小程序密码未更新。解决：在“我的”中选择“解除绑定”，然后使用新密码重新登录小程序。
-3.部分未知原因。解决：尝试在后台中退出南邮小程序和微信App，然后重新进入。如果仍有问题请进行反馈或联系官Q：2092313702.`,
+2.你更新了正方系统的密码，小程序密码未更新。解决：根据小程序弹出的更新正方密码提示输入新的正方密码，或者发起小程序反馈、加青柚官方QQ2092313702，发送新的正方密码附上学生证等身份证明申请人工更新密码
+3.部分未知原因。解决：尝试在后台中退出南邮小程序和微信App，然后重新进入。如果仍有问题请进行反馈或联系官Q2092313702.`,
       "请参见“南邮小程序相关问题”——“为什么我进入小程序后部分功能不能使用？”一问。",
       "课表同步是正方教务系统的课表，没有显示可能是因为：老师尚未更新课表内容，如有相关问题，请联系该课任课老师了解。",
       "课表同步是正方教务系统的课表，正方教务系统中没有对实习周的安排内容，了解相关安排请联系老师或班委。另，在实习周期间，课表仍然正常显示该周课程内容，并会在首页提醒。",
@@ -121,7 +215,8 @@ export default class extends wepy.page {
       "跑操的记录并不是在打卡后即时更新的，只有当体育部老师上传打卡记录后方可查询。一般在每天九点钟之后可以成功查到。",
       "小程序所显示的跑操记录来自体育部官方系统，与之同步。"
     ],
-    showOff: []
+    showOff: [],
+    visitorModeStatus: false
   };
   methods = {
     showDetail(e) {
@@ -142,11 +237,17 @@ export default class extends wepy.page {
       this.$apply();
     },
     myFeedback() {
+      if (this.visitorModeStatus) {
+        return this.$invoke("BaseContainer", "showVisitorTips");
+      }
       this.$navigate({
         url: "myfeedback"
       });
     },
     historyFeedback() {
+      if (this.visitorModeStatus) {
+        return this.$invoke("BaseContainer", "showVisitorTips");
+      }
       this.$navigate({
         url: "historyfeedback"
       });
@@ -171,6 +272,7 @@ export default class extends wepy.page {
     });
   }
   onLoad() {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
     wepy.getSystemInfo().then(res => {
       this.winWidth = parseInt(res.windowWidth);
       this.winHeight = parseInt(res.windowHeight);

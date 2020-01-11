@@ -38,35 +38,46 @@ export default class extends wepy.component {
   box-shadow 0rpx 3rpx 7rpx 0rpx rgba(0, 0, 0, 0.35)
   border-radius 30rpx
   margin-bottom 29rpx
+  position relative
+  display flex
+  flex-direction column
   .head
     background-repeat no-repeat
     background-size 605rpx
     height 180rpx
+    width 100%
+    padding 28rpx 24rpx 0 24rpx
+    box-sizing border-box
     .right
-      float right
       display flex
       flex-direction column
       align-items flex-end
-      margin 28rpx 24rpx 0 0
     .paper
       width 92rpx
-      margin 28rpx 0 0 41rpx
+      position absolute
+      top 28rpx
+      left 41rpx
     .head-text
+      max-width 545rpx
       font-size 34rpx
       font-family 'SimHei'
       color rgb(88, 88, 88)
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
   .foot
+    display flex
+    flex-direction row
+    justify-content space-between
     .text
       font-size 26rpx
       color rgb(88, 88, 88)
       line-height 1.192
     .foot-left
-      float left
       display flex
       flex-direction column
       margin-left 37rpx
     .foot-right
-      float right
       display flex
       flex-direction column
       margin-right 37rpx

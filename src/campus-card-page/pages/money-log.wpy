@@ -1,0 +1,136 @@
+<template>
+  <BaseContainer navTitle="金额操作记录">
+    <view slot="qy-content">
+      <view class="container">
+        <view class="header-tip">
+          <view class="image-container"></view>
+          <view class="tip-font">
+            肖辰旭提示你：此表格只代表在小程序端的操作记录，不一定表示交易成功哦～
+          </view>
+        </view>
+        <scroll-view scroll-x style="position:relative;width:750rpx;">
+          <view class="main-container">
+            <view class="main-container-header">
+              <view class="header-item">项目</view>
+              <view class="header-item">金额</view>
+              <view class="header-item">时间</view>
+              <view class="header-item">备注</view>
+            </view>
+            <view class="main-container-item" wx:for="{{records}}" wx:key="index" wx:index="index">
+              <view class="main-item">{{item.type}}</view>
+              <view class="main-item">{{item.money / 100}} 元</view>
+              <view class="main-item">{{item.time}}</view>
+              <view class="main-item longer">{{item.extra || '无'}}</view>
+            </view>
+          </view>
+        </scroll-view>
+        <view class="rectangle"></view>
+      </view>
+    </view>
+  </BaseContainer>
+</template>
+
+<script>
+import wepy from "wepy";
+import { getMoneyLog } from "@/api/campusCard";
+import { mockGetMoneyLog } from "@/mock/campusCard";
+import BaseContainer from "@/components/baseContainer";
+
+export default class MoneyLog extends wepy.page {
+  data = {
+    records: [],
+    pageNumber: 1,
+    visitorModeStatus: false
+  };
+  components = {
+    BaseContainer
+  };
+  config = {
+    navigationBarTitleText: "金额操作记录"
+  };
+  async getData(pageNum) {
+    const { data } = !this.visitorModeStatus
+      ? await getMoneyLog(pageNum, 30)
+      : await mockGetMoneyLog();
+    const result = data.data;
+    result.map(item => {
+      const time = new Date(item.createTime);
+      return (item.time =
+        time.getFullYear() +
+        "." +
+        Number(time.getMonth() + 1) +
+        "." +
+        time.getDate());
+    });
+    this.records.push(...result);
+    this.$apply();
+  }
+  async onLoad() {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    await this.getData(1);
+  }
+  async onReachBottom() {
+    if (!this.visitorModeStatus) {
+      await this.getData(++this.pageNumber);
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  min-height 100vh
+  margin 0 0 0 26rpx
+  width 724rpx
+  position absolute
+  .rectangle
+    position absolute
+    top 186rpx
+    width 108rpx
+    right 0
+    height calc(100% - 170rpx)
+    background-image linear-gradient(90deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.98) 100%)
+  .header-tip
+    display flex
+    font-family PingFangSC-Regular
+    font-size 24rpx
+    color #888888
+    margin-bottom 16rpx
+    width calc(100% - 52rpx)
+    .image-container
+      width 46rpx
+      height 46rpx
+      background-size contain
+      background-repeat no-repeat
+      background-image url('https://static.airbob.org/under-graduate/campus-card/notice%21@2x.png')
+  .main-container
+    min-width 1000rpx
+    .main-container-header
+      background #6BDEC9
+      display flex
+      align-items center
+      height 96rpx
+      border-radius 6rpx
+      .header-item
+        font-family PingFangSC-Medium
+        font-size 32rpx
+        padding-left 23rpx
+        width 185rpx
+        color #ffffff
+    .main-container-item
+      position relative
+      display flex
+      font-family PingFangSC-Regular
+      font-size 32rpx
+      height 98rpx
+      align-items center
+      color #353535
+      border-bottom 1px solid #D7D7D7
+      .main-item
+        overflow hidden
+        padding-left 23rpx
+        width 185rpx
+      .longer
+        flex 1
+        width 100%
+</style>

@@ -11,11 +11,21 @@
 <template>
   <view class="type-container">
     <view class="front-image-container" style="height:{{imageHeight}};width:{{imageWidth}}">
-      <image class="contain-image" src="{{Image}}" mode="aspectFit" />
+      <image class="contain-image" src="{{Image}}" mode="aspectFit">
     </view>
-    <input type="{{inputType}}" @input="putValue" class="place-to-type" placeholder="{{PlaceHolder}}"/>
+    <input
+      type="{{inputType}}"
+      @input="putValue"
+      class="place-to-type"
+      placeholder="{{PlaceHolder}}"
+    >
     <view class="to-verification" wx:if="{{verification}}" @tap="Tap">
-      <image class="to-verification" mode="aspectFit" src="{{verification}}" style="width:{{verificationImagewidth}};"/>
+      <image
+        class="to-verification"
+        mode="aspectFit"
+        src="{{verification}}"
+        style="width:{{verificationImagewidth}};"
+      >
       <view class="get-verification">{{verificationText}}</view>
     </view>
   </view>
@@ -62,7 +72,6 @@ export default class Input extends wepy.component {
 <style lang="stylus" scoped>
 input
   min-height 0rpx
-
 .type-container
   position relative
   margin 0 auto

@@ -1,0 +1,263 @@
+<template>
+  <view>
+    <view wx:if="{{navStatus}}">
+      <QyNavigation :title.sync="navTitle" :background.sync="background"></QyNavigation>
+    </view>
+    <QyModal :maskClosable="maskClosable" width="500rpx" :visible.sync="passwordModelStatus">
+      <view slot="content" class="bind-container">
+        <input
+          class="bind-input"
+          placeholder="{{passwordModelOptions.passwordModelProps ? placeholder:''}}"
+          password="true"
+          @input="passwordInput"
+          placeholder-style="color: #999CA0"
+        >
+        <button class="bind-button" @tap.stop="bindPassword" hover-class="button-click">立即绑定</button>
+      </view>
+    </QyModal>
+    <QyModalGraduate width="500rpx" :visible.sync="graduateModalStatus">
+      <view slot="content" class="bind-graduate-container">
+        <view class="graduate-content">
+          <view class="content-detail">
+            <view>亲爱的{{name}}，</view>
+            <view>你已经离开南邮{{leaveDate}}天，</view>
+            <view>你所请求的数据</view>
+            <view>已经无法再次被刷新。</view>
+          </view>
+          <view class="content-detail">
+            <view>记忆可以保留，</view>
+            <view>青春无法再来。</view>
+          </view>
+          <view>祝好。</view>
+        </view>
+        <button class="bind-button" @tap.stop="closeGraduateModel" hover-class="button-click">知道了</button>
+      </view>
+    </QyModalGraduate>
+
+    <view>
+      <slot name="qy-content"></slot>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+import QyNavigation from "./qy-navigation";
+import QyModal from "./qy-modal";
+import QyModalGraduate from "./qy-modal";
+import { changeSecretCode, changeSecretCodeLower } from "@/api/common";
+import { getGraduateTime } from "@/api/graduateMode";
+import { connect } from "wepy-redux";
+
+@connect({
+  graduateModalStatus(state) {
+    return state.graduateReducer.graduateModalStatus;
+  },
+  visitorModeStatus(state) {
+    return state.visitorReducer.visitorModeStatus;
+  }
+})
+export default class BaseContainer extends wepy.component {
+  components = {
+    QyNavigation,
+    QyModal,
+    QyModalGraduate
+  };
+  data = {
+    password: "",
+    name: "",
+    graduateModelStatus: false,
+    passwordModelStatus: false,
+    placeholder: "",
+    navStatus: true,
+    leaveDate: parseInt((Date.now() - 1560960000000) / 86400000)
+  };
+  props = {
+    navTitle: {
+      type: String,
+      default: "NJUPT"
+    },
+    openPage: {
+      type: Boolean,
+      default: true
+    },
+    background: {
+      type: String,
+      default: "#fff"
+    },
+    passwordModelOptions: {
+      type: Object,
+      twoWay: true,
+      default: {
+        passwordModelProps: false,
+        placeholder: "",
+        bindInfo: { username: "", domainType: "" },
+        checkPassword: function() {
+          return null;
+        },
+        checkErrMsg: "",
+        refreshData: function() {
+          return null;
+        }
+      }
+    }
+  };
+  watch = {
+    passwordModelOptions(next) {
+      const { passwordModelProps } = next;
+      this.passwordModelStatus = passwordModelProps;
+      this.$apply();
+    },
+    openPage(next) {
+      this.navStatus = !next;
+      this.$apply();
+    },
+    // modal 显示的时候再接数据
+    graduateModalStatus(next) {
+      if (next) {
+        this.calcGraduateTime();
+      }
+    }
+  };
+  methods = {
+    passwordInput({ detail: { value } }) {
+      this.password = value;
+    },
+    closeGraduateModel() {
+      wepy.$store.dispatch({ type: `HIDE_GRADUATE_MODAL` });
+      wepy.navigateBack();
+      this.graduateModelStatus = false;
+    },
+    bindPassword() {
+      const {
+        bindInfo: { username, domainType },
+        checkPassword,
+        checkErrMsg
+      } = this.passwordModelOptions;
+      const bindPasswordInfo = [username, this.password, domainType];
+      if (checkPassword) {
+        if (checkPassword(this.password)) {
+          this.updatePasswordRequest(bindPasswordInfo);
+        } else {
+          wepy.showModal({
+            content: checkErrMsg,
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        }
+      } else {
+        this.updatePasswordRequest(bindPasswordInfo);
+      }
+    }
+  };
+  async updatePasswordRequest(bindPasswordInfo) {
+    wepy.showLoading({
+      title: "正在更新密码",
+      mask: true,
+      success: res => {}
+    });
+    const secretInfo = await changeSecretCode.apply(this, bindPasswordInfo);
+    wepy.hideLoading();
+    if (secretInfo.data && secretInfo.data.data) {
+      this.closePasswordModel();
+    } else {
+      wepy.showModal({
+        content: "密码错误",
+        confirmText: "知道了",
+        showCancel: false,
+        confirmColor: "#353535"
+      });
+    }
+  }
+  closePasswordModel() {
+    this.passwordModelStatus = false;
+    this.placeholder = "";
+    this.passwordModelOptions.refreshData();
+    this.$apply();
+  }
+  getCurrentPage() {
+    const pages = getCurrentPages();
+    const pageLength = pages.length;
+    return pageLength ? pages[pageLength - 1].route : null;
+  }
+  goBack() {
+    // 离开页面的打点
+    wepy.navigateBack();
+  }
+  async calcGraduateTime() {
+    const {
+      data: { data }
+    } = await getGraduateTime();
+    const date = new Date(data);
+    this.leaveDate = `${date.getFullYear()}-${date.getMonth() +
+      1}-${date.getDate()}`;
+  }
+  showVisitorTips() {
+    return wepy.showModal({
+      title: "小贴士",
+      content: "游客模式下无法使用哦~",
+      confirmColor: "#47CFF5",
+      showCancel: false,
+      confirmText: "知道了"
+    });
+  }
+  onLoad() {
+    const { placeholder } = this.passwordModelOptions;
+    this.placeholder = placeholder;
+    this.name =
+      wepy.getStorageSync("User").name || wepy.getStorageSync("userInfo").name;
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.bind-graduate-container
+  display flex
+  flex-direction column
+  background-image url('https://static.airbob.org/under-graduate/memory/modal.png')
+  background-repeat no-repeat
+  height 630rpx
+  border-radius 30rpx
+  background-size cover
+  .graduate-content
+    color #925800
+    font-size 26rpx
+    margin-bottom 130rpx
+    margin-top 72rpx
+    margin-left 81rpx
+    .content-detail
+      margin-bottom 33rpx
+  .bind-button
+    background-image linear-gradient(82deg, #dcbf86 0%, #be8d43 100%),linear-gradient(#f2f2f2, #f2f2f2)
+    text-align center
+    width 320rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
+</style>

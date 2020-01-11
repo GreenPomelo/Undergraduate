@@ -1,161 +1,146 @@
 <template>
-  <view>
-    <view class="cover" hidden="{{!showModal}}" animation="{{coverAnimation}}">
-    </view>
-    <view class="cover-modal" hidden="{{!showModal}}">
-      <view style="color:#353535;margin:40rpx 25rpx 20rpx 25rpx">当欠费满10元时还书自动扣款，若欠费未满10元将在毕业前结清。你也可以前往图书馆自行缴费。</view>
-      <view style="height:2rpx;width:540rpx;background:#E3E3E3;margin-left:-20rpx"></view>
-      <view style="color:#39C9FF;margin-top:5rpx;padding-top:30rpx" @tap="understandTip">知道了</view>
-    </view>
-    <QyModal :maskClosable="maskClosable" width="500rpx" :visible.sync="bindModalVisible">
-      <view slot="content" class="bind-container">
-        <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
-        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
+  <BaseContainer navTitle="图书馆" :passwordModelOptions.sync="passwordModelOptions">
+    <view slot="qy-content">
+      <view class="cover" hidden="{{!showModal}}" animation="{{coverAnimation}}"></view>
+      <view class="cover-modal" hidden="{{!showModal}}">
+        <view style="color:#353535;margin:40rpx 25rpx 20rpx 25rpx">当欠费满10元时还书自动扣款，若欠费未满10元将在毕业前结清。你也可以前往图书馆自行缴费。</view>
+        <view style="height:2rpx;width:540rpx;background:#E3E3E3;margin-left:-20rpx"></view>
+        <view style="color:#39C9FF;margin-top:5rpx;padding-top:30rpx" @tap="understandTip">知道了</view>
       </view>
-    </QyModal>
-    <!-- <navigator style="text-align:center;"> {{navTitle}} </navigator> -->
-    <!-- <qy-container> -->
-      <!-- <view slot="qy-content"> -->
-        <view class="swiper-tab">
-          <view class="swiper-tab-list {{currentTab==0?'active':''}}" data-current="0" @tap="switchNav">已借书目</view>
-          <view class="swiper-tab-list {{currentTab==1?'active':''}}" data-current="1" @tap="switchNav">书目检索</view>
-          <view class="swiper-tab-list {{currentTab==2?'active':''}}" data-current="2" @tap="switchNav">座位查询</view>
-          <view animation="{{animationNav}}" class="swiper-line"></view>
-        </view>
-        <swiper id="hhh" class="swiper-box" current="{{currentTab}}" duration="500" display-multiple-items="1" style="height:{{winHeight-38}}px" bindchange="changeTab">
-          <!-- 已借书目 -->
-          <swiper-item>
-            <view class="books-container">
-              <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px">
-                <view class="books-head" style="margin-bottom:{{arrears==0?'80rpx':'0'}}">
-                  <view class="books-num">
-                    {{totalBooksNumber}}
-                  </view>
-                  <view class="books-cnt">
-                    次
-                  </view>
+      <view class="swiper-tab">
+        <view class="swiper-tab-list {{currentTab==0?'active':''}}" data-current="0" @tap="switchNav">已借书目</view>
+        <view class="swiper-tab-list {{currentTab==1?'active':''}}" data-current="1" @tap="switchNav">书目检索</view>
+        <view class="swiper-tab-list {{currentTab==2?'active':''}}" data-current="2" @tap="switchNav">座位查询</view>
+        <view animation="{{animationNav}}" class="swiper-line"></view>
+      </view>
+      <swiper id="hhh" class="swiper-box" current="{{currentTab}}" duration="500" display-multiple-items="1" style="height:{{winHeight-38}}px" bindchange="changeTab">
+        <!-- 已借书目 -->
+        <swiper-item>
+          <view class="books-container">
+            <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px">
+              <view class="books-head" style="margin-bottom:{{arrears==0?'80rpx':'0'}}">
+                <view class="books-num">{{totalBooksNumber}}</view>
+                <view class="books-cnt">次</view>
+              </view>
+              <view wx:if="{{arrears!=0}}" class="books-tip" @tap="showBooksTip">
+                你已欠费{{arrears}}元
+                <image class="books-question" src="https://static.airbob.org/under-graduate/library_pic_why.png">
+              </view>
+              <view class="hist-container" @tap="checkHistory">
+                <view class="hist-title">
+                  <span>历史借阅</span>
                 </view>
-                <view wx:if="{{arrears!=0}}" class="books-tip" @tap="showBooksTip">
-                  你已欠费{{arrears}}元
-                  <image class="books-question" src="https://static.airbob.org/under-graduate/library_pic_why.png" />
-                </view>
-                <view wx:if="{{curBooksNum==0}}" class="books-none-container">
-                  <image class="books-none-img" src="https://static.airbob.org/under-graduate/pic_empty.png" />
+                <image class="button-right" src="https://static.airbob.org/under-graduate/image/score/button_down.png">
+              </view>
+              <view wx:if="{{curBooksNum==0}}" class="books-none-container">
+                <image class="books-none-img" src="https://static.airbob.org/under-graduate/pic_empty.png">
                   <view>你当前没有借书，快去图书馆淘一淘！</view>
+              </view>
+              <view class="books-list" wx:if="{{curBooksNum>0}}">
+                <repeat for="{{lendBooks}}" key="key" index="index" item="item">
+                  <view class="book-container" style="border-bottom-left-radius:{{isTapIndex[index]? '0rpx' : '20rpx'}};border-bottom-right-radius:{{isTapIndex[index]? '0rpx' : '20rpx'}};">
+                    <view class="book-info-all">
+                      <view class="book-name">{{item.bookname}}</view>
+                      <view class="book-info">已续借{{item.renew}}次</view>
+                      <view class="book-info" style="white-space:nowrap">
+                        应还日期：{{item.DDL}}
+                        <span style="color:#FFB737" wx:if="{{item.leftDDL<=10&&item.leftDDL>=0}}">据归还还有{{item.leftDDL}}天，请及时归还！</span>
+                      </view>
+                    </view>
+                    <image data-index="{{index}}" data-name="{{item.marc_no}}" class="button-updown" src="https://static.airbob.org/under-graduate/image/score/button_down.png" @tap="{{hide[index]? 'showBookDetails' : 'hideBookDetails'}}" animation="{{spin[index]}}">
+                  </view>
+                  <view class="book-detail-container" animation="{{showOff[index]}}">
+                    <view class="book-detail-info-all" id="lendbook{{index}}">
+                      <view class="book-info">书名: {{item.bookname}}</view>
+                      <view class="book-info">作者: {{item.author}}</view>
+                      <view class="book-info">出版社: {{item.publishers}}</view>
+                      <view class="book-info">所属分类: {{item.category}}</view>
+                      <view class="book-info">ISBN: {{item.ISBN}}</view>
+                      <view class="book-info">价格: {{item.price}}</view>
+                      <view class="book-info">简介: {{item.summary}}</view>
+                    </view>
+                  </view>
+                </repeat>
+              </view>
+              <view wx:if="{{curBooksNum>0}}" class="button-renew" style="background-image:url({{renewAll?renewbtn.highlight:renewbtn.disabled}});" @tap="renewBooks">一键续借</view>
+            </scroll-view>
+          </view>
+        </swiper-item>
+        <!-- 书目检索 -->
+        <swiper-item>
+          <view class="search-container">
+            <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px" bindscrolltolower="loadMoreBooks">
+              <view class="search-bar-container">
+                <view class="search-bar">
+                  <view class="search-placeholder-all" hidden="{{hasInput}}" @tap="clearPlaceHolder">
+                    <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon">
+                      <view class="search-placeholder">输入书名/作者/关键词</view>
+                  </view>
+                  <input type="text" class="search-input" confirm-type="search" focus="{{hasInput}}" @input="search" value="{{key}}" bindconfirm="confirmSearch">
                 </view>
-                <view class="books-list" wx:if="{{curBooksNum>0}}">
-                  <repeat for="{{lendBooks}}" key="key" index="index" item="item">
-                    <view class="book-container" style="border-bottom-left-radius:{{isTapIndex[index]? '0rpx' : '20rpx'}};border-bottom-right-radius:{{isTapIndex[index]? '0rpx' : '20rpx'}};border-bottom:{{isTapIndex[index]? 'none' : '1rpx solid rgba(0,0,0,0.1)'}};">
-                      <view class="book-info-all">
-                        <view class="book-name">
-                          {{item.bookname}}
-                        </view>
-                        <view class="book-info">已续借{{item.renew}}次</view>
-                        <view class="book-info" style="white-space:nowrap">应还日期：{{item.DDL}} <span style="color:#FFB737" wx:if="{{item.leftDDL<=10&&item.leftDDL>=0}}">据归还还有{{item.leftDDL}}天，请及时归还！</span></view>
-                      </view>
-                      <image data-index="{{index}}" data-name="{{item.marc_no}}" class="button-updown" src="https://static.airbob.org/under-graduate/image/score/button_down.png" @tap="{{hide[index]? 'showBookDetails' : 'hideBookDetails'}}"  animation="{{spin[index]}}"/>
-                    </view>
-                    <view class="book-detail-container" animation="{{showOff[index]}}" style="border-bottom:{{isTapIndex[index]? '1rpx solid rgba(0,0,0,0.1)' : 'none'}};">
-                      <view class="book-detail-info-all" id="lendbook{{index}}">
-                        <view class="book-info">书名: {{item.bookname}}</view>
-                        <view class="book-info">作者: {{item.author}}</view>
-                        <view class="book-info">出版社: {{item.publishers}}</view>
-                        <view class="book-info">所属分类: {{item.category}}</view>
-                        <view class="book-info">ISBN: {{item.ISBN}}</view>
-                        <view class="book-info">价格: {{item.price}}</view>
-                        <view class="book-info">简介: {{item.summary}}</view>
-                      </view>
-                    </view>
+              </view>
+              <view class="search-recommend" hidden="{{emptyResult||hasResult}}">
+                <view class="search-recommend-title">热门推荐</view>
+                <view class="search-recommend-content">
+                  <repeat for="{{recomends}}" key="key" index="index" item="book">
+                    <view class="search-recommend-book" @tap="quickSearch" data-name="{{book.name}}">{{book.name}}</view>
                   </repeat>
                 </view>
-                <view wx:if="{{curBooksNum>0}}" class="button-renew" style="background-image:url({{renewAll?renewbtn.highlight:renewbtn.disabled}});" @tap="renewBooks">
-                  一键续借
-                </view>
-              </scroll-view>
-            </view>
-          </swiper-item>
-          <!-- 书目检索 -->
-          <swiper-item>
-            <view class="search-container">
-              <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px" bindscrolltolower="loadMoreBooks">
-                <view class="search-bar-container">
-                  <view class="search-bar">
-                    <view class="search-placeholder-all" hidden="{{hasInput}}" @tap="clearPlaceHolder">
-                      <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon"/>
-                      <view class="search-placeholder">输入书名/作者/关键词</view>
-                    </view>
-                    <input type="text" class="search-input" confirm-type="search" focus="{{hasInput}}" @input="search" value="{{key}}" bindconfirm="confirmSearch"/>
-                  </view>
-                </view>
-                <view class="search-recommend" hidden="{{emptyResult||hasResult}}">
-                  <view class="search-recommend-title">
-                    热门推荐
-                  </view>
-                  <view class="search-recommend-content">
-                    <repeat for="{{recomends}}" key="key" index="index" item="book">
-                      <view class="search-recommend-book" @tap="quickSearch" data-name="{{book.name}}">
-                        {{book.name}}
-                      </view>
-                    </repeat>
-                  </view>
-                </view>
-                <view class="search-no-result" style="display:{{emptyResult?'flex':'none'}};flex-direction column;">
-                  <image class="search-no-result-pic" src="https://static.airbob.org/under-graduate/pic_empty.png" />
+              </view>
+              <view class="search-no-result" style="display:{{emptyResult?'flex':'none'}};flex-direction column;">
+                <image class="search-no-result-pic" src="https://static.airbob.org/under-graduate/pic_empty.png">
                   <view class="search-no-result-tips">没有找到这本书，你可以推荐图书馆购买哦</view>
                   <view class="search-no-result-recom" @tap="goToRecomened">进行读者荐购</view>
-                </view>
-                <view class="search-result" hidden="{{!hasResult}}">
-                  <repeat for="{{searchResult}}" key="key" index="index" item="item">
-                    <view class="search-result-container" style="border-bottom-left-radius:{{isTapIndexS[index]? '0rpx' : '20rpx'}};border-bottom-right-radius:{{isTapIndexS[index]? '0rpx' : '20rpx'}};border-bottom:{{isTapIndexS[index]? 'none' : '1rpx solid rgba(0,0,0,0.1)'}}">
-                      <view class="search-info-all">
-                        <view class="search-book-name">
-                          {{item.bookname}}
-                        </view>
-                        <view class="search-info-item">作者: {{item.author}}</view>
-                        <view class="search-info-item">出版社: {{item.publishers}}</view>
+              </view>
+              <view class="search-result" hidden="{{!hasResult}}">
+                <repeat for="{{searchResult}}" key="key" index="index" item="item">
+                  <view class="search-result-container" style="border-bottom-left-radius:{{isTapIndexS[index]? '0rpx' : '20rpx'}};border-bottom-right-radius:{{isTapIndexS[index]? '0rpx' : '20rpx'}};border-bottom:{{isTapIndexS[index]? 'none' : '1rpx solid rgba(0,0,0,0.1)'}}">
+                    <view class="search-info-all">
+                      <view class="search-book-name">{{item.bookname}}</view>
+                      <view class="search-info-item">作者: {{item.author}}</view>
+                      <view class="search-info-item">出版社: {{item.publishers}}</view>
+                      <view class="search-info-item">索书号: {{item.callno}}</view>
+                      <view class="search-info-item">可借本数: {{item.leftBookNum}}</view>
+                    </view>
+                    <image data-index="{{index}}" data-name="{{item.marc_no}}" class="search-button-updown" src="https://static.airbob.org/under-graduate/image/score/button_down.png" @tap="{{hideS[index]? 'showSearchedBookDetails' : 'hideSearchedBookDetails'}}" animation="{{spinS[index]}}">
+                  </view>
+                  <view class="search-detail-container" animation="{{showOffS[index]}}" style="border-bottom:{{isTapIndexS[index]? '1rpx solid rgba(0,0,0,0.1)' : 'none'}}">
+                    <view class="search-detail-info-all" id="searchbook{{index}}">
+                      <repeat for="{{item.positionDetail}}" key="key" item="item">
+                        <view class="search-info-item">图书位置: {{item.position}}</view>
                         <view class="search-info-item">索书号: {{item.callno}}</view>
-                        <view class="search-info-item">可借本数: {{item.leftBookNum}}</view>
-                      </view>
-                      <image data-index="{{index}}" data-name="{{item.marc_no}}" class="search-button-updown" src="https://static.airbob.org/under-graduate/image/score/button_down.png" @tap="{{hideS[index]? 'showSearchedBookDetails' : 'hideSearchedBookDetails'}}" animation="{{spinS[index]}}"/>
+                        <view class="search-info-item">状态: {{item.status}}</view>
+                        <view style="height:20rpx; width: 590rpx"></view>
+                      </repeat>
+                      <view class="search-info-divide"></view>
+                      <view class="search-info-item">所属分类: {{item.category}}</view>
+                      <view class="search-info-item">ISBN: {{item.ISBN}}</view>
+                      <view class="search-info-item">价格: {{item.price}}</view>
+                      <view class="search-info-item">简介: {{item.summary}}</view>
                     </view>
-                    <view class="search-detail-container" animation = "{{showOffS[index]}}" style="border-bottom:{{isTapIndexS[index]? '1rpx solid rgba(0,0,0,0.1)' : 'none'}}">
-                      <view class="search-detail-info-all" id="searchbook{{index}}">
-                        <repeat for="{{item.positionDetail}}" key="key" item="item">
-                          <view class="search-info-item">图书位置: {{item.position}}</view>
-                          <view class="search-info-item">索书号: {{item.callno}}</view>
-                          <view class="search-info-item">状态: {{item.status}}</view>
-                          <view style="height:20rpx; width: 590rpx"></view>
-                        </repeat>
-                        <view class="search-info-divide"></view>
-                        <view class="search-info-item">所属分类: {{item.category}}</view>
-                        <view class="search-info-item">ISBN: {{item.ISBN}}</view>
-                        <view class="search-info-item">价格: {{item.price}}</view>
-                        <view class="search-info-item">简介: {{item.summary}}</view>
-                      </view>
-                    </view>
-                  </repeat>
-                </view>
-              </scroll-view>
-            </view>
-          </swiper-item>
-          <!-- 座位查询 -->
-          <swiper-item>
-            <view class="seats-container">
-              <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px">
-                <view class="seats-head"></view>
-                <view class="seats-divide"></view>
-                <view class="seats-body">
-                  <repeat for="{{floors}}" key="key" index="index" item="item">
-                    <seats-card :lib.sync="item"></seats-card>
-                  </repeat>
-                </view>
-              </scroll-view>
-            </view>
-          </swiper-item>
-        </swiper>
-      <!-- </view> -->
-    <!-- </qy-container> -->
-  </view>
+                  </view>
+                </repeat>
+              </view>
+            </scroll-view>
+          </view>
+        </swiper-item>
+        <!-- 座位查询 -->
+        <swiper-item>
+          <view class="seats-container">
+            <scroll-view scroll-y="true" enable-back-to-top="true" style="height:{{winHeight-38}}px">
+              <view class="seats-head"></view>
+              <view class="seats-divide"></view>
+              <view class="seats-body">
+                <repeat for="{{floors}}" key="key" index="index" item="item">
+                  <seats-card :lib.sync="item"></seats-card>
+                </repeat>
+              </view>
+            </scroll-view>
+          </view>
+        </swiper-item>
+      </swiper>
+    </view>
+  </BaseContainer>
 </template>
 
 <script>
@@ -171,27 +156,33 @@ import {
   bookStoreAgain,
   bookStoreContent
 } from "@/api/library";
-import navigation from "@/components/qy-navigation";
-import container from "@/components/qy-container";
-import QyModal from "@/components/qy-modal";
+import {
+  mockLibrarySearch,
+  mockAlreadyBorrowBooksSum,
+  mockHistoricalBorrow,
+  mockBookArrears,
+  mockRemainSeats,
+  mockHotBooks,
+  mockBookStore,
+  mockBookStoreAgain,
+  mockBookStoreContent
+} from "@/mock/library";
+import BaseContainer from "@/components/baseContainer";
 import seatsCard from "../../components/seats-card";
 import { changeSecretCode } from "@/api/common";
+import JudgeStatus from "@/mixins/module";
 
 export default class Library extends wepy.page {
   config = {
     navigationBarTitleText: "图书馆"
   };
   components = {
-    "qy-navigation": navigation,
-    "qy-container": container,
-    "seats-card": seatsCard,
-    QyModal
+    BaseContainer,
+    "seats-card": seatsCard
   };
+  mixins = [JudgeStatus];
   data = {
     navTitle: "图书馆",
-    token: "",
-    phoneNumber: "",
-    studentId: "",
     bindModalVisible: false,
     bindInputPassword: "",
     userInfo: {},
@@ -245,7 +236,16 @@ export default class Library extends wepy.page {
         rooms: []
       }
     ],
-    placeholder: ""
+    visitorModeStatus: false,
+    passwordModelOptions: {
+      passwordModelProps: false,
+      placeholder: "图书馆密码（默认学号）",
+      refreshData: this.getHistoricalBorrowing,
+      bindInfo: {
+        username: wepy.getStorageSync("User").studentId,
+        domainType: "0"
+      }
+    }
   };
   methods = {
     switchNav(e) {
@@ -296,12 +296,15 @@ export default class Library extends wepy.page {
       this.$apply();
     },
     loadMoreBooks(e) {
-      if (this.searchResult.length !== 0) {
+      if (!this.visitorModeStatus && this.searchResult.length !== 0) {
         wepy.showLoading({
           title: "加载中"
         });
         this.searchedPage++;
-        bookStore(this.searchBookName, this.searchedPage).then(res => {
+        let ifMockBookStore = this.visitorModeStatus
+          ? mockBookStore(this.searchBookName, this.searchedPage)
+          : bookStore(this.searchBookName, this.searchedPage);
+        ifMockBookStore.then(res => {
           let results = res.data.data;
           if (res.data) {
             // 判断是否有更多：请求的最后一个和当前搜索结果的最后一个相同
@@ -346,7 +349,10 @@ export default class Library extends wepy.page {
       });
       async function addDetails(name, index) {
         return new Promise((resolve, reject) => {
-          bookStoreContent(name)
+          let ifMockBookStoreContent = that.visitorModeStatus
+            ? mockBookStoreContent(name)
+            : bookStoreContent(name);
+          ifMockBookStoreContent
             .then(res => {
               let detail = res.data.data;
               that.lendBooks[index].category = detail.type;
@@ -425,7 +431,10 @@ export default class Library extends wepy.page {
       function addDetails(name, index) {
         return new Promise((resolve, reject) => {
           // 发送请求, if执行成功，reslove()
-          bookStoreContent(name)
+          let ifMockBookStoreContent = that.visitorModeStatus
+            ? mockBookStoreContent(name)
+            : bookStoreContent(name);
+          ifMockBookStoreContent
             .then(res => {
               let detail = res.data.data;
               that.searchResult[index].category = detail.type;
@@ -511,7 +520,10 @@ export default class Library extends wepy.page {
     async renewBooks(e) {
       let that = this;
       wepy.showLoading();
-      await bookStoreAgain()
+      let ifMockBookStoreAgain = this.visitorModeStatus
+        ? mockBookStoreAgain()
+        : await bookStoreAgain();
+      ifMockBookStoreAgain
         .then(res => {
           let results = res.data.data;
           if (res.data) {
@@ -534,7 +546,10 @@ export default class Library extends wepy.page {
         .then(res => {
           // 请求已借书目获取that.lendBooks[j].leftDDL 和 that.lendBooks[j].newDDL
           if (res === "200") {
-            alreadyBorrowBooksSum().then(res => {
+            let ifMockAlreadyBorrowBooksSum = this.visitorModeStatus
+              ? mockAlreadyBorrowBooksSum()
+              : alreadyBorrowBooksSum();
+            ifMockAlreadyBorrowBooksSum.then(res => {
               let results = res.data.data;
               for (let i = 0; i < results.length; i++) {
                 let bar = results[i].bar;
@@ -587,7 +602,6 @@ export default class Library extends wepy.page {
     confirmSearch(e) {
       const { value } = e.detail;
       this.searchResult = [];
-      this.$apply();
       this.find(value);
       this.$apply();
     },
@@ -599,36 +613,13 @@ export default class Library extends wepy.page {
     quickSearch(e) {
       const { name } = e.target.dataset;
       this.searchResult = [];
-      // this.$apply();
       this.find(name);
       this.$apply();
     },
     bindCardPassword(e) {
       this.bindInputPassword = e.detail.value;
-    },
-    async bindHandle() {
-      await changeSecretCode(
-        wepy.getStorageSync("User").studentId,
-        this.bindInputPassword,
-        "0"
-      ).then(res => {
-        if (res.data && res.data.data) {
-          // 绑定成功
-          this.placeholder = "";
-          this.bindModalVisible = false;
-          this.init();
-        } else {
-          wepy.showModal({
-            content: "密码错误",
-            confirmText: "知道了",
-            showCancel: false,
-            confirmColor: "#353535"
-          });
-        }
-      });
     }
   };
-
   /**
    * 查询书籍接口
    */
@@ -647,7 +638,10 @@ export default class Library extends wepy.page {
     wepy.showLoading({
       title: "加载中"
     });
-    librarySearch(this.searchBookName, "1").then(res => {
+    let ifMockHistoricalBorrow = this.visitorModeStatus
+      ? mockLibrarySearch(this.searchBookName, "1")
+      : librarySearch(this.searchBookName, "1");
+    ifMockHistoricalBorrow.then(res => {
       this.searchedPage = 1;
       const {
         data: [...results],
@@ -710,12 +704,14 @@ export default class Library extends wepy.page {
       return this.lendBooks.length;
     }
   };
-
   /**
    * 获取欠款金额（需模块绑定后使用）finish
    */
   getArrearMoney() {
-    bookArrears().then(res => {
+    let ifMockHistoricalBorrow = this.visitorModeStatus
+      ? mockBookArrears()
+      : bookArrears();
+    ifMockHistoricalBorrow.then(res => {
       if (res.data) {
         if (res.data.data.charAt(0) === ".") this.arrears = "0" + res.data.data;
         else this.arrears = res.data.data;
@@ -723,15 +719,16 @@ export default class Library extends wepy.page {
       this.$apply();
     });
   }
-
   /**
    * 获取总借阅书本数（需模块绑定后使用）finish, 仅在此处判断密码更新。
    */
   getHistoricalBorrowing() {
-    historicalBorrow().then(res => {
-      if (!res.data) {
-        this.placeholder = "图书馆密码（默认学号）";
-        this.bindModalVisible = true;
+    let ifMockHistoricalBorrow = this.visitorModeStatus
+      ? mockHistoricalBorrow()
+      : historicalBorrow();
+    ifMockHistoricalBorrow.then(res => {
+      if (!res.data.success) {
+        this.passwordModelOptions.passwordModelProps = true;
         this.$apply();
       } else {
         this.totalBooksNumber = res.data.data;
@@ -739,15 +736,16 @@ export default class Library extends wepy.page {
       this.$apply();
     });
   }
-
   /**
    * 获取用户已借书目（需模块绑定后使用）
    */
   getAlreadyBorrowBooks() {
-    alreadyBorrowBooksSum().then(res => {
+    let ifMockAlreadyBorrowBooksSum = this.visitorModeStatus
+      ? mockAlreadyBorrowBooksSum()
+      : alreadyBorrowBooksSum();
+    ifMockAlreadyBorrowBooksSum.then(res => {
       let results = res.data.data;
       this.lendBooks = [];
-      this.$apply();
       if (res.data) {
         for (let i = 0; i < results.length; i++) {
           let lend = {};
@@ -763,7 +761,6 @@ export default class Library extends wepy.page {
           this.isTapIndex.push(false);
           this.hide.push(true);
         }
-        this.$apply();
         for (let i = 0; i < this.lendBooks.length; i++) {
           if (this.lendBooks[i].leftDDL <= 0) {
             this.renewAll = false;
@@ -782,7 +779,6 @@ export default class Library extends wepy.page {
       this.$apply();
     });
   }
-
   /**
    * 获取热门推荐
    */
@@ -790,7 +786,8 @@ export default class Library extends wepy.page {
     wepy.showLoading({
       title: "加载中"
     });
-    hotBooks().then(res => {
+    let ifMockHotBooks = this.visitorModeStatus ? mockHotBooks() : hotBooks();
+    ifMockHotBooks.then(res => {
       const { data } = res.data;
       data.map((item, index) => {
         this.recomends[index] = {
@@ -802,7 +799,6 @@ export default class Library extends wepy.page {
       wepy.hideLoading();
     });
   }
-
   /**
    * 获取剩余座位
    */
@@ -810,7 +806,10 @@ export default class Library extends wepy.page {
     wepy.showLoading({
       title: "加载中"
     });
-    remainSeats().then(res => {
+    let ifMockRemainSeats = this.visitorModeStatus
+      ? mockRemainSeats()
+      : remainSeats();
+    ifMockRemainSeats.then(res => {
       let results = res.data.data;
       for (let i = 0; i < 4; i++) {
         this.floors[i].rooms = [];
@@ -835,43 +834,42 @@ export default class Library extends wepy.page {
       wepy.hideLoading();
     });
   }
-
   /**
    * 页面绑定模块后的一些请求
    */
-  async onLoadRequests() {
+  onLoadRequests() {
+    wepy.showLoading({
+      title: "正在加载"
+    });
+    this.getHistoricalBorrowing();
+    this.getAlreadyBorrowBooks();
+    this.getArrearMoney();
+    wepy.hideLoading();
+  }
+  async init() {
     wepy.showLoading({
       title: "加载中"
     });
-    await this.getHistoricalBorrowing();
-    await this.getAlreadyBorrowBooks();
-    await this.getArrearMoney();
+    await this.onLoadRequests();
     wepy.hideLoading();
   }
-  async onLoad(option) {
-    wepy.getSystemInfo().then(res => {
-      this.winWidth = parseInt(res.windowWidth);
-      this.winHeight = parseInt(res.windowHeight);
+  onLoad(option) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(option.name).then(async () => {
+      wepy.getSystemInfo().then(res => {
+        this.winWidth = parseInt(res.windowWidth);
+        this.winHeight = parseInt(res.windowHeight);
+      });
+      if (option.page === "search") {
+        this.currentTab = 1;
+      } else if (option.page === "seats") {
+        this.currentTab = 2;
+      } else {
+        this.currentTab = 0;
+        this.init();
+      }
       this.$apply();
     });
-    this.token = wepy.getStorageSync("token");
-    this.$apply();
-    let userInfomations = wepy.getStorageSync("User");
-    this.phoneNumber = userInfomations.nativeInformation.phoneNumber;
-    this.studentId = userInfomations.nativeInformation.studentId;
-    this.userId = userInfomations.nativeInformation.userId;
-    // 用于模块绑定
-    // this.bindingDomainUserName = this.studentId;
-    this.$apply();
-    if (option.page === "search") {
-      this.currentTab = 1;
-    } else if (option.page === "seats") {
-      this.currentTab = 2;
-    } else {
-      this.currentTab = 0;
-      this.onLoadRequests();
-    }
-    this.$apply();
   }
 }
 </script>
@@ -965,51 +963,72 @@ export default class Library extends wepy.page {
         width 400rpx
         height 291rpx
         margin-bottom 50rpx
+    .hist-container
+      width 665rpx
+      height 97rpx
+      display flex
+      flex-direction row
+      align-items center
+      justify-content space-between
+      border-radius 20rpx
+      margin 30rpx auto
+      padding 26rpx 30rpx
+      box-shadow 0rpx 0rpx 10rpx 0rpx rgba(0, 0, 0, 0.05)
+      box-sizing border-box
+      .hist-title
+        width 570rpx
+        span
+          font-size 30rpx
+          font-weight bold
+          color #353535
+      .button-right
+        width 31rpx
+        height 16rpx
+        transform rotate(-90deg)
     .books-list
       display flex
       flex-direction column
       align-items center
       width 750rpx
       .book-container
-        width 675rpx
+        width 665rpx
         min-height 180rpx
-        border-top 1rpx solid rgba(0, 0, 0, 0.1)
-        border-right 1rpx solid rgba(0, 0, 0, 0.1)
-        border-left 1rpx solid rgba(0, 0, 0, 0.1)
+        box-shadow 0rpx 0rpx 10rpx 0rpx rgba(0, 0, 0, 0.05)
         border-radius 20rpx
-        margin-bottom 29rpx
+        margin-bottom 30rpx
         display flex
+        flex-direction row
+        justify-content space-between
         align-items center
+        padding 26rpx 30rpx
+        box-sizing border-box
         .book-info-all
-          width 590rpx
           display flex
           flex-direction column
           align-items flex-start
           font-size 24rpx
           color #353535
           line-height 45rpx
-          margin 30rpx 0rpx 30rpx 30rpx
+          width 570rpx
           .book-name
             font-size 30rpx
             font-weight bold
         .button-updown
-          width 35rpx
-          height 20rpx
+          width 31rpx
+          height 16rpx
       .book-detail-container
-        width 675rpx
+        width 665rpx
         height 0
         overflow hidden
-        border-right 1rpx solid rgba(0, 0, 0, 0.1)
-        border-left 1rpx solid rgba(0, 0, 0, 0.1)
         border-radius 0 0 20rpx 20rpx
         font-size 24rpx
         color #353535
-        margin-top -29rpx
-        margin-bottom 29rpx
+        margin-top -30rpx
+        margin-bottom 30rpx
         z-index 1000
+        box-shadow 0rpx 0rpx 10rpx 0rpx rgba(0, 0, 0, 0.05)
         .book-detail-info-all
-          width 590rpx
-          border-top 2rpx solid #dddddd
+          border-top 1rpx solid #E3E3E3
           display flex
           flex-direction column
           align-items flex-start

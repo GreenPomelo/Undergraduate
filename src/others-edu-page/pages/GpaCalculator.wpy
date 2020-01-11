@@ -1,27 +1,29 @@
 <template lang="pug">
-view.gpa
-  view.header
-    view.banner-wrapper
-      image.banner(src="https://static.airbob.org/under-graduate/gpa/gpa_pic_blackboard.png")
-    view.info-wrapper
-      text.title GPA:
-      text.gpa-number {{gpa}}
-      text.credit 已修学分：{{credits}}（除任选课）
+BaseContainer(navTitle="GPA计算器")
+  view(slot="qy-content")
+    view.gpa
+      view.header
+        view.banner-wrapper
+          image.banner(src="https://static.airbob.org/under-graduate/gpa/gpa_pic_blackboard.png")
+        view.info-wrapper
+          text.title GPA:
+          text.gpa-number {{gpa}}
+          text.credit 已修学分：{{credits}}（除任选课）
 
-  view.gap
+      view.gap
 
-  view.custom-score-wrapper
-    repeat(for="{{customScores}}" key="key" index="index" item="score")
-      custom-score( :score="score" @modifyCredit.user="handleCreditInput" @modifyCustomScore.user="handleCustomScore" @modifyName.user="handleCourseNameInput" @close.user="closeCustomScore")
+      view.custom-score-wrapper
+        repeat(for="{{customScores}}" key="key" index="index" item="score")
+          custom-score( :score="score" @modifyCredit.user="handleCreditInput" @modifyCustomScore.user="handleCustomScore" @modifyName.user="handleCourseNameInput" @close.user="closeCustomScore")
 
 
-  view.card-wrapper
-    repeat(for="{{scores}}" key="key" index="index" item="score")
-      card( :termScores.sync="score" :scoreItemHeight.sync="scoreItemHeight" @delete.user="deleteScore" @modifyScore.user="handleScoreInput")
+      view.card-wrapper
+        repeat(for="{{scores}}" key="key" index="index" item="score")
+          card( :termScores.sync="score" :scoreItemHeight.sync="scoreItemHeight" @delete.user="deleteScore" @modifyScore.user="handleScoreInput")
 
-view.footer
-  view.add-btn( @tap="addCouse") 添加课程
-  view.calculate-btn( @tap="calculateGPA") 查看 GPA
+    view.footer
+      view.add-btn( @tap="addCouse") 添加课程
+      view.calculate-btn( @tap="calculateGPA") 查看 GPA
 </template>
 
 <script>
@@ -30,6 +32,9 @@ import GpaCard from "../components/GpaCard";
 import GpaCustomScore from "../components/GpaCustomScore";
 import GpaMixin from "../../mixins/Gpa/Gpa.js";
 import { getUserGrade } from "@/api/education";
+import { mockGetUserGrade } from "@/mock/education";
+import JudgeStatus from "@/mixins/module";
+import BaseContainer from "@/components/baseContainer";
 
 export default class GPACalculator extends wepy.page {
   config = {
@@ -44,15 +49,17 @@ export default class GPACalculator extends wepy.page {
     scores: [], // 所有成绩
     customScores: [], // 自定义成绩
     scoreItemHeight: null,
-    screenWidth: null
+    screenWidth: null,
+    visitorModeStatus: false
   };
 
   components = {
     card: GpaCard,
-    "custom-score": GpaCustomScore
+    "custom-score": GpaCustomScore,
+    BaseContainer
   };
 
-  mixins = [GpaMixin];
+  mixins = [GpaMixin, JudgeStatus];
 
   computed = {
     gpa() {
@@ -142,7 +149,7 @@ export default class GPACalculator extends wepy.page {
 
   // 获取成绩
   getScore() {
-    return getUserGrade();
+    return !this.visitorModeStatus ? getUserGrade() : mockGetUserGrade();
   }
 
   // 初始化成绩数据
@@ -160,14 +167,17 @@ export default class GPACalculator extends wepy.page {
 
       if (res.success === true) {
         const { data } = res;
-        const { credits, scores, sumOfCreditMultiplyPoint } = this.handleScores(
-          data.score
+        const sortScore = data.score.sort(
+          (x, y) =>
+            Number(x.year.substring(0, 4)) - Number(y.year.substring(0, 4)) ||
+            Number(x.term) - Number(y.term)
         );
-
+        const { credits, scores, sumOfCreditMultiplyPoint } = this.handleScores(
+          sortScore
+        );
         this.handleFirstScores(scores[0]);
         this.mountData(credits, scores, sumOfCreditMultiplyPoint);
         this.$apply();
-
         this.setScoreItemHeight();
       } else {
         return false;
@@ -229,8 +239,11 @@ export default class GPACalculator extends wepy.page {
   }
 
   // 页面加载的时候请求成绩数据
-  onLoad() {
-    this.initData();
+  onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(op.name).then(() => {
+      this.initData();
+    });
   }
 }
 </script>

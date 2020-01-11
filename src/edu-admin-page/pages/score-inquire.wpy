@@ -1,73 +1,79 @@
 <template>
-  <view>
-    <qy-modal width="500rpx">
-			<view slot="content" class="bind-container">
-				<input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
-				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
-			</view>
-		</qy-modal>
-    <view class="cover" hidden="{{!showModal}}" animation="{{coverAnimation}}">
-    </view>
-    <view class="cover-modal" hidden="{{!showModal}}">
-      <view>排名根据使用小程序用户产生</view>
-      <view>仅供参考，具体请通过辅导员查询</view>
-      <view style="color:#47CFF5;margin-top:30rpx" @tap="getRankRule">知道了</view>
-    </view>
-    <view slot="qy-content" class="container">
-      <view class="top-container">
-        <view class="performance-point">{{GPA}}
-          <view class="average-point">平 均 绩 点</view>
-        </view>
-        <view class="rank-thing" @tap="rankQuestion">
-          <view class="ranking">当前排名：{{rank}}/{{collegeNumber}}</view><view class="rank-question"></view>
-        </view>
+  <BaseContainer navTitle="成绩查询" :passwordModelOptions.sync="passwordModelOptions">
+    <view slot="qy-content">
+      <view class="cover" hidden="{{!showModal}}" animation="{{coverAnimation}}">
       </view>
-      <view class="credit-column">
-        <view class="credit-item"><view>总学分</view><view class="credit-item-score">{{creditSelected}}</view></view>
-        <view class="credit-item"><view>已修学分</view><view class="credit-item-score">{{creditGained}}</view></view>
-        <view class="credit-item" style="border:none"><view>重修学分</view><view class="credit-item-score">{{creditRetake}}</view></view>
+      <view class="cover-modal" hidden="{{!showModal}}">
+        <view>排名根据使用小程序用户产生</view>
+        <view>仅供参考，具体请通过辅导员查询</view>
+        <view style="color:#47CFF5;margin-top:30rpx" @tap="getRankRule">知道了</view>
       </view>
-      <view class="divide"></view>
-      <view style="position:relative;">
-        <view hidden="{{loadHide}}" class="hide-container">
-          <view class="boxLoading"></view>
+      <view slot="qy-content" class="container">
+        <view class="top-container">
+          <view class="performance-point">{{GPA}}
+            <view class="average-point">平 均 绩 点</view>
+          </view>
+          <view class="rank-thing" @tap="rankQuestion">
+            <view class="ranking">当前排名：{{rank}}/{{collegeNumber}}</view><view class="rank-question"></view>
+          </view>
         </view>
-        <repeat for="{{terms}}" index="index" key="key" item="item">
-          <view class="term-card" data-index="{{index}}" @tap="{{hide[index] ? 'showDetails' : 'hideDetails'}}"><view class="term-card-item">{{item.term}}</view>
-            <image data-index="{{index}}" hidden = "{{Loading[index]}}" animation="{{spinS[index]}}" src="https://static.airbob.org/under-graduate/image/score/button_down.png" mode="aspectFill"/>
-            <i class="weui-loading" wx:if="{{Loading[index]}}"/>
-            <view class="detail-cover" id="detail{{index}}" animation="{{animationData[index]}}">
-              <repeat for="{{item.course}}" index="INDEX" key="KEY" item="ITEM">
-                <view class="detail-information" id="detailCourse{{INDEX}}">
-                  <view class="main-info">
-                    <view class="detail-name">{{ITEM.courseName}}</view>
-                    <view class="detail-info">编号：{{ITEM.courseCode}} 学分{{ITEM.credit}}</view>
-                    <view class="detail-info">成绩：{{ITEM.score}}（正考）
-                      <span wx:if="{{ITEM.resitScore !== ''}}">{{ITEM.resitScore}}（补考）</span>
-                      <span wx:if="{{ITEM.retakeScore !== ''}}">{{ITEM.retakeScore}}（重修）</span>
-                      </view>
+        <view class="credit-column">
+          <view class="credit-item"><view>总学分</view><view class="credit-item-score">{{creditSelected}}</view></view>
+          <view class="credit-item"><view>已修学分</view><view class="credit-item-score">{{creditGained}}</view></view>
+          <view class="credit-item" style="border:none"><view>重修学分</view><view class="credit-item-score">{{creditRetake}}</view></view>
+        </view>
+        <view class="divide"></view>
+        <view style="position:relative;">
+          <view hidden="{{loadHide}}" class="hide-container">
+            <view class="boxLoading"></view>
+          </view>
+          <repeat for="{{terms}}" index="index" key="key" item="item">
+            <view class="term-card" data-index="{{index}}" @tap="{{hide[index] ? 'showDetails' : 'hideDetails'}}"><view class="term-card-item">{{item.term}}</view>
+              <image data-index="{{index}}" hidden = "{{Loading[index]}}" animation="{{spinS[index]}}" src="https://static.airbob.org/under-graduate/image/score/button_down.png" mode="aspectFill"/>
+              <i class="weui-loading" wx:if="{{Loading[index]}}"/>
+              <view class="detail-cover" id="detail{{index}}" animation="{{animationData[index]}}">
+                <repeat for="{{item.course}}" index="INDEX" key="KEY" item="ITEM">
+                  <view class="detail-information" id="detailCourse{{INDEX}}">
+                    <view class="main-info">
+                      <view class="detail-name">{{ITEM.courseName}}</view>
+                      <view class="detail-info">编号：{{ITEM.courseCode}} 学分{{ITEM.credit}}</view>
+                      <view class="detail-info">成绩：{{ITEM.score}}（正考）
+                        <span wx:if="{{ITEM.resitScore !== ''}}">{{ITEM.resitScore}}（补考）</span>
+                        <span wx:if="{{ITEM.retakeScore !== ''}}">{{ITEM.retakeScore}}（重修）</span>
+                        </view>
+                    </view>
+                    <view class="credit-info">{{ITEM.point}}</view>
                   </view>
-                  <view class="credit-info">{{ITEM.point}}</view>
-                </view>
-              </repeat>
+                </repeat>
+              </view>
             </view>
+          </repeat>
+          <view hidden="{{terms[0] || !loadHide}}">
+            <view class="image-container">
+              <image src="https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E9%A1%B5_%E7%A9%BA.png" style="width:400rpx;height:300rpx" mode="aspecfFit"/>
+            </view>
+            <view class="words">大学生活刚刚开始，加油～</view>
           </view>
-        </repeat>
-        <view hidden="{{terms[0] || !loadHide}}">
-          <view class="image-container">
-            <image src="https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E9%A1%B5_%E7%A9%BA.png" style="width:400rpx;height:300rpx" mode="aspecfFit"/>
-          </view>
-          <view class="words">大学生活刚刚开始，加油～</view>
         </view>
       </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 <script>
 import wepy from "wepy";
-import modal from "../../components/qy-modal";
 import { changeSecretCode } from "@/api/common";
+import JudgeStatus from "@/mixins/module";
 import { getUserGrade, rankingSelf } from "@/api/education";
+import { mockGetUserGrade } from "@/mock/education";
+import GpaMixin from "../../mixins/Gpa/Gpa";
+import BaseContainer from "@/components/baseContainer";
+import { connect } from "wepy-redux";
+
+@connect({
+  graduateIdentity(state) {
+    return state.graduateReducer.graduateIdentity;
+  }
+})
 export default class Score extends wepy.page {
   config = {
     navigationBarTitleText: "成绩查询"
@@ -90,11 +96,22 @@ export default class Score extends wepy.page {
     rank: "",
     loadHide: false,
     spinS: [],
-    placeholder: ""
+    placeholder: "",
+    passwordModelOptions: {
+      passwordModelProps: false,
+      placeholder: "正方密码",
+      refreshData: this.init,
+      bindInfo: {
+        username: wepy.getStorageSync("User").studentId,
+        domainType: "1"
+      }
+    },
+    visitorModeStatus: false
   };
   components = {
-    "qy-modal": modal
+    BaseContainer
   };
+  mixins = [JudgeStatus, GpaMixin];
   changeModuleStatus(status) {
     let that = this;
     return new Promise(resolve => {
@@ -105,27 +122,6 @@ export default class Score extends wepy.page {
   methods = {
     bindCardPassword(e) {
       this.bindInputPassword = e.detail.value;
-    },
-    async bindHandle() {
-      await changeSecretCode(
-        wepy.getStorageSync("User").studentId,
-        this.bindInputPassword,
-        "1"
-      ).then(res => {
-        if (res.data && res.data.data) {
-          // 绑定成功
-          this.placeholder = "";
-          this.$invoke("qy-modal", "close");
-          this.init();
-        } else {
-          wepy.showModal({
-            content: "密码错误",
-            confirmText: "知道了",
-            showCancel: false,
-            confirmColor: "#353535"
-          });
-        }
-      });
     },
     async rankQuestion() {
       let that = this;
@@ -198,7 +194,7 @@ export default class Score extends wepy.page {
         timingFunction: "ease"
       });
       showAnimation.height(0 + "rpx").step();
-      spin.rotate(-360).step();
+      spin.rotate(0).step();
       this.spinS[index] = spin.export();
       this.animationData[index] = showAnimation.export();
       this.$apply();
@@ -255,32 +251,58 @@ export default class Score extends wepy.page {
     });
   }
   async init() {
-    let that = this;
     await wepy.getSystemInfo().then(res => {
-      that.screenWidth = parseFloat(res.screenWidth / 750);
+      this.screenWidth = parseFloat(res.screenWidth / 750);
     });
-    let res = await getUserGrade();
-    if (!res.data) {
-      this.placeholder = "正方密码";
-      this.$invoke("qy-modal", "open");
-      this.$apply();
-    }
-    if (res.data) {
-      that.loadHide = true;
+    let res = this.visitorModeStatus
+      ? await mockGetUserGrade()
+      : await getUserGrade();
+    if (!res.data.data) {
+      this.passwordModelOptions.passwordModelProps = true;
+    } else {
       let data = res.data.data;
+      const { studentId } = wepy.getStorageSync("User");
+      if (this.graduateIdentity) {
+        const { credits } = this.handleScores(
+          res.data.data.score.sort(
+            (x, y) =>
+              Number(x.year.substring(0, 4)) - Number(y.year.substring(0, 4)) ||
+              Number(x.term) - Number(y.term)
+          )
+        );
+        let reTakeScore;
+        const reTakeData = res.data.data.score.filter(item => item.retakeScore);
+        if (reTakeData.length !== 0) {
+          reTakeScore = reTakeData.reduce(
+            (x, y) => Number(x.credit) + Number(y.credit)
+          );
+        } else {
+          reTakeScore = 0;
+        }
+        this.creditGained = credits;
+        this.creditSelected = credits + reTakeScore;
+        this.creditRetake = reTakeScore;
+      } else {
+        this.creditGained = data.creditGained;
+        this.creditSelected = data.creditSelected;
+        this.creditRetake = data.creditRetake === "" ? "0" : data.creditRetake;
+      }
+      this.loadHide = true;
       let allScore = data.score;
-      await that.forEachTerm(allScore);
-      that.GPA = data.gpa;
-      that.creditGained = data.creditGained;
-      that.creditRetake = data.creditRetake === "" ? "0" : data.creditRetake;
-      that.creditSelected = data.creditSelected;
+      await this.forEachTerm(allScore);
+      this.GPA = data.gpa;
     }
-    const rankRes = await rankingSelf();
-    this.rank = rankRes.data.data.rank;
-    this.collegeNumber = rankRes.data.data.total;
+    if (!this.visitorModeStatus) {
+      const rankRes = await rankingSelf();
+      this.rank = Number(rankRes.data.data.rank) + 1;
+      this.collegeNumber = rankRes.data.data.total;
+    } else {
+      this.rank = "100";
+      this.collegeNumber = 200;
+    }
     if (this.terms.length === 0) {
       this.GPA = "-.--";
-      that.ranl = "-";
+      this.ranl = "-";
     } else {
       for (let i = 0; i < this.terms.length; i++) {
         this.Loading.push(false);
@@ -289,8 +311,11 @@ export default class Score extends wepy.page {
     }
     this.$apply();
   }
-  async onLoad() {
-    this.init();
+  async onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(op.name).then(() => {
+      this.init();
+    });
   }
 }
 </script>

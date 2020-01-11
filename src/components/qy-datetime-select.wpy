@@ -22,7 +22,7 @@ export default class QyDatetimeSelect extends wepy.component {
     },
     endDate: {
       type: String,
-      default: "2020-01-01"
+      default: "2030-01-01"
     },
     startTime: {
       type: String,
@@ -46,21 +46,21 @@ export default class QyDatetimeSelect extends wepy.component {
     this.date = this.startDate;
     this.begintime = this.startTime;
     this.endtime = this.startTime;
-    this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+    this.$emit("datetimeSelect", this.date, this.begintime, this.endtime);
   }
   methods = {
     dateChange(e) {
       this.date = e.detail.value;
-      this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+      this.$emit("datetimeSelect", this.date, this.begintime, this.endtime);
     },
     begintimeChange(e) {
       this.begintime = e.detail.value;
-      this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+      this.$emit("datetimeSelect", this.date, this.begintime, this.endtime);
     },
     endtimeChange(e) {
       // end时间如果比begin小处理下。。
       this.endtime = e.detail.value;
-      this.$emit("datetime-select", this.date, this.begintime, this.endtime);
+      this.$emit("datetimeSelect", this.date, this.begintime, this.endtime);
     }
   };
   formateDate(date, fmt) {

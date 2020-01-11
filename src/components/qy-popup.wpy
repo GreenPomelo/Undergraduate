@@ -1,0 +1,84 @@
+<template>
+  <view
+    class="pop-up-container"
+    style="{{ displayStatus && !openPage ? 'display:flex' : 'display:none'}}"
+  >
+    <view class="pop-up-wrapper">
+      <view class="close-pop-up" @tap="closeThePopup">
+        <view class="close-wrapper">
+          <image src="https://static.airbob.org/under-graduate/popup/close.png">
+        </view>
+      </view>
+      <view class="pop-up-body" @tap="navToWebview">
+        <image src="https://static.airbob.org/under-graduate/popup/window.png">
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class QyPopUp extends wepy.component {
+  props = {
+    link: String,
+    openPage: Boolean
+  };
+  data = {
+    displayStatus: true
+  };
+  methods = {
+    navToWebview() {
+      wepy.navigateTo({
+        url: `../others-page/pages/display-webview?link=${this.link}`
+      });
+      this.displayStatus = false;
+      wepy.setStorageSync("annual", false);
+    },
+    closeThePopup() {
+      this.displayStatus = false;
+      wepy.setStorageSync("annual", false);
+      this.$emit("changeAnnualStatus");
+    }
+  };
+  onLoad() {
+    this.displayStatus = wepy.getStorageSync("annual") ? true : false;
+    this.$apply();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.pop-up-container
+  position absolute
+  top 0
+  bottom 0
+  right 0
+  left 0
+  z-index 500
+  display flex
+  justify-content center
+  align-items center
+  background-color rgba(0, 0, 0, 0.4)
+  overflow hidden
+  .pop-up-wrapper
+    width 100vw
+    height 100vh
+    display flex
+    flex-direction column
+    justify-content center
+    align-items center
+    .close-pop-up
+      width 460rpx
+      height 50rpx
+      display flex
+      justify-content flex-end
+      margin-bottom 10rpx
+      .close-wrapper
+        image
+          width 50rpx
+          height 50rpx
+    .pop-up-body
+      image
+        width 460rpx
+        height 700rpx
+</style>

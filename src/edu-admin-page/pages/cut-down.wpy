@@ -1,57 +1,113 @@
 <template>
-  <view>
-    <QyModal containerClass="cutdown-modal-containerClass" height="510rpx" width="605rpx">
-      <view slot="content" class="slot-content">
-        <input class="input space" value="{{subject}}" placeholder-class="placeholder" placeholder="科目名称" @input="handleInput" data-input="subject" />
-        <QyDatetimeSelect style="margin-bottom:28rpx;" />
-        <input class="input space" value="{{room}}" placeholder-class="placeholder" placeholder="地点" @input="handleInput" data-input="room" />
-        <input class="input space" value="{{teacher}}" placeholder-class="placeholder" placeholder="老师" @input="handleInput" data-input="teacher" />
-        <button class="add-button" @tap.stop="addSubject" data-input="subject">增加课程</button>
-      </view>
-    </QyModal>
-    <QyQuestionModal width="auto">
-      <view slot="content" class="question-container">
-        <view class="bb">
-          <text class="left-container">课程表相关</text>
-          <text class="right-container">由学生个人课表通过课名和老师名过滤一次之后得到的考试安排</text>
+  <BaseContainer navTitle="考试倒计时">
+    <view slot="qy-content">
+      <view>
+        <QyModal containerClass="cutdown-modal-containerClass" height="550rpx" width="605rpx">
+          <view slot="content" class="slot-content">
+            <input
+              class="input space"
+              value="{{subject}}"
+              placeholder-class="placeholder"
+              placeholder="{{placeholder.subject}}"
+              @input="handleInput"
+              data-input="subject"
+            >
+            <QyDatetimeSelect endDate="2030-01-01" style="margin-bottom:28rpx;"/>
+            <input
+              class="input space"
+              value="{{room}}"
+              placeholder-class="placeholder"
+              placeholder="{{placeholder.room}}"
+              @input="handleInput"
+              data-input="room"
+            >
+            <input
+              class="input space"
+              value="{{teacher}}"
+              placeholder-class="placeholder"
+              placeholder="{{placeholder.teacher}}"
+              @input="handleInput"
+              data-input="teacher"
+            >
+            <button class="add-button" @tap.stop="addSubject" data-input="subject">增加课程</button>
+          </view>
+        </QyModal>
+        <QyQuestionModal width="auto">
+          <view slot="content" class="question-container">
+            <view class="bb">
+              <text class="left-container">我的考试</text>
+              <text class="right-container">由学生个人课表通过课名和老师名过滤一次之后得到的考试安排</text>
+            </view>
+            <view class="bb" style="margin-top:20rpx;margin-bottom:20rpx;">
+              <text class="left-container">专业考试</text>
+              <text class="right-container">该专业所有考试安排</text>
+            </view>
+            <view class="button" @tap.stop="isQuestionModalVisible" data-is-visible="{{false}}">知道了</view>
+          </view>
+        </QyQuestionModal>
+        <view class="exam-card">
+          <view class="exam-card-top">
+            <repeat for="{{examCard}}" key="index" index="index" item="item">
+              <view class="exam-card-top-item {{currentTab==index ? 'active' : ''}}"  data-current="{{index}}"  @tap="handleSwiperChange">
+                {{item.type}}
+              </view>
+            </repeat>
+          </view>
+          <view class="exam-card-main" >
+            <swiper current="{{currentTab}}" style="box-shadow: {{currentTab === 0 ? '0px 0px 15rpx #a2f8d8' : '0px 0px 15rpx #f3dc8d'}}" class="swiper-container" duration="200">
+              <repeat for="{{examCard}}" key="index" index="index" item="item">
+                <swiper-item  class="exam-card-item" catchtouchmove="stopTouchMove">
+                  <view>
+                    <view class="question" @tap.stop="isQuestionModalVisible" data-is-visible="{{true}}"></view>
+                    <view class="remaining-times">{{item.remainingTimes}}</view>
+                    <view class="remaining-times-title">剩余科目</view>
+                    <view class="subtitle">
+                      <p>{{item.subtitle}}</p>
+                    </view>
+                    </view>
+                </swiper-item>
+              </repeat>
+            </swiper>
+          </view>
         </view>
-        <view class="bb" style="margin-top:20rpx;margin-bottom:8rpx;">
-          <text class="left-container">专业安排相关</text>
-          <text class="right-container">该专业所有考试安排</text>
+        <view class='devide-line'/>
+        <view class="container" style="height:{{clientHeight}}px" >
+          <view class="swiper-container" animation="{{toggleAnimation}}">
+            <repeat for="{{examCard}}" key="index" index="index" item="examCardItem">
+              <view class="swiper-item" id="swiper-item-{{index}}">
+                <view class="head-container">
+                  <text class="text" style="{{fetchdata2.length === 0?'display:none':''}}">近期考试</text>
+                  <image
+                    class="add"
+                    mode="widthFix"
+                    src="https://static.airbob.org//QjE2MDEyMzI3LXBsdXMucG5n"
+                    @tap.stop="addModal"
+                  >
+                </view>
+                <view wx:for="{{examCardItem.subjects.unFinished}}" wx:key="{{index}}" >
+                  <view class="unfinished-line" hidden="{{index ===0}}" ></view>
+                  <SubjectCard :item.sync="item" :isFinished="false" :distanceX.sync="distanceX[index]" :bg.sync="unfinishBg[index%3]"/>
+                </view>
+                <view class='devide-line'/>
+                <text class="finish-text" style="{{fetchdata1.length === 0?'display:none':''}}">已结束</text>
+                <view wx:for="{{examCardItem.subjects.finished}}" wx:key="{{index}}">
+                  <SubjectCard :item.sync="item" :isFinished="true" :show.sync="shows[index]"/>
+                </view>
+              </view>
+            </repeat>
+          </view>
+          <view style="{{hasExam?'display:none':''}}">
+            <image
+              class="no-image"
+              mode="widthFix"
+              src="https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E6%8F%92%E7%94%BB.png"
+            >
+            <view class="no-text">考试安排还没出来哦</view>
+          </view>
         </view>
-        <view class="button" @tap.stop="hideQuestionModal">知道了</view>
-      </view>
-    </QyQuestionModal>
-    <view class="container">
-      <view class="select-container">
-        <view class="select-title" @tap.stop="toggleDrop">{{current==="timetable"?"课程表相关":"专业相关"}}</view>
-        <!-- <image class="arrow" mode="widthFix" animation="{{arrowAnimation}}" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/arrow2.png" /> -->
-        <!-- <view class="drop" style="{{dropOpen===true?'':'display:none'}}">
-                  <view @tap.stop="changeTimetable" class="drop-text">课程表相关</view>
-                  <view @tap.stop="changeProfession" class="drop-text">专业安排相关</view>
-                </view> -->
-        <view class="question" @tap.stop="showQuestionModal">?</view>
-      </view>
-      <image class="line" mode="widthFix" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E9%A1%B6%E9%83%A8%E6%A8%AA%E7%BA%BF.png" />
-      <view class="head-container">
-        <text class="text" style="{{fetchdata2.length === 0?'display:none':''}}">未结束科目</text>
-        <image class="add" mode="widthFix" src="https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E5%A2%9E%E5%8A%A0.png" @tap.stop="addModal" />
-      </view>
-      <view class="line" />
-      <repeat for="{{unfinishSubject}}" key="index" index="index" item="item">
-        <SubjectCard1 :item.sync="item" :isFinished="false" :bg.sync="unfinishBg[index%3]" />
-      </repeat>
-      <text class="text" style="{{fetchdata1.length === 0?'display:none':''}}">已结束科目</text>
-      <view class="line" />
-      <repeat for="{{finishSubject}}" key="index" index="index">
-        <SubjectCard2 :item.sync="item" :isFinished="true" :show.sync="shows[index]" />
-      </repeat>
-      <view style="{{fetchdata1.length === 0 && fetchdata2.length ===0?'':'display:none'}}">
-        <image class="no-image" mode="widthFix" src="https://static.airbob.org/under-graduate/%E7%BC%BA%E7%9C%81%E6%8F%92%E7%94%BB.png" />
-        <view class="no-text">考试安排还没出来哦</view>
       </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
@@ -59,6 +115,7 @@ import wepy from "wepy";
 import SubjectCard from "../components/subject-card";
 import QyModal from "@/components/qy-modal";
 import QyDatetimeSelect from "@/components/qy-datetime-select";
+import JudgeStatus from "@/mixins/module";
 import {
   strikeOutYourExam,
   restoreYourOwnExam,
@@ -66,24 +123,33 @@ import {
   selfExam,
   getYourOwnExam
 } from "@/api/education";
+import BaseContainer from "@/components/baseContainer";
+
 export default class CutDown extends wepy.page {
   components = {
-    SubjectCard1: SubjectCard,
-    SubjectCard2: SubjectCard,
+    SubjectCard,
     QyModal,
     QyQuestionModal: QyModal,
-    QyDatetimeSelect
+    QyDatetimeSelect,
+    BaseContainer
   };
   config = {
     enablePullDownRefresh: true
   };
+  mixins = [JudgeStatus];
   data = {
-    current: "timetable", // or profession
-    // dropOpen: false,
-    subjects: [],
-    shows: [],
-    fetchdata1: [], // 课程表相关
-    fetchdata2: [], // 专业安排相关
+    placeholder: {
+      subject: "科目名称",
+      room: "地点",
+      teacher: "老师"
+    },
+    shows: [], // 控制已结束的卡片是否展开
+    distanceX: [], // 未结束的每个滑块的距离
+    tempDistanceX: [], // 临时的未结束的每个滑块的距离
+    rawSubjects: {
+      fetchdata1: [], // 课程表相关
+      fetchdata2: [] // 专业安排相关
+    },
     subject: "",
     room: "",
     beginTimestamp: 0,
@@ -106,17 +172,60 @@ export default class CutDown extends wepy.page {
           "linear-gradient( 45deg, rgb(253,178,59) 0%, rgb(252,196,107) 100%)",
         right: "rgb(252,192,97)"
       }
-    ]
+    ],
+    currentTab: 0,
+    clientHeight: "",
+    examCard: [
+      {
+        id: 0,
+        type: "我的考试",
+        remainingTimes: "",
+        subtitle: "考试已经结束了",
+        subjects: {
+          unFinished: [],
+          finished: []
+        }
+      },
+      {
+        id: 1,
+        type: "专业考试",
+        remainingTimes: "",
+        subtitle: "考试已经结束了",
+        subjects: {
+          unFinished: [],
+          finished: []
+        }
+      }
+    ],
+    toggleAnimation: {}
   };
-  onPullDownRefresh() {
-    this.current = "timetable";
-    this.getSubjects();
+  async onPullDownRefresh() {
+    await this.fetchData(true);
+    await this.onLoad();
     wepy.stopPullDownRefresh();
+    wepy.showToast({
+      title: "刷新成功",
+      icon: "success",
+      duration: 1000
+    });
   }
   events = {
+    movableViewTouchEnd: () => {
+      this.distanceX = this.tempDistanceX;
+      this.$apply();
+    },
+    movableViewChange: (itemIndex, itemX) => {
+      this.tempDistanceX = new Array(
+        this.examCard[this.currentTab].subjects.unFinished.length
+      ).fill(0);
+      this.tempDistanceX[itemIndex] = itemX * 2;
+      this.$apply();
+    },
     showchange: index => {
       // 切换已完成科目的可见状态
       this.shows[index] = !this.shows[index];
+      setTimeout(this.getClientHeight.bind(this), 200);
+      this.$apply();
     },
     down: async (originIndex, coursecode, courseteacher) => {
       // 手动把一个课程移动到下面 删除
@@ -127,21 +236,13 @@ export default class CutDown extends wepy.page {
       wepy.hideLoading();
       if (res.data) {
         // 删除成功
-        this[`fetchdata${this.current === "timetable" ? "1" : "2"}`][
+        this.rawSubjects[`fetchdata${this.currentTab + 1}`][
           originIndex
         ].enable = false;
-        this.subjects = this.subjects.map((item, index) => {
-          if (originIndex === index) {
-            return {
-              ...item,
-              handDown: true,
-              handUp: false
-            };
-          }
-          return {
-            ...item
-          };
-        });
+        const { fetchdata1, fetchdata2 } = this.rawSubjects;
+        this.initFetchData(fetchdata1, fetchdata2);
+        this.initShowAndX();
+        this.getClientHeight();
         wepy.showToast({
           title: "删除课程成功",
           icon: "none",
@@ -167,21 +268,13 @@ export default class CutDown extends wepy.page {
       );
       wepy.hideLoading();
       if (res.data) {
-        this[`fetchdata${this.current === "timetable" ? "1" : "2"}`][
+        this.rawSubjects[`fetchdata${this.currentTab + 1}`][
           originIndex
         ].enable = true;
-        this.subjects = this.subjects.map((item, index) => {
-          if (originIndex === index) {
-            return {
-              ...item,
-              handDown: false,
-              handUp: true
-            };
-          }
-          return {
-            ...item
-          };
-        });
+        const { fetchdata1, fetchdata2 } = this.rawSubjects;
+        this.initFetchData(fetchdata1, fetchdata2);
+        this.initShowAndX();
+        this.getClientHeight();
         wepy.showToast({
           title: "恢复课程成功",
           icon: "none",
@@ -196,7 +289,7 @@ export default class CutDown extends wepy.page {
       }
       this.$apply();
     },
-    "datetime-select": (date, begintime, endtime) => {
+    datetimeSelect: (date, begintime, endtime) => {
       date = date.replace(/-/g, "/");
       const begin = new Date(`${date} ${begintime}`);
       const end = new Date(`${date} ${endtime}`);
@@ -204,7 +297,23 @@ export default class CutDown extends wepy.page {
       this.duration = (end.getTime() - begin.getTime()) / 1000 / 60; // 分钟
     }
   };
+  watch = {
+    currentTab() {
+      this.methods.toggle.call(this);
+    }
+  };
   methods = {
+    toggle() {
+      const animation = wepy.createAnimation({
+        duration: 200,
+        timingFunction: "ease-out"
+      });
+      this.toggleAnimation = animation
+        .translateX(`${this.currentTab !== 0 ? -100 : 0}vw`)
+        .step()
+        .export();
+      this.$apply();
+    },
     addModal() {
       // 打开添加课程Moal
       this.$invoke("QyModal", "open");
@@ -212,27 +321,21 @@ export default class CutDown extends wepy.page {
     handleInput(e) {
       this[e.target.dataset.input] = e.detail.value;
     },
-    async toggleDrop() {
-      // this.dropOpen = !this.dropOpen;
-      try {
-        const res = await wepy.showActionSheet({
-          itemList: ["课程表相关", "专业安排相关"]
-        });
-        if (res.tapIndex === 0 && this.current !== "timetable") {
-          this.changeTimetable();
-        } else if (res.tapIndex === 1 && this.current !== "profession") {
-          this.changeProfession();
-        }
+    stopTouchMove() {
+      return false;
+    },
+    async handleSwiperChange(e) {
+      if (this.currentTab === e.target.dataset.current) {
+        return false;
+      } else {
+        this.currentTab = e.target.dataset.current;
+        this.initShowAndX();
+        this.getClientHeight();
         this.$apply();
-      } catch (e) {}
+      }
     },
     async addSubject() {
       // 添加课程请求
-      //       subject: "",
-      // room: "",
-      // beginTimestamp:0,
-      // duration:0,
-      // teacher: "",
       if (this.duration < 0) {
         wepy.showToast({
           title: "考试结束时间必须大于开始时间",
@@ -258,8 +361,8 @@ export default class CutDown extends wepy.page {
             duration: 2000
           });
           this.$invoke("QyModal", "close");
-          this.current = "timetable";
-          this.getSubjects();
+          this.currentTab = 0;
+          this.fetchData();
           this.$apply();
         } else {
           wepy.showToast({
@@ -270,157 +373,152 @@ export default class CutDown extends wepy.page {
         }
       }
     },
-    showQuestionModal() {
-      this.$invoke("QyQuestionModal", "open");
-    },
-    hideQuestionModal() {
-      this.$invoke("QyQuestionModal", "close");
+    isQuestionModalVisible(event) {
+      let isVisible = event.currentTarget.dataset.isVisible;
+      if (isVisible) {
+        this.$invoke("QyQuestionModal", "open");
+      } else if (!isVisible) {
+        this.$invoke("QyQuestionModal", "close");
+      }
     }
   };
-  onLoad() {
-    const cache = wepy.getStorageSync("cutdown");
-    if (cache) {
-      // 先显示缓存的考试再去加载
-      const { fetchdata1, fetchdata2 } = cache;
-      this.fetchdata1 = fetchdata1;
-      this.fetchdata2 = fetchdata2;
-      this.subjects = fetchdata1.map((item, index) => {
-        return {
-          ...item,
-          originIndex: index,
-          handDown: !item.enable,
-          handUp: false
-        };
-      });
-      this.shows = new Array(fetchdata1.length).fill(false);
-      // this.$apply();
+  async onLoad(op) {
+    if (op) {
+      // 如果非下拉刷新，就判断模块是否已关闭
+      await this.judgeStatus(op.name);
     }
-    this.getSubjects();
-  }
-  changeTimetable() {
-    if (this.current === "profession") {
-      this.current = "timetable";
-      // this.dropOpen = false;
-      this.subjects = this.formatFetchData1;
-    }
-    this.shows = new Array(this.fetchdata2.length).fill(false);
-  }
-  changeProfession() {
-    if (this.current === "timetable") {
-      this.current = "profession";
-      // this.dropOpen = false;
-      this.subjects = this.formatFetchData2;
-      this.shows = new Array(this.fetchdata2.length).fill(false);
-    }
-  }
-  formatBeginAndEnd(begin, end) {
-    function fillZero(number) {
-      return ("00" + number).slice(-2);
-    }
-    return `${fillZero(begin.getMonth() + 1)}.${fillZero(
-      begin.getDate()
-    )} ${fillZero(begin.getHours())}:${fillZero(begin.getMinutes())}-${fillZero(
-      end.getHours()
-    )}:${fillZero(end.getMinutes())}`;
-  }
-  async getSubjects() {
-    // 个人课表考试查询
-    const p1 = selfExam().then(res => {
-      if (res.data) {
-        this.fetchdata1 = res.data.data.map(item => {
-          const beginDate = new Date(item.examDate);
-          const endDate = new Date(
-            item.examDate + Number(item.examDuration * 60 * 1000)
-          );
-          const remain = Math.floor(
-            (item.examDate - Date.now()) / 1000 / 60 / 60 / 24
-          );
-          return {
-            subject: item.courseName,
-            place: item.examPosition,
-            teacher: item.courseTeacher,
-            time: this.formatBeginAndEnd(beginDate, endDate),
-            enable: item.enable,
-            courseCode: item.courseCode,
-            remain
-          };
-        });
-        this.subjects = this.fetchdata1.map((item, index) => {
-          return {
-            ...item,
-            originIndex: index,
-            handDown: !item.enable,
-            handUp: false
-          };
-        });
-        this.shows = new Array(this.fetchdata1.length).fill(false);
-        this.$apply();
-      }
+    wepy.showLoading({
+      title: "加载中"
     });
-    // 专业相关班级考试查询
-    const p2 = getYourOwnExam(0).then(res => {
-      if (res.data) {
-        this.fetchdata2 = res.data.data.map(item => {
-          const beginDate = new Date(item.examDate);
-          const endDate = new Date(
-            item.examDate + Number(item.examDuration * 60 * 1000)
-          );
-          const remain = Math.floor(
-            (item.examDate - Date.now()) / 1000 / 60 / 60 / 24
-          );
-          return {
-            subject: item.courseName,
-            place: item.examPosition,
-            teacher: item.courseTeacher,
-            time: this.formatBeginAndEnd(beginDate, endDate),
-            enable: item.enable,
-            courseCode: item.courseCode,
-            remain
-          };
-        });
-        this.$apply();
-      }
-    });
-    // 更新缓存
-    await Promise.all([p1, p2]);
+    // const cache = wepy.getStorageSync("cutdown");
+    // if (cache) {
+    //   // 如果有缓存就先显示缓存里的，最终都会重新从后端获取
+    //   this.rawSubjects = cache;
+    //   const { fetchdata1, fetchdata2 } = this.rawSubjects;
+    //   this.initFetchData(fetchdata1, fetchdata2);
+    //   this.$apply();
+    //   this.getCardInfo();
+    //   this.initShowAndX();
+    //   this.getClientHeight();
+    // }
+    this.rawSubjects = await this.fetchData();
+    const { fetchdata1, fetchdata2 } = this.rawSubjects;
+    this.initFetchData(fetchdata1, fetchdata2);
     this.$apply();
-    wepy.setStorageSync("cutdown", {
-      fetchdata1: this.fetchdata1,
-      fetchdata2: this.fetchdata2
+    this.getCardInfo();
+    this.initShowAndX();
+    this.getClientHeight();
+    wepy.hideLoading();
+  }
+  initFetchData(fetchdata1, fetchdata2) {
+    this.examCard[0].subjects = this.handleFetchData(
+      this.initSubjects(fetchdata1)
+    );
+    this.examCard[1].subjects = this.handleFetchData(
+      this.initSubjects(fetchdata2)
+    );
+    this.$apply();
+  }
+  setFetchDataItem(item) {
+    const backToZero = raw => raw - (raw % 86400000);
+    const diffDay = (t1, t2) => (backToZero(t1) - backToZero(t2)) / 86400000;
+    const fillZero = number => ("00" + number).slice(-2);
+    const formatBeginAndEnd = (begin, end) =>
+      `${fillZero(begin.getMonth() + 1)}.${fillZero(
+        begin.getDate()
+      )} ${fillZero(begin.getHours())}:${fillZero(
+        begin.getMinutes()
+      )}-${fillZero(end.getHours())}:${fillZero(end.getMinutes())}`;
+
+    const beginDate = new Date(item.examDate);
+    const endDate = new Date(
+      item.examDate + Number(item.examDuration * 60 * 1000)
+    );
+    const remain = diffDay(item.examDate, Date.now());
+    return {
+      subject: item.courseName, // 考试名称
+      place: item.examPosition, // 考试地点
+      teacher: item.courseTeacher, // 授课老师
+      time: formatBeginAndEnd(beginDate, endDate), // 考试时间格式化后
+      enable: item.enable, // 考试是否被用户手动删除
+      courseCode: item.courseCode, // 考试号
+      examDate: item.examDate, // 考试还有几天
+      remain // 离考试还有几天
+    };
+  }
+  getCardInfo() {
+    for (const examCardItem of this.examCard) {
+      const latelySubject = examCardItem.subjects.unFinished[0];
+      examCardItem.subtitle = latelySubject
+        ? `最近一门：${latelySubject.subject}`
+        : "考试已经结束了";
+      examCardItem.remainingTimes = examCardItem.subjects.unFinished.length;
+    }
+    this.$apply();
+  }
+  async initShowAndX() {
+    this.shows = new Array(
+      this.examCard[this.currentTab].subjects.finished.length
+    ).fill(false);
+    this.distanceX = new Array(
+      this.examCard[this.currentTab].subjects.unFinished.length
+    ).fill(0);
+    this.tempDistanceX = new Array(
+      this.examCard[this.currentTab].subjects.unFinished.length
+    ).fill(0);
+    this.$apply();
+  }
+  async getClientHeight() {
+    const query = wepy.createSelectorQuery();
+    query.select(`#swiper-item-${this.currentTab}`).boundingClientRect();
+    query.selectViewport().scrollOffset();
+    query.exec(res => {
+      this.clientHeight = res[0].height + 30;
+      this.$apply();
     });
+  }
+  async fetchData(force = false) {
+    const result = { fetchdata1: [], fetchdata2: [] };
+    const [selfExamResponse, getYourOwnExamResponse] = await Promise.all([
+      selfExam(),
+      getYourOwnExam(0)
+    ]);
+    if (selfExamResponse.data && selfExamResponse.data.data) {
+      result.fetchdata1 = selfExamResponse.data.data;
+    }
+    if (getYourOwnExamResponse.data && getYourOwnExamResponse.data.data) {
+      result.fetchdata2 = getYourOwnExamResponse.data.data;
+    }
+    // wepy.setStorageSync("cutdown", result);
+    result.fetchdata1 = result.fetchdata1.map(this.setFetchDataItem);
+    result.fetchdata2 = result.fetchdata2.map(this.setFetchDataItem);
+    return result;
+  }
+  initSubjects(rawSubjects) {
+    return (rawSubjects = rawSubjects.map((item, index) => ({
+      ...item,
+      originIndex: index
+    })));
+  }
+  handleFetchData(rawSubjects) {
+    rawSubjects = rawSubjects.filter(x => x.enable);
+    const unFinished = rawSubjects.filter(item => item.remain > -1);
+    const finished = rawSubjects.filter(item => item.remain <= -1);
+
+    // const unFinished = rawSubjects.filter(
+    //   item => item.remain > -1 && item.enable
+    // );
+    // const finished = rawSubjects.filter(
+    //   item => item.remain <= -1 || !item.enable
+    // );
+    unFinished.sort((a, b) => a.examDate - b.examDate);
+    return { unFinished, finished };
   }
   computed = {
-    unfinishSubject() {
-      return this.subjects.filter(
-        item =>
-          item.handUp === true || (item.handDown === false && item.remain > -1)
-      );
-    },
-    finishSubject() {
-      return this.subjects.filter(
-        item =>
-          item.handDown === true || (item.handUp === false && item.remain <= -1)
-      );
-    },
-    formatFetchData1() {
-      return this.fetchdata1.map((item, index) => {
-        return {
-          ...item,
-          originIndex: index,
-          handDown: !item.enable,
-          handUp: false
-        };
-      });
-    },
-    formatFetchData2() {
-      return this.fetchdata2.map((item, index) => {
-        return {
-          ...item,
-          originIndex: index,
-          handDown: !item.enable,
-          handUp: false
-        };
-      });
+    // 考试安排是否已出来
+    hasExam() {
+      const { unFinished, finished } = this.examCard[this.currentTab].subjects;
+      return unFinished.length + finished.length !== 0;
     }
   };
 }
@@ -428,13 +526,44 @@ export default class CutDown extends wepy.page {
 
 <style lang="stylus" scoped>
 @import '../../css/normal-input'
+.devide-line
+  background-color #f5f5f5
+  width 100vw
+  height 23rpx
+  margin 12.87rpx 0 12.87rpx 0
 
 .container
-  display flex
-  flex-direction column
-  align-items center
   font-family 'SimHei'
-  margin-top 9rpx
+  width 100vw
+  color  #353535
+  overflow hidden
+  .swiper-container
+    display flex
+    // overflow-y hidden
+    .swiper-item
+      width 100vw
+      display flex
+      flex-direction column
+      align-items center
+      height 0%
+      .unfinished-line
+        background-color #f5f5f5
+        width 93vw
+        height 2.5rpx
+        margin 0 auto
+      .text
+        color #353535
+        font-family "PingFangSC-Medium"
+        font-size 28rpx
+        font-weight 400
+      .finish-text
+        color #353535
+        font-family "PingFangSC-Medium"
+        font-size 28rpx
+        font-weight 400
+        line-height 32rpx
+        margin 10rpx 0 10rpx 54rpx
+        align-self flex-start
   .select-container
     position relative
     // z-index 23
@@ -468,19 +597,6 @@ export default class CutDown extends wepy.page {
         text-align center
         &:first-of-type
           margin 59rpx 0 4rpx
-    .question
-      border-radius 50%
-      background-color rgb(239, 239, 239)
-      width 40rpx
-      height 40rpx
-      line-height 40rpx
-      position absolute
-      font-size 20rpx
-      text-align center
-      font-family 'Microsoft YaHei UI'
-      color rgb(90, 90, 90)
-      top 23rpx
-      left 547rpx
     .arrow
       width 45rpx
       position absolute
@@ -488,23 +604,25 @@ export default class CutDown extends wepy.page {
       left 457rpx
       z-index 30
   .head-container
-    width 639rpx
+    width 699rpx
     height 67rpx
     display flex
+    margin-left 50rpx !important
+    margin 0 auto
     justify-content space-between
+    align-items center
     .add
-      width 55rpx
+      width 33rpx
+      height 33rpx
+      padding 33rpx
   .text
-    font-size 36rpx
-    color rgb(53, 53, 53)
-    font-weight bold
-  .line
-    width 670rpx
-    max-height 20rpx
-    margin 17rpx 0 29rpx
-    background-image url('https://static.airbob.org/under-graduate/grade/%E5%88%86%E5%89%B2%E7%BA%BF.png')
-    background-size contain
-    background-position-x 32rpx
+    font-weight 400
+    color #353535
+    font-family "PingFangSC-Medium"
+    font-size 33rpx
+    align-self flex-start
+    margin 10rpx 0 10rpx 0
+
   .no-image
     width 400rpx
     margin-top 129rpx
@@ -519,16 +637,19 @@ export default class CutDown extends wepy.page {
   align-items center
   margin-top 56rpx
   .add-button
-    background-color rgb(134, 222, 243)
-    color rgb(255, 255, 255)
+    margin-top 0
+    width 100%
+    background-color #fff
+    border-radius 30rpx
+    // border-bottom 2px solid #fff
+    color  #39C9FF
     font-size 30rpx
     text-align center
-    height 57rpx
-    line-height 57rpx
-    width 466rpx
-    border-radius 28.5rpx
-    position relative
-    top 28rpx
+    height 94rpx
+    line-height 94rpx
+    border-bottom none !important
+  .add-button::after
+    border-bottom none
   .space
     margin-bottom 28rpx
 .question-container
@@ -544,17 +665,13 @@ export default class CutDown extends wepy.page {
   .bb
     display flex
     justify-content space-between
+    line-height 1rem
     margin 29rpx 42rpx 0
     .right-container
       width 290rpx
     .left-container
       width 143rpx
-  .line
-    width 100%
-    height 2rpx
-    background-image url('https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E9%A1%B6%E9%83%A8%E6%A8%AA%E7%BA%BF.png')
-    background-size contain
-    margin 39rpx auto 0
+
   .button
     border-top 2rpx solid rgb(246, 246, 246)
     text-align center
@@ -562,147 +679,69 @@ export default class CutDown extends wepy.page {
     font-size 30rpx
     height 85rpx
     line-height 85rpx
-</style>
-
-<style lang="stylus">
-@import '../../css/normal-input'
-
-.container
-  display flex
-  flex-direction column
-  align-items center
-  font-family 'SimHei'
-  margin-top 9rpx
-  .select-container
+.exam-card
+  height 421rpx
+  .exam-card-top
+    height 65rpx
     position relative
-    // z-index 23
-    .select-title
-      color rgb(53, 53, 53)
+    .exam-card-top-item.active
+      top 0
+    .exam-card-top-item
+      position absolute
+      top 20%
+      height 65rpx
+      width 210rpx
+      line-height 65rpx
       text-align center
-      font-size 30rpx
-      position relative
-      z-index 22
-      border-radius 30rpx
-      box-shadow 0rpx 3rpx 14rpx 0rpx rgba(0, 0, 0, 0.35)
-      width 524rpx
-      height 71rpx
-      line-height 71rpx
-    .drop
-      width 524rpx
-      height 150rpx
-      display flex
-      flex-direction column
-      position absolute
-      align-items center
-      background-color rgb(255, 255, 255)
-      box-shadow 0rpx 3rpx 14rpx 0rpx rgba(0, 0, 0, 0.35)
-      top 34rpx
-      z-index 20
-      .drop-text
-        font-size 30rpx
-        font-family 'SimHei'
-        color rgb(53, 53, 53)
-        width 100%
-        text-align center
-        &:first-of-type
-          margin 59rpx 0 4rpx
-    .question
-      border-radius 50%
-      background-color rgb(239, 239, 239)
-      width 40rpx
-      height 40rpx
-      line-height 40rpx
-      position absolute
-      font-size 20rpx
+      border-radius 15rpx 15rpx 0 0
+      font-size 28rpx
+      transition all 200ms ease-out
+      &:nth-child(1)
+        left 58rpx
+        background-color #7be5d8
+      &:nth-child(2)
+        left 268rpx
+        background-color #ffc65c
+  .swiper-container
+    height 356rpx
+    width 698rpx
+    margin 0 auto
+    swpier-item
+    .exam-card-item
+      height 356rpx
+      width 700rpx
+      background-size 100% 100%
       text-align center
-      font-family 'Microsoft YaHei UI'
-      color rgb(90, 90, 90)
-      top 23rpx
-      left 547rpx
-    .arrow
-      width 45rpx
-      position absolute
-      top 16rpx
-      left 457rpx
-      z-index 30
-  .head-container
-    width 639rpx
-    height 67rpx
-    display flex
-    justify-content space-between
-    .add
-      width 55rpx
-  .text
-    font-size 36rpx
-    color rgb(53, 53, 53)
-    font-weight bold
-  .line
-    width 670rpx
-    max-height 20rpx
-    margin 17rpx 0 29rpx
-    background-image url('https://static.airbob.org/under-graduate/grade/%E5%88%86%E5%89%B2%E7%BA%BF.png')
-    background-size contain
-    background-position-x 32rpx
-  .no-image
-    width 400rpx
-    margin-top 129rpx
-  .no-text
-    color #999CA0
-    font-size 28rpx
-    margin-top 55rpx
-    text-align center
-
-.slot-content
-  display flex
-  flex-direction column
-  align-items center
-  margin-top 56rpx
-  .add-button
-    background-color rgb(134, 222, 243)
-    color rgb(255, 255, 255)
-    font-size 30rpx
-    text-align center
-    height 57rpx
-    line-height 57rpx
-    width 466rpx
-    border-radius 28.5rpx
-    position relative
-    top 28rpx
-  .space
-    margin-bottom 28rpx
-
-.question-container
-  width 524rpx
-  height 271rpx
-  border-radius 10rpx
-  background-color white
-  font-size 24rpx
-  font-family 'SimHei'
-  color rgb(0, 0, 0)
-  display flex
-  flex-direction column
-  .bb
-    display flex
-    justify-content space-between
-    margin 29rpx 42rpx 0
-    .right-container
-      width 290rpx
-    .left-container
-      width 143rpx
-  .line
-    width 100%
-    height 2rpx
-    background-image url('https://static.airbob.org/under-graduate/%E5%80%92%E8%AE%A1%E6%97%B6/%E9%A1%B6%E9%83%A8%E6%A8%AA%E7%BA%BF.png')
-    background-size contain
-    margin 39rpx auto 0
-  .button
-    border-top 2rpx solid rgb(246, 246, 246)
-    text-align center
-    color #39C9FF
-    font-size 30rpx
-    height 85rpx
-    line-height 85rpx
+      color #353535
+      &:nth-of-type(1)
+        background-image url("https://static.airbob.org/under-graduate/QjE2MDEyMzI3LeaIkeeahOiAg+ivlS5wbmc=")
+        // .subtitle
+        //   background-color rgba(140,251,243,0.9)
+      &:nth-of-type(2)
+        background-image url("https://static.airbob.org/under-graduate/QjE2MDEyMzI3LemHkeiJsl8wMy5wbmc=")
+        // .subtitle
+        //   background-color rgba(250,222,146,0.9)
+      .remaining-times
+        font-size 100rpx
+        padding-top 30rpx
+        height 110rpx
+      .remaining-times-title
+        letter-spacing 10rpx
+        margin 10rpx 0 10rpx 0
+      // .subtitle
+      //   margin-top 10rpx
+      //   width 60%
+      //   display inline-block
+      //   font-size 0.8em
+      //   line-height 50rpx
+      //   border-radius 50rpx
+      .question
+        border-radius 50%
+        width 45rpx
+        height 45rpx
+        position absolute
+        background-image url("https://static.airbob.org/under-graduate/QjE2MDEyMzI3LemXruWPt+Wkh+S7vS5wbmc=")
+        background-size 100% 100%
+        top 20rpx
+        right 20rpx
 </style>
-
-
-

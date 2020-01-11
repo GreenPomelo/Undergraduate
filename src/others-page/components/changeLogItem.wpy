@@ -1,7 +1,7 @@
 <template>
   <view>
     <view class="item-header">
-      <image src="https://static.airbob.org/under-graduate/circle.png" class="header-round"/>
+      <image src="https://static.airbob.org/under-graduate/circle.png" class="header-round">
       <text>{{log.title}}</text>
     </view>
     <view class="item-body">
@@ -35,7 +35,6 @@ export default class extends wepy.component {
     vertical-align middle
   text
     vertical-align middle
-
 .item-body
   margin 0 30rpx 0 20rpx
   border-left #6f8392 solid 4rpx

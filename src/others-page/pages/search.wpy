@@ -1,5 +1,6 @@
 <template>
   <view>
+    <qy-navigation :title="navTitle"></qy-navigation>
     <view class="search-bar">
       <image src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png" class="search-icon"/>
       <input type="text" class="search-input" @input="search" value="{{keyWord}}" placeholder="搜索个关键词看看？" focus="true"/>
@@ -8,7 +9,7 @@
     <view hidden="{{noSearch}}">
       <!-- <view class="hot-search" style="border-bottom:1rpx solid #F5F5F5">
         <view class="search-title">热门搜索</view>
-        <view class="hot-search-item">        
+        <view class="hot-search-item">
           <repeat for="{{hotSearch}}" index="index" item="item" key="key">
             <navigator open-type="navigate" hover-class="none" path="/other-pages/topic?id={{item.tagId}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="search-item" data-name="{{item}}" style="padding-left:{{item.hotIcon ? '10rpx' : '34rpx'}}">
               <image wx:if="{{item.hotIcon}}" src="https://static.airbob.org/under-graduate/search-icon-hot@3x.png" mode="aspectFit" class="hot-search-image"/>
@@ -22,7 +23,7 @@
           <view class="get-rid" @tap="clearHistory"></view>
             搜索历史
         </view>
-        <view class="hot-search-item">                
+        <view class="hot-search-item">
           <repeat for="{{searchHistory}}" index="index" key="key" item="item">
             <view class="search-item" @tap="quickSearch" data-name="{{item}}">{{item}}</view>
           </repeat>
@@ -53,8 +54,13 @@
 import wepy from "wepy";
 import allSearch from "../mixins/all-search-thing";
 import { findIcons } from "@/api/common";
+import navigation from "@/components/qy-navigation";
 export default class extends wepy.page {
+  components = {
+    "qy-navigation": navigation
+  };
   data = {
+    navTitle: "搜索",
     isFocus: false,
     keyWord: "",
     hotSearch: [],
@@ -94,15 +100,15 @@ export default class extends wepy.page {
       this.searchHistory = [];
       this.$apply();
     },
-    // quickSearch(e) {
-    // let name = e.currentTarget.dataset.name;
-    // if (!wepy.getStorageSync("searchHistory")) {
-    //   wepy.setStorageSync("searchHistory", []);
-    // }
-    // this.keyWord = name;
-    // this.find(name);
-    // this.$apply();
-    // },
+    quickSearch(e) {
+      let name = e.currentTarget.dataset.name;
+      if (!wepy.getStorageSync("searchHistory")) {
+        wepy.setStorageSync("searchHistory", []);
+      }
+      this.keyWord = name;
+      this.find(name);
+      this.$apply();
+    },
     navTo(e) {
       let path = e.currentTarget.dataset.path;
       wepy.navigateTo({
@@ -111,39 +117,42 @@ export default class extends wepy.page {
     }
   };
   find(e) {
-    let that = this;
     let name = e;
     this.result = [];
     this.allSearches.forEach((i, keyWord) => {
       if (i.name.indexOf(name) !== -1) {
         let index = i.name.indexOf(name);
         let before = i.name.substr(0, index);
-        let leftWord = i.name.substr(before.length + that.keyWord.length);
+        let leftWord = i.name.substr(before.length + this.keyWord.length);
         i.before = before;
         i.leftWord = leftWord;
-        that.result.unshift(i);
-        if (that.searchHistory.indexOf(i.name) === -1) {
-          that.searchHistory.unshift(i.name);
-          wepy.setStorageSync("searchHistory", that.searchHistory);
+        this.result.unshift(i);
+        if (this.searchHistory.indexOf(i.name) === -1) {
+          this.searchHistory.unshift(i.name);
+          wepy.setStorageSync("searchHistory", this.searchHistory);
         }
       }
     });
     this.$apply();
   }
   onLoad() {
-    let that = this;
-    this.searchHistory = wepy.getStorageSync("searchHistory");
+    let tempHistory = wepy.getStorageSync("searchHistory");
+    if (!tempHistory) {
+      tempHistory = [];
+      wepy.setStorageSync("searchHistory", []);
+    }
+    this.searchHistory = tempHistory;
     this.allSearches = this.allSearchThing();
     findIcons().then(res => {
-      that.hotSearch.push(...res.data.data);
-      that.hotSearch.forEach((item, index) => {
+      this.hotSearch.push(...res.data.data);
+      this.hotSearch.forEach((item, index) => {
         if (index <= 2) {
-          that.hotSearch[index].hotIcon = true;
+          this.hotSearch[index].hotIcon = true;
         } else {
-          that.hotSearch[index].hotIcon = false;
+          this.hotSearch[index].hotIcon = false;
         }
       });
-      that.$apply();
+      this.$apply();
     });
   }
 }

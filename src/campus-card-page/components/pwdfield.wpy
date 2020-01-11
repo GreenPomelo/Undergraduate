@@ -73,7 +73,7 @@ export default class PwdField extends wepy.component {
     flex 1
     display flex
     align-items center
-    justify-content center 
+    justify-content center
     border-radius 8rpx
     margin-right 8rpx
     border 1rpx solid #999ca0

@@ -1,6 +1,6 @@
 <template>
-  <view>
-    <view class="run-container">
+  <BaseContainer :navTitle="navTitle" :passwordModelOptions.sync="passwordModelOptions">
+    <view slot="qy-content" class="run-container">
       <view class="circle">
         <view class="scale-text-container">
           <view class="scale-text-top">60</view>
@@ -15,13 +15,48 @@
           </repeat>
         </view>
       </view>
+      <view class="run-history-btn" @tap.stop="handleRunHistoryItem">
+        <view class="run-history-btn-text">历史跑操记录>></view>
+      </view>
+      <view class="run-history-card-container" hidden="{{runHistoryHidden}}" @tap="handleRunHistoryItemHidden">
+        <view class="run-history-card">
+          <text class="run-history-card-title">历史跑操记录</text>
+          <repeat for="{{runHistoryData}}" key="index" index="index" item="item">
+              <view class="run-history-card-item">
+                <view style="font-size:18px;transform:translateY(3px)"><text style="font-size:36px">{{item.count}}</text>次</view>
+                <view class="run-history-card-item-term">
+                  <view>{{item.year}}</view>
+                  <view>{{item.semester}}</view>
+                </view>
+              </view>
+          </repeat>
+          <!-- <view hidden="{{runHistoryData.length}}">
+            <text class="run-history-nohistory">暂时没有您的跑操记录~</text>
+          </view> -->
+        </view>
+      </view>
       <view class="divide" style="margin-top:15rpx"></view>
       <view class="runtime-column">
         <view class="runtime-item"><view>奖惩记录</view><view class="runtime-item-score">{{rewordRecord}}</view></view>
         <view class="runtime-item"><view>年级最多</view><view class="runtime-item-score">{{maxCount}}</view></view>
         <view class="runtime-item" style="border:none"><view>年级排行</view><view class="runtime-item-score">{{Rank}}</view></view>
       </view>
-    <view class="divide"></view>
+    <view class="divide" wx:if="{{runPosterBtn.isShow}}"></view>
+      <view class='run-poster' wx:if="{{runPosterBtn.isShow}}">
+          <view class='run-poster-title'>你已经完成跑操<span>{{runTimes}}</span>次啦！</view>
+          <view class='run-poster-btn'>
+            <view class="run-poster-btn-text" @tap.stop="handleRunPosterModal">生成海报>></view>
+          </view>
+      </view>
+      <view class='run-poster-modal-container' hidden="{{runPosterHidden}}" @tap="handleRunPosterModalHidden" catchtouchmove="ture">
+        <view class='run-poster-modal'>
+          <canvas class='run-poster-modal-img' canvas-id="run-poster-modal-img" id="run-poster-modal-img"></canvas>
+          <view class="run-poster-modal-btn" @tap='saveRunPoster'>
+            <p>保存到本地</p>
+          </view>
+        </view>
+      </view>
+      <view class="divide"></view>
       <view>
         <repeat for="{{runDetails}}" index="index" key="key" item="item">
           <view class="card-item" style="color:{{item.finish ? '#fff' : '#000'}};background-image:url({{item.finish ? 'https://static.airbob.org/under-graduate/run_pic_card_success.png' : 'https://static.airbob.org/under-graduate/run_pic_card_fail.png'}})">
@@ -35,37 +70,205 @@
         <view class="no-result-content">赶快起床跑步啦！</view>
       </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
-import { getExercise } from "@/api/common";
+import {
+  getExercise,
+  getRunHistory,
+  changeSecretCode,
+  commonInformation
+} from "@/api/common";
+import { mockGetExercise, mockGetRunHistory } from "@/mock/common";
+import JudgeStatus from "@/mixins/module";
+import navigation from "@/components/qy-navigation";
+import BaseContainer from "@/components/baseContainer";
+
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "晨跑"
   };
+  components = {
+    "qy-navigation": navigation,
+    BaseContainer
+  };
   data = {
+    navTitle: "晨跑",
     Arrs: [],
     runTimes: 0,
     rewordRecord: "无",
     Rank: "",
     maxCount: "",
-    runDetails: []
+    runDetails: [],
+    runHistoryHidden: true,
+    runPosterBtn: {
+      isShow: false,
+      isFreshmen: false
+    },
+    runPosterHidden: true,
+    runHistoryData: [],
+    passwordModelOptions: {
+      passwordModelProps: false,
+      placeholder: "请输入体育部密码",
+      refreshData: this.loadHistory,
+      bindInfo: {
+        username: wepy.getStorageSync("User").studentId,
+        domainType: "2"
+      }
+    },
+    visitorModeStatus: false
   };
-  async onLoad() {
+  mixins = [JudgeStatus];
+  methods = {
+    handleRunHistoryItem() {
+      this.loadHistory();
+    },
+    handleRunHistoryItemHidden() {
+      this.runHistoryHidden = true;
+    },
+    handleRunPosterModal() {
+      this.drawRunPoster();
+      this.runPosterHidden = false;
+    },
+    handleRunPosterModalHidden() {
+      this.runPosterHidden = true;
+    }
+  };
+  async saveRunPoster() {
+    wx.canvasToTempFilePath({
+      destWidth: 605,
+      destHeight: 1075,
+      canvasId: "run-poster-modal-img",
+      success(res) {
+        wx.saveImageToPhotosAlbum({
+          filePath: res.tempFilePath,
+          success(res) {
+            wepy.showToast({
+              title: "成功保存~"
+            });
+          },
+          fail() {
+            wepy.showToast({
+              title: "保存失败",
+              icon: "none"
+            });
+          }
+        });
+      }
+    });
+  }
+  async drawRunPoster() {
+    let index = 0;
+    let extra = this.rewordRecord;
+    let tempRunDetails = JSON.parse(JSON.stringify(this.runDetails));
+    let posterDate = tempRunDetails[0]["date"];
+    if (extra === "无") extra = 0;
+    tempRunDetails.reverse().forEach(item => {
+      if (item.finish) {
+        index++;
+        if (
+          (index + extra == 25 && this.runPosterBtn.isFreshmen) ||
+          (index + extra == 35 && !this.runPosterBtn.isFreshmen)
+        ) {
+          posterDate =
+            tempRunDetails.length === 0 ? "xxxx-xx-xx" : item["date"];
+        }
+      }
+    });
+    wepy.showLoading({
+      title: "海报生成中..."
+    });
+    wx.downloadFile({
+      url: this.runPosterBtn.isFreshmen
+        ? "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LTI1dGltZXMuanBn"
+        : "https://static.airbob.org/under-graduate/QjE2MDEyMzI3LVJ1blBvc3Rlci5KUEc=",
+      success: res => {
+        wx.getImageInfo({
+          src: res.tempFilePath,
+          success: res => {
+            const ctx = wx.createCanvasContext("run-poster-modal-img");
+            let canvasWidth = wx.getSystemInfoSync().windowWidth;
+            let WIDTH = (605 / 750) * canvasWidth;
+            let HEIGHT = (1075 / 750) * canvasWidth;
+            ctx.drawImage(res.path, 0, 0, WIDTH, HEIGHT);
+            ctx.setTextAlign("center");
+            ctx.setFillStyle("#a50a0a");
+            ctx.font = "22rpx STXingkai";
+            ctx.fillText(posterDate.slice(5, 7), 0.17 * WIDTH, 0.39 * HEIGHT);
+            ctx.fillText(posterDate.slice(8, 10), 0.31 * WIDTH, 0.39 * HEIGHT);
+            ctx.draw();
+          }
+        });
+      },
+      complete: () => {
+        wepy.hideLoading();
+      }
+    });
+  }
+  async loadHistory() {
+    const { data: historyData } = this.visitorModeStatus
+      ? await mockGetRunHistory()
+      : await getRunHistory();
+    if (historyData && historyData.success) {
+      if (historyData.data.runningCountInfos === null) {
+        this.runHistoryHidden = true;
+        wepy.showModal({
+          content: "暂时没有您的历史记录",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#353535"
+        });
+      } else {
+        const temp = historyData.data.runningCountInfos.map((item, index) => {
+          const year = item.term.slice(0, 4);
+          const term = item.term.slice(item.term.length - 2);
+          item.year = `${year}-${Number(year) + 1}学年`;
+          item.semester = `第${parseInt(term) === 1 ? "一" : "二"}学期`;
+          return item;
+        });
+        this.runHistoryData = temp.filter(item => item.count !== "0");
+        this.passwordModelOptions.passwordModelProps = false;
+        if (this.runHistoryData.length === 0) {
+          this.runHistoryHidden = true;
+          wepy.showModal({
+            content: "暂时没有您的历史记录",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          });
+        } else {
+          this.runHistoryHidden = false;
+        }
+      }
+    } else {
+      this.runHistoryHidden = true;
+      this.passwordModelOptions.passwordModelProps = true;
+    }
+    this.$apply();
+  }
+  async onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(op.name);
     let reg = /[\u4e00-\u9fa5]/;
-    let that = this;
-    let runtime = await getExercise();
-    that.runTimes = runtime.data.data.totalCount;
-    that.maxCount = runtime.data.data.maxCount;
-    that.Rank = parseInt(runtime.data.data.rankingPercent * 100) + "%";
-    that.rewordRecord =
+    let runtime = this.visitorModeStatus
+      ? await mockGetExercise()
+      : await getExercise();
+    this.runTimes = runtime.data.data.totalCount;
+    this.maxCount = runtime.data.data.maxCount;
+    this.Rank = parseInt(runtime.data.data.rankingPercent * 100) + "%";
+    this.rewordRecord =
       runtime.data.data.extraCount === 0 || runtime.data.data.extraCount === "0"
         ? "无"
         : runtime.data.data.extraCount;
-    let Details = runtime.data.data.recordTimeList;
-    Details.forEach((item, index) => {
+    let details = runtime.data.data.recordTimeList;
+    let spareGender = wepy.getStorageSync("userInfo").gender === "女" ? 2 : 1;
+    let gender =
+      wepy.getStorageSync("User").nativeInformation.gender === 0
+        ? spareGender
+        : wepy.getStorageSync("User").nativeInformation.gender;
+    details.forEach((item, index) => {
       let start = item.start.split(reg);
       let end = item.end.split(reg);
       let time;
@@ -79,72 +282,82 @@ export default class extends wepy.page {
       } else {
         time = start[3] + ":" + start[4] + "~" + end[3] + ":" + end[4];
       }
-      let isFinish =
-        Math.abs(
-          parseInt((start[3] - end[3]) * 60) +
-            parseInt(start[4]) -
-            parseInt(end[4])
-        ) <=
-        (wepy.getStorageSync("User").nativeInformation.gender === 0 ? 13 : 11);
-      that.runDetails.push({
+      let isFinish = this.visitorModeStatus
+        ? true
+        : Math.abs(
+            parseInt((start[3] - end[3]) * 60) +
+              parseInt(start[4]) -
+              parseInt(end[4])
+          ) <= (gender === 2 ? 13 : 11);
+      this.runDetails.push({
         date: start[0] + "-" + start[1] + "-" + start[2],
         time: time,
         finish: isFinish
       });
     });
-    that.$apply();
-    function CIRCLE() {
-      return new Promise(resolve => {
-        for (let i = 0; i < 60; i++) {
-          let left = 240 * Math.sin(((6 * i) / 180) * Math.PI);
-          let top = 240 - 240 * Math.cos(((6 * i) / 180) * Math.PI);
-          let color = "#D0F5FF";
-          let height = 24;
-          if (i % 15 === 0) {
-            height = 48;
+    this.$apply();
+    for (let i = 0; i < 60; i++) {
+      let left = 240 * Math.sin(((6 * i) / 180) * Math.PI);
+      let top = 240 - 240 * Math.cos(((6 * i) / 180) * Math.PI);
+      let color = "#D0F5FF";
+      let height = 24;
+      if (i % 15 === 0) {
+        height = 48;
+        top -= 12;
+        switch (i) {
+          case 0:
+            top += 12;
+            break;
+          case 15:
+            left -= 12;
+            break;
+          case 30:
             top -= 12;
-            switch (i) {
-              case 0:
-                top += 12;
-                break;
-              case 15:
-                left -= 12;
-                break;
-              case 30:
-                top -= 12;
-                break;
-              case 45:
-                left += 12;
-                break;
-            }
-          }
-          that.Arrs.push({
-            left: left,
-            top: top,
-            color: color,
-            height: height,
-            id: i
-          });
+            break;
+          case 45:
+            left += 12;
+            break;
         }
-        resolve();
+      }
+      this.Arrs.push({
+        left: left,
+        top: top,
+        color: color,
+        height: height,
+        id: i
       });
     }
-    await CIRCLE();
-    for (let i = 0; i <= that.runTimes; i++) {
+    for (let i = 0; i <= this.runTimes; i++) {
       var timeOut = setTimeout(() => {
-        if (i === 0 && that.runTimes >= 60) {
-          that.Arrs[i].color = "#FFCE43";
-        } else if (i === 0 && that.runTimes < 60) {
-          that.Arrs[i + 1].color = "#FFCE43";
-          that.Arrs[i].color = "#D0F5FF";
+        if (i === 0 && this.runTimes >= 60) {
+          this.Arrs[i].color = "#FFCE43";
+        } else if (i === 0 && this.runTimes < 60) {
+          this.Arrs[i + 1].color = "#FFCE43";
+          this.Arrs[i].color = "#D0F5FF";
         } else if (i !== 0) {
-          that.Arrs[i + 1].color = "#FFCE43";
-          that.$apply();
+          this.Arrs[i + 1].color = "#FFCE43";
+          this.$apply();
         }
         clearTimeout(timeOut);
       }, i * 100);
     }
-    that.$apply();
+    this.$apply();
+    const { data: commonInfo } = await commonInformation();
+    if (
+      commonInfo.data.semester.slice(5, 6) == 1 &&
+      commonInfo.data.year.slice(2, 4) ==
+        wepy.getStorageSync("User").nativeInformation.studentId.slice(1, 3)
+    )
+      this.runPosterBtn["isFreshmen"] = true;
+    if (this.runPosterBtn["isFreshmen"]) {
+      if (this.runTimes >= 25) this.runPosterBtn["isShow"] = true;
+    } else {
+      if (this.runTimes >= 35) this.runPosterBtn["isShow"] = true;
+    }
+    if (op.showPoster) {
+      this.runPosterHidden = false;
+    }
+    this.$apply();
   }
 }
 </script>
@@ -224,6 +437,58 @@ export default class extends wepy.page {
       .runtime-item-score
         color #353535
         font-size 36rpx
+  .run-poster
+    display flex
+    align-items center
+    font-size 30rpx
+    height 100rpx
+    padding 10rpx
+    .run-poster-title
+      color #353535
+      width 58%
+      text-align center
+      span
+        color #ed2f6a
+    .run-poster-btn
+      width 30%
+      background-color #6AE4FF
+      border 10rpx solid #89E1FB
+      border-radius 20rpx
+      color white
+      padding 10rpx 20rpx
+      text-align center
+      .run-poster-btn-text
+        font-size 30rpx
+  .run-poster-modal-container
+    position fixed
+    width 100%
+    height 100%
+    background rgba(0, 0, 0, 0.5)
+    z-index 200
+    top 0px
+    left 0px
+    .run-poster-modal
+      position fixed
+      z-index 201
+      top 55%
+      left 50%
+      transform translate(-50%,-50%)
+      .run-poster-modal-img
+        width 605rpx
+        height 1075rpx
+        background-color #fff
+        z-index 202
+      .run-poster-modal-btn
+        background-color #6AE4FF
+        border 10rpx solid #89E1FB
+        color #fff
+        width 500rpx
+        height 60rpx
+        border-radius 50rpx
+        z-index 202
+        margin 20rpx auto
+        text-align center
+        line-height 60rpx
   .card-item
     position relative
     display flex
@@ -238,6 +503,70 @@ export default class extends wepy.page {
     background-repeat no-repeat
     background-size contain
     justify-content space-around
+  .run-history-btn
+    border 2px solid bule
+    margin-top 15px
+    margin-bottom 15px
+    display flex
+    justify-content center
+    align-items center
+    .run-history-btn-text
+      height 25px
+      text-align center
+      color white
+      background-image url('https://static.airbob.org/run-radius1/QjE2MDEyMzI3LXJhZGl1czEucG5n');
+      background-color #18e0f7
+      background-position: center center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      border 2px solid #89e1fb
+      border-radius 13px
+      padding 0
+      width 60vw
+      font-size 17px
+  .run-history-card-container
+    position fixed
+    width 100%
+    height 100%
+    background rgba(0, 0, 0, 0.5)
+    z-index 200
+    top 0px
+    left 0px
+    .run-history-card
+      position absolute
+      top 20vh
+      left 10vw
+      width 80vw
+      height 60vh
+      background-image url('https://static.airbob.org/run-radius2/QjE2MDEyMzI3LXJhZGl1czIucG5n')
+      background-position: center center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      // background-color #52e2df
+      display flex
+      flex-direction column
+      align-items center
+      border-radius 10px
+      .run-history-nohistory
+        color #708090
+      .run-history-card-title
+        color white
+        margin-top 25px
+        font-size 23px
+        margin-bottom 35px
+        font-weight 100
+      .run-history-card-item
+        height 56px
+        border-radius 28px
+        width 67vw
+        margin-top 10px
+        margin-bottom 10px
+        display flex
+        justify-content space-around
+        background-color #a4f1ed
+        .run-history-card-item-term
+          font-size 15px
+          transform:translateY(5px)
 .no-result
   position relative
   top 66rpx
@@ -255,4 +584,27 @@ export default class extends wepy.page {
   text-align center
   color #999CA0
   font-size 28rpx
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 485rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
 </style>

@@ -1,257 +1,261 @@
 <template>
   <view class="container">
-      <view class="questionnaire-header">
-          <view class="header-title">{{ title }}(匿名)</view>
-          <view class="header-detail">
-              <view>来源：{{ source }}</view>
-              <view>时间：{{ deadline }}{{ relativeDate }}</view>
-          </view>
-          <view class="header-circle">
-            <view class="header-circle-1"></view>
-            <view class="header-circle-2"></view>
-            <view class="header-circle-3"></view>
-            <view class="header-circle-4"></view>
-          </view>
+    <qy-navigation :title="navTitle"></qy-navigation>
+    <view class="questionnaire-header">
+      <view class="header-title">{{ title }}(匿名)</view>
+      <view class="header-detail">
+        <view>来源：{{ source }}</view>
+        <view>时间：{{ deadline }}{{ relativeDate }}</view>
       </view>
-      <view class="questionnaire-line"></view>
-      <view class="questionnaire-content">
-          <repeat for="{{ questions }}" index="qIndex" key="qItem" item="qItem">
-              <view class="question-title">{{ qItem.id }}. {{ qItem.content }}<span>{{ qItem.required?"*":"" }}</span></view>
-              <view class="question-card {{qItem.type=='single'?'radio-box-container':''}}">
-                  <repeat for="{{ qItem.answer }}" index="aIndex" key="aItem" item="aItem">
-                      <view class="answerItem radioItem shadow-box" @tap="checkbox" data-qIndex="{{ qIndex }}" data-aIndex="{{ aIndex }}" data-type="radio">
-                      <view class="answer-radiobox {{ aItem.checked?'answer-radiobox-ontap':'' }}">
-                        <view class="radiobox-circle {{ aItem.checked?'radiobox-circle-ontap':'' }}"></view>
-                      </view>
-                        <div class="answer-content {{ aItem.checked?'answer-content-ontap':'' }}">{{aItem.value}}</div>
-                        </view>
-                  </repeat>
+      <view class="header-circle">
+        <view class="header-circle-1"></view>
+        <view class="header-circle-2"></view>
+        <view class="header-circle-3"></view>
+        <view class="header-circle-4"></view>
+      </view>
+    </view>
+    <view class="questionnaire-line"></view>
+    <view class="questionnaire-content">
+      <repeat for="{{ questions }}" index="qIndex" key="qItem" item="qItem">
+        <view class="question-title">{{ qItem.id }}. {{ qItem.content }}<span>{{ qItem.required?"*":"" }}</span></view>
+        <view class="question-card {{qItem.type=='single'?'radio-box-container':''}}">
+          <repeat for="{{ qItem.answer }}" index="aIndex" key="aItem" item="aItem">
+            <view class="answerItem radioItem shadow-box" @tap="checkbox" data-qIndex="{{ qIndex }}" data-aIndex="{{ aIndex }}" data-type="radio">
+              <view class="answer-radiobox {{ aItem.checked?'answer-radiobox-ontap':'' }}">
+                <view class="radiobox-circle {{ aItem.checked?'radiobox-circle-ontap':'' }}"></view>
               </view>
-              <view class="question-card shadow-box {{qItem.type=='multiple'?'check-box-container':''}}">
-                  <repeat for="{{ qItem.answer }}" index="aIndex" key="aItem" item="aItem">
-                      <view class="answerItem checkItem" @tap="checkbox"  data-qIndex="{{ qIndex }}" data-aIndex="{{ aIndex }}" data-type="check">
-                      <view class="answer-checkbox {{ aItem.checked?'answer-checkbox-ontap':'' }}">
-                          <image class="checkbox-tick {{ aItem.checked?'checkbox-tick-ontap':'' }}" mode="aspectFit" src="https://static.airbob.org/under-graduate/tick.svg"/>
-                      </view>
-                        <div class="answer-content {{ aItem.checked?'answer-content-ontap':'' }}">{{aItem.value}}</div>
-                        </view>
-                  </repeat>
-              </view>
-              <view class="question-card {{qItem.type=='textA'?'input-container':''}}">
-                  <input class="answerItem inputItem boxshadow {{ inputOnTap?'boxshadow-onfocus':'' }}" placeholder-class="placeholderClass" placeholder="{{qItem.answer}}" @focus="showboxshadow" @blur="hideboxshadow" @input="textInput" data-qIndex="{{ qIndex }}" data-type="input"/>
-              </view>
-              <view class="question-card {{qItem.type=='textB'?'textarea-container':''}}">
-                  <textarea class="answerItem textareaItem boxshadow {{ textareaOnTap?'boxshadow-onfocus':'' }}" placeholder-class="placeholderClass" placeholder="{{qItem.answer}}" @focus="showboxshadow" @blur="hideboxshadow" @input="textInput" data-qIndex="{{ qIndex }}" data-type="textarea"/>
-              </view>
+              <div class="answer-content {{ aItem.checked?'answer-content-ontap':'' }}">{{aItem.value}}</div>
+            </view>
           </repeat>
-          <button class="save-submit-btn" @tap="submitQuestionnaire">保存并提交</button>
-      </view>
+        </view>
+        <view class="question-card shadow-box {{qItem.type=='multiple'?'check-box-container':''}}">
+          <repeat for="{{ qItem.answer }}" index="aIndex" key="aItem" item="aItem">
+            <view class="answerItem checkItem" @tap="checkbox" data-qIndex="{{ qIndex }}" data-aIndex="{{ aIndex }}" data-type="check">
+              <view class="answer-checkbox {{ aItem.checked?'answer-checkbox-ontap':'' }}">
+                <image class="checkbox-tick {{ aItem.checked?'checkbox-tick-ontap':'' }}" mode="aspectFit" src="https://static.airbob.org/under-graduate/tick.svg" />
+              </view>
+              <div class="answer-content {{ aItem.checked?'answer-content-ontap':'' }}">{{aItem.value}}</div>
+            </view>
+          </repeat>
+        </view>
+        <view class="question-card {{qItem.type=='textA'?'input-container':''}}">
+          <input class="answerItem inputItem boxshadow {{ inputOnTap?'boxshadow-onfocus':'' }}" placeholder-class="placeholderClass" placeholder="{{qItem.answer}}" @focus="showboxshadow" @blur="hideboxshadow" @input="textInput" data-qIndex="{{ qIndex }}" data-type="input"
+          />
+        </view>
+        <view class="question-card {{qItem.type=='textB'?'textarea-container':''}}">
+          <textarea class="answerItem textareaItem boxshadow {{ textareaOnTap?'boxshadow-onfocus':'' }}" placeholder-class="placeholderClass" placeholder="{{qItem.answer}}" @focus="showboxshadow" @blur="hideboxshadow" @input="textInput" data-qIndex="{{ qIndex }}"
+            data-type="textarea" />
+        </view>
+      </repeat>
+      <button class="save-submit-btn" @tap="submitQuestionnaire">保存并提交</button>
+    </view>
   </view>
 </template>
 
 <script>
-import wepy from "wepy";
-import { getQuestionnaireInfo, submitQuestionnaire } from "@/api/questionnaire";
-export default class extends wepy.page {
-  config = {
-    navigationBarTitleText: ""
-  };
-  data = {
-    inputOnTap: false,
-    textareaOnTap: false,
-    title: "",
-    questionnaireId: "",
-    source: "",
-    deadline: "",
-    relativeDate: "",
-    questions: [],
-    completed: true
-  };
-  methods = {
-    showboxshadow(e) {
-      let type = e.currentTarget.dataset.type;
-      if (type === "textarea") {
-        this.textareaOnTap = true;
-      } else if (type === "input") {
-        this.inputOnTap = true;
-      }
-      this.$apply();
-    },
-    hideboxshadow(e) {
-      let type = e.currentTarget.dataset.type;
-      if (type === "textarea") {
-        this.textareaOnTap = false;
-      } else if (type === "input") {
-        this.inputOnTap = false;
-      }
-      this.$apply();
-    },
-    checkbox(e) {
-      let qIndex = Number(e.currentTarget.dataset.qindex);
-      let aIndex = Number(e.currentTarget.dataset.aindex);
-      let type = e.currentTarget.dataset.type;
-      let answer = this.questions[qIndex].answer;
-      if (type === "radio") {
-        for (let i in answer) {
-          if (Number(i) === aIndex) {
-            this.questions[qIndex].answer[i].checked = !answer[i].checked;
-          } else {
-            this.questions[qIndex].answer[i].checked = false;
-          }
+  import wepy from "wepy";
+  import navigation from "@/components/qy-navigation";
+  import { getQuestionnaireInfo, submitQuestionnaire } from "@/api/questionnaire";
+  export default class extends wepy.page {
+    config = {
+      navigationBarTitleText: ""
+    };
+    components = {
+      "qy-navigation": navigation
+    };
+    data = {
+      navTitle: "问卷测评",
+      inputOnTap: false,
+      textareaOnTap: false,
+      title: "",
+      questionnaireId: "",
+      source: "",
+      deadline: "",
+      relativeDate: "",
+      questions: [],
+      completed: true
+    };
+    methods = {
+      showboxshadow(e) {
+        let type = e.currentTarget.dataset.type;
+        if (type === "textarea") {
+          this.textareaOnTap = true;
+        } else if (type === "input") {
+          this.inputOnTap = true;
         }
-      } else if (type === "check") {
-        this.questions[qIndex].answer[aIndex].checked = !answer[aIndex].checked;
-      }
-      this.$apply();
-    },
-    textInput(e) {
-      let qIndex = Number(e.currentTarget.dataset.qindex);
-      this.questions[qIndex].answer = e.detail.value;
-    }
-  };
-  async getQuestionnaire() {
-    let that = this;
-    let questionnaire = await getQuestionnaireInfo(that.questionnaireId);
-    if (questionnaire.data.success) {
-      that.questions = questionnaire.data.data.questions;
-      that.title = questionnaire.data.data.name;
-      let timestamp = questionnaire.data.data.deadline;
-      if (timestamp !== 1356019200000 && timestamp !== 3489458895000) {
-        that.deadline =
-          new Date(questionnaire.data.data.deadline)
-            .toLocaleDateString()
-            .replace(/\//g, ".") + " ";
-      } else {
-        that.deadline = "";
-      }
-    } else {
-      await wepy.showToast({
-        title: "获取问卷信息失败,请重试",
-        icon: "none",
-        duration: 1500
-      });
-    }
-  }
-  async submitQuestionnaire() {
-    let answerArray = [];
-    let that = this;
-    this.completed = true;
-    this.questions.map(item => {
-      let answer = this.getQuestionAnswer(item);
-      if (answer) {
-        answerArray.push({
-          answer: answer,
-          id: item.id,
-          type: item.type
-        });
-      } else {
-        this.completed = false;
-      }
-    });
-    this.$apply();
-    if (this.completed) {
-      let postQuestionnaire = await submitQuestionnaire(
-        that.questionnaireId,
-        answerArray
-      );
-      wepy.showLoading({
-        title: "提交中"
-      });
-      setTimeout(() => {
-        wepy.hideLoading();
-        if (postQuestionnaire.data.success) {
-          wepy.showToast({
-            title: "提交成功",
-            icon: "none",
-            duration: 1500
-          });
-          const page = this.getCurrentPages();
-          page[page.length - 2].data.questionnaires.map(item => {
-            if (this.questionnaireId === item.questionId) {
-              item.status = 1;
-            }
-          });
-          wepy.navigateBack({
-            delta: 1
-          });
-        } else if (postQuestionnaire.data.errCode === 425) {
-          wepy.showToast({
-            title: "已经提交过一次了哦",
-            icon: "none",
-            duration: 1500
-          });
-        } else {
-          wepy.showToast({
-            title: "提交失败,请重试",
-            icon: "none",
-            duration: 1500
-          });
+        this.$apply();
+      },
+      hideboxshadow(e) {
+        let type = e.currentTarget.dataset.type;
+        if (type === "textarea") {
+          this.textareaOnTap = false;
+        } else if (type === "input") {
+          this.inputOnTap = false;
         }
-      }, 1000);
-    } else {
-      wepy.showToast({
-        title: "问卷尚未填写完整",
-        icon: "none",
-        duration: 1500
-      });
-    }
-  }
-  getQuestionAnswer(item) {
-    let indexArray = [];
-    if (item.type === "single" || item.type === "multiple") {
-      for (let i in item.answer) {
-        if (item.answer[i].checked) {
-          indexArray.push(i);
-        }
-      }
-      if ((item.required && indexArray.length !== 0) || !item.required) {
-        return indexArray;
-      } else {
-        return false;
-      }
-    } else {
-      if ((item.required && !/^\s*$/.test(item.answer)) || !item.required) {
-        return item.answer;
-      } else {
-        return false;
-      }
-    }
-  }
-  async init() {
-    if (
-      wepy.getStorageSync("token") &&
-      wepy.getStorageSync("User").enabled &&
-      wepy.getStorageSync("userInfo")
-    ) {
-      await this.getQuestionnaire();
-      this.questions.map(item => {
-        let answer = item.answer;
-        if (item.type === "single" || item.type === "multiple") {
+        this.$apply();
+      },
+      checkbox(e) {
+        let qIndex = Number(e.currentTarget.dataset.qindex);
+        let aIndex = Number(e.currentTarget.dataset.aindex);
+        let type = e.currentTarget.dataset.type;
+        let answer = this.questions[qIndex].answer;
+        if (type === "radio") {
           for (let i in answer) {
-            item.answer[i] = {
-              value: answer[i],
-              checked: false
-            };
+            if (Number(i) === aIndex) {
+              this.questions[qIndex].answer[i].checked = !answer[i].checked;
+            } else {
+              this.questions[qIndex].answer[i].checked = false;
+            }
           }
+        } else if (type === "check") {
+          this.questions[qIndex].answer[aIndex].checked = !answer[aIndex].checked;
+        }
+        this.$apply();
+      },
+      textInput(e) {
+        let qIndex = Number(e.currentTarget.dataset.qindex);
+        this.questions[qIndex].answer = e.detail.value;
+      }
+    };
+    async getQuestionnaire() {
+      let that = this;
+      let questionnaire = await getQuestionnaireInfo(that.questionnaireId);
+      if (questionnaire.data.success) {
+        that.questions = questionnaire.data.data.questions;
+        that.title = questionnaire.data.data.name;
+        let timestamp = questionnaire.data.data.deadline;
+        if (timestamp !== 1356019200000 && timestamp !== 3489458895000) {
+          that.deadline =
+            new Date(questionnaire.data.data.deadline)
+              .toLocaleDateString()
+              .replace(/\//g, ".") + " ";
         } else {
-          item.answer = answer[0];
+          that.deadline = "";
+        }
+      } else {
+        await wepy.showToast({
+          title: "获取问卷信息失败,请重试",
+          icon: "none",
+          duration: 1500
+        });
+      }
+    }
+    async submitQuestionnaire() {
+      let answerArray = [];
+      let that = this;
+      this.completed = true;
+      this.questions.map(item => {
+        let answer = this.getQuestionAnswer(item);
+        if (answer || answer === "") {
+          answerArray.push({
+            answer: answer,
+            id: item.id,
+            type: item.type
+          });
+        } else {
+          this.completed = false;
         }
       });
       this.$apply();
-    } else {
-      wepy.reLaunch({
-        url: "../../pages/login"
-      });
+      if (this.completed) {
+        let postQuestionnaire = await submitQuestionnaire(
+          that.questionnaireId,
+          answerArray
+        );
+        wepy.showLoading({
+          title: "提交中"
+        });
+        setTimeout(() => {
+          wepy.hideLoading();
+          if (postQuestionnaire.data.success) {
+            wepy.showToast({
+              title: "提交成功",
+              icon: "none",
+              duration: 1500
+            });
+            const page = this.getCurrentPages();
+            page[page.length - 2].data.questionnaires.map(item => {
+              if (this.questionnaireId === item.questionId) {
+                item.status = 1;
+              }
+            });
+            wepy.navigateBack({
+              delta: 1
+            });
+          } else if (postQuestionnaire.data.errCode === 425) {
+            wepy.showToast({
+              title: "已经提交过一次了哦",
+              icon: "none",
+              duration: 1500
+            });
+          } else {
+            wepy.showToast({
+              title: "提交失败,请重试",
+              icon: "none",
+              duration: 1500
+            });
+          }
+        }, 1000);
+      } else {
+        wepy.showToast({
+          title: "问卷尚未填写完整",
+          icon: "none",
+          duration: 1500
+        });
+      }
+    }
+    getQuestionAnswer(item) {
+      let indexArray = [];
+      if (item.type === "single" || item.type === "multiple") {
+        for (let i in item.answer) {
+          if (item.answer[i].checked) {
+            indexArray.push(i);
+          }
+        }
+        if ((item.required && indexArray.length !== 0) || !item.required) {
+          return indexArray;
+        } else {
+          return false;
+        }
+      } else {
+        if ((item.required && !/^\s*$/.test(item.answer)) || !item.required) {
+          return item.answer;
+        } else {
+          return false;
+        }
+      }
+    }
+    async init() {
+      if (wepy.getStorageSync("token") && wepy.getStorageSync("User").enabled) {
+        await this.getQuestionnaire();
+        this.questions.map(item => {
+          let answer = item.answer;
+          if (item.type === "single" || item.type === "multiple") {
+            for (let i in answer) {
+              item.answer[i] = {
+                value: answer[i],
+                checked: false
+              };
+            }
+          } else {
+            item.answer = answer[0];
+          }
+        });
+        this.$apply();
+      } else {
+        wepy.reLaunch({
+          url: "../../pages/login"
+        });
+      }
+    }
+    onLoad(options) {
+      this.questionnaireId = options.questionnaireId;
+      this.relativeDate = options.deadline;
+      this.source = options.assignName;
+      this.$apply();
+      this.init();
     }
   }
-  onLoad(options) {
-    this.questionnaireId = options.questionnaireId;
-    this.relativeDate = options.deadline;
-    this.source = options.assignName;
-    this.$apply();
-    this.init();
-  }
-}
 </script>
 
 <style lang="stylus" scoped>

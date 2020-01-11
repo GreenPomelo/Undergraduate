@@ -1,38 +1,67 @@
 <template>
- <view class="container">
-    <view class="head-bg">
-      <view class="head-bg-title">账户余额（元）</view>
-      <view class="head-bg-remain">{{accountBalance}}</view>
-    </view>
-    <view class="main-container">
-      <view class="pay-account">充值账号：{{sno}}</view>
-      <view class="pay-way">支付方式：银行卡绑定校园卡</view>
-      <view class="quick-pay-container">
-        <view class="quick-pay-item" @tap.stop="put" data-charge="50">50元</view>
-        <view class="quick-pay-item" @tap.stop="put" data-charge="100">100元</view>
-        <view class="quick-pay-item" @tap.stop="put" data-charge="200">200元</view>
-        <view class="quick-pay-item" @tap.stop="put" data-charge="300">300元</view>
-      </view>
-      <view class="list">
-        <view class="list-item-quick">
-          <view class="list-item-text item"> 充值金额</view>
-          <input class="list-item-text  input" type="digit" @input="put" value="{{charge}}" placeholder="可输入1-300元整数金额" placeholder-style="font-size:30rpx;color:#888888" cursor-spacing="130" />
+  <BaseContainer navTitle="校园卡充值">
+    <view slot="qy-content">
+      <view class="container">
+        <view class="head-bg">
+          <view class="head-bg-title">账户余额（元）</view>
+          <view class="head-bg-remain">{{accountBalance}}</view>
         </view>
+        <view class="main-container">
+          <view class="pay-account">充值账号：{{sno}}</view>
+          <view class="pay-way">支付方式：银行卡绑定校园卡</view>
+          <view class="quick-pay-container">
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="50">50元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="100">100元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="200">200元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="300">300元</view>
+          </view>
+          <view class="list">
+            <view class="list-item-quick">
+              <view class="list-item-text item">充值金额</view>
+              <input
+                class="list-item-text input"
+                type="digit"
+                @input="put"
+                value="{{charge}}"
+                placeholder="可输入1-300元整数金额"
+                placeholder-style="font-size:30rpx;color:#888888"
+                cursor-spacing="130"
+              >
+            </view>
+          </view>
+          <button
+            @tap.stop="openPayModal"
+            class="enter-button {{(charge==='' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}"
+            hover-class="button-click"
+            disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}"
+          >确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}</button>
+        </view>
+        <PayFlow
+          :open.sync="isPayModalOpen"
+          :charge.sync="charge"
+          type="card"
+          payWay="银行卡绑定校园卡"
+          operateContent="校园卡/银行卡转账"
+        />
       </view>
-      <button @tap.stop="openPayModal" class="enter-button {{(charge==='' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}" hover-class="button-click" disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}">
-        确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}
-      </button>
     </view>
-    <PayFlow :open.sync="isPayModalOpen" :charge.sync="charge" type="card" payWay="银行卡绑定校园卡" operateContent="校园卡/银行卡转账" />
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
-// import QyNav from "@/components/qy-navigation";
-// import QyContainer from "@/components/qy-container";
 import PayFlow from "../components/pay-flow";
 import { campusCardRequestInfo } from "@/api/campusCard";
+import { mockCampusCardRequestInfo } from "@/mock/campusCard";
+import JudgeStatus from "@/mixins/module";
+import BaseContainer from "@/components/baseContainer";
+import { connect } from "wepy-redux";
+
+@connect({
+  graduateIdentity(state) {
+    return state.graduateReducer.graduateIdentity;
+  }
+})
 export default class CampusCardCharge extends wepy.page {
   data = {
     accountBalance: 0, // 账户余额
@@ -41,42 +70,62 @@ export default class CampusCardCharge extends wepy.page {
     charge: "",
     // isPageUp: false, // 控制输入时按钮不被遮挡
     isPayModalOpen: false,
-    sno: ""
+    sno: "",
+    visitorModeStatus: false
   };
   components = {
-    // QyNav,
-    // QyContainer,
-    PayFlow
+    PayFlow,
+    BaseContainer
   };
+  mixins = [JudgeStatus];
   config = {
     navigationBarTitleText: "校园卡充值",
     enablePullDownRefresh: true
   };
-  onLoad() {
-    const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
-    if (!moduleStatus) {
-      // 一卡通维护中
-      wepy.redirectTo({
-        url: "../../others-page/pages/close"
-      });
-    }
-    this.getRemain();
+  onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(op.name).then(() => {
+      if (!this.visitorModeStatus) {
+        const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
+        if (!moduleStatus) {
+          // 一卡通维护中
+          wepy.redirectTo({
+            url: "../../others-page/pages/close"
+          });
+        }
+      }
+      this.getRemain();
+    });
   }
   async getRemain() {
-    const { data: balance } = await campusCardRequestInfo();
-    if (balance.success) {
-      this.accountBalance =
-        (Number(balance.data.db_balance) +
-          Number(balance.data.unsettle_amount)) /
-        100;
-      this.cardBalance = balance.data.db_balance / 100;
-      this.sno = balance.data.sno;
-      this.$apply();
+    let yktInfoCache = wepy.getStorageSync("yktInfo");
+    const fromYktIndex =
+      getCurrentPages().findIndex(
+        page => page.route === "campus-card-page/pages/campus-card-index"
+      ) !== -1;
+    if (!fromYktIndex || !yktInfoCache || !yktInfoCache.data) {
+      const { data: balance } = !this.visitorModeStatus
+        ? await campusCardRequestInfo(this.graduateIdentity)
+        : await mockCampusCardRequestInfo();
+      yktInfoCache = { data: balance.data, time: new Date() };
+      wepy.setStorageSync("yktInfo", yktInfoCache);
     }
+    const { data: balance } = yktInfoCache;
+    this.accountBalance = this.graduateIdentity
+      ? (Number(balance.db_balance) + Number(balance.unset_balance)) / 100
+      : (Number(balance.db_balance) + Number(balance.unsettle_amount)) / 100;
+    this.cardBalance = balance.db_balance / 100;
+    this.sno = balance.sno;
+    this.$apply();
   }
-  onPullDownRefresh() {
-    this.getRemain();
+  async onPullDownRefresh() {
+    await this.getRemain();
     wepy.stopPullDownRefresh();
+    wepy.showToast({
+      title: "刷新成功",
+      icon: "success",
+      duration: 1000
+    });
   }
   methods = {
     showWhy() {
@@ -86,9 +135,6 @@ export default class CampusCardCharge extends wepy.page {
         showCancel: false,
         confirmColor: "#47CFF5"
       });
-    },
-    openPayModal() {
-      this.isPayModalOpen = true;
     },
     closePayModal() {
       this.isPayModalOpen = false;
@@ -100,10 +146,57 @@ export default class CampusCardCharge extends wepy.page {
       this.isPageUp = false;
     },
     put(e) {
-      const value = Number(e.detail.value || e.target.dataset.charge);
+      const value = Number(e.detail.value);
       this.putCharge(value);
+    },
+    fastPay(e) {
+      const value = Number(e.target.dataset.charge);
+      this.putCharge(value);
+      this.openPayModal();
+    },
+    openPayModal() {
+      // 校验
+      if (this.visitorModeStatus) {
+        this.charge = "";
+        return this.$invoke("BaseContainer", "showVisitorTips");
+      }
+      if (!isNaN(this.charge) && this.charge > 0) {
+        this.isPayModalOpen = true; // 输入密码
+      } else {
+        wepy
+          .showModal({
+            content: "金额错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          })
+          .then(res => {
+            this.charge = "";
+          });
+      }
     }
   };
+  openPayModal() {
+    // 校验
+    if (this.visitorModeStatus) {
+      this.charge = "";
+      return this.$invoke("BaseContainer", "showVisitorTips");
+    }
+    if (!isNaN(this.charge) && this.charge > 0) {
+      this.isPayModalOpen = true; // 输入密码
+    } else {
+      wepy
+        .showModal({
+          content: "金额错误",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#353535"
+        })
+        .then(res => {
+          this.charge = "";
+        });
+    }
+  }
   events = {
     closePayModal: () => {
       this.isPayModalOpen = false;
@@ -122,7 +215,7 @@ export default class CampusCardCharge extends wepy.page {
   flex-direction column
   margin-top 38rpx
   .head-bg
-    background-image url("https://static.airbob.org/under-graduate/campus-card/card.png")
+    background-image url('https://static.airbob.org/under-graduate/campus-card/card.png')
     width 100%
     height 243rpx
     background-size cover

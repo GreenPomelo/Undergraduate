@@ -1,50 +1,89 @@
 <template>
-  <view class="container">
-    <view class="head-bg">
-      <view class="head-bg-container" @tap="goSelectRoom">
-        <view class="image"></view>
-        <view class="dorm">{{dorm}}</view>
-        <view class="arrow"></view>
-      </view>
-    </view>
-    <view class="main-container">
-      <view class="pay-account">本次充值宿舍：{{dormRoom}}</view>
-      <view class="pay-way">支付方式：银行卡绑定校园卡</view>
-      <picker range="{{modeArray}}" value="0" @change="changeMode">
-        <view class="list">
-          <view class="arrow"></view>
-          <view class="list-item-quick">
-            <view class="list-item-text item"> 充值类型</view>
-            <view class="list-item-text">{{modeArray[modeIndex]}}</view>
+  <BaseContainer navTitle="电费充值">
+    <view slot="qy-content">
+      <view class="container">
+        <view class="header-tip">
+          <view class="image-container"></view>
+          <view class="tip-font">肖辰旭提示你：剩余电量数据可能存在5min的延迟，请耐心等待哦~</view>
+        </view>
+        <view class="head-bg">
+          <view class="head-bg-container" @tap="goSelectRoom">
+            <view class="image" wx:if="{{dorm === '点击添加宿舍地址'}}"></view>
+            <view class="dorm" wx:if="{{dorm === '点击添加宿舍地址'}}">{{dorm}}</view>
+            <view class="remain-electricity" wx:if="{{dorm !== '点击添加宿舍地址'}}">
+              <view class="title">{{dorm}}剩余电量（度）</view>
+              <view class="remains">{{remainEle}}</view>
+            </view>
+            <view class="arrow"></view>
           </view>
         </view>
-      </picker>
-      <view class="quick-pay-container">
-        <view class="quick-pay-item" @tap.stop="putMoney" data-charge="10">10元</view>
-        <view class="quick-pay-item" @tap.stop="putMoney" data-charge="20">20元</view>
-        <view class="quick-pay-item" @tap.stop="putMoney" data-charge="30">30元</view>
-        <view class="quick-pay-item" @tap.stop="putMoney" data-charge="50">50元</view>
-      </view>
-      <view class="list">
-        <view class="list-item-quick">
-          <view class="list-item-text item"> 充值金额</view>
-          <input class="list-item-text input" type="digit" @input="putMoney" value="{{charge}}" placeholder="可输入1-300元整数金额" placeholder-style="font-size:30rpx;color:#888888" cursor-spacing="130" />
+        <view class="main-container">
+          <view class="pay-account">本次充值宿舍：{{dormRoom}}</view>
+          <view class="pay-way">支付方式：银行卡绑定校园卡</view>
+          <picker range="{{modeArray}}" value="0" @change="changeMode" wx:if="{{dormItem.campus === 0}}">
+            <view class="list">
+              <view class="arrow"></view>
+              <view class="list-item-quick">
+                <view class="list-item-text item">充值类型</view>
+                <view class="list-item-text">{{modeArray[modeIndex]}}</view>
+              </view>
+            </view>
+          </picker>
+          <view class="quick-pay-container">
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="10">10元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="20">20元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="30">30元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="50">50元</view>
+          </view>
+          <view class="list">
+            <view class="list-item-quick">
+              <view class="list-item-text item">充值金额</view>
+              <input
+                class="list-item-text input"
+                type="digit"
+                @input="putMoney"
+                value="{{charge}}"
+                placeholder="可输入1-300元整数金额"
+                placeholder-style="font-size:30rpx;color:#888888"
+                cursor-spacing="130"
+              >
+            </view>
+          </view>
+          <view class="button-container">
+            <button
+              @tap.stop="openPayModal"
+              class="enter-button {{(charge === '' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}"
+              hover-class="button-click"
+              disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}"
+            >确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}</button>
+            <button @tap.stop="getQueryElec" class="get-query-elec">电费查询</button>
+          </view>
         </view>
+        <PayFlow
+          :electricURL.sync="electricURL"
+          :open.sync="isPayModalOpen"
+          type="electric"
+          :charge.sync="charge"
+          payWay="校园卡电费转账"
+          :operateContent="modeArray[modeIndex]"
+        />
       </view>
-      <button @tap.stop="openPayModal" class="enter-button {{(charge==='' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}" hover-class="button-click" disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}">
-        确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}
-      </button>
     </view>
-    <PayFlow :electricURL.sync="electricURL" :open.sync="isPayModalOpen" type="electric" :charge.sync="charge" payWay="校园卡电费转账" :operateContent="modeArray[modeIndex]" />
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
 import PayFlow from "../components/pay-flow";
+import JudgeStatus from "@/mixins/module";
+import { getRemainEle } from "@/api/campusCard";
+import { getDefaultDorm } from "@/api/common";
+import BaseContainer from "@/components/baseContainer";
+
 export default class ElectricCharge extends wepy.page {
   data = {
     charge: "",
+    remainEle: 0,
     isPayModalOpen: false,
     isPageUp: false,
     modeArray: ["小寝电费充值", "大寝电费充值"],
@@ -53,11 +92,14 @@ export default class ElectricCharge extends wepy.page {
     useOnce: -1,
     dorm: "点击添加宿舍地址",
     dormRoom: "请先添加宿舍",
-    dormItem: {}
+    dormItem: {},
+    visitorModeStatus: false
   };
   components = {
-    PayFlow
+    PayFlow,
+    BaseContainer
   };
+  mixins = [JudgeStatus];
   config = {
     navigationBarTitleText: "电费充值"
   };
@@ -91,25 +133,10 @@ export default class ElectricCharge extends wepy.page {
     }
   };
   methods = {
-    async openPayModal() {
-      this.isPayModalOpen = true;
-      const roomId =
-        (this.dormItem.campus === 1 || this.dormItem.campus === "1"
-          ? "0"
-          : "") +
-        this.dormItem.bigRoom +
-        (this.dormItem.campus === 1 || this.dormItem.campus === "1"
-          ? ""
-          : this.modeIndex === "0" || this.modeIndex === 0
-            ? this.dormItem.smallRoom
-            : "0");
-      // const buildingId =
-      //   this.dormItem.areaName === "青教"
-      //     ? Number(this.dormItem.buildingName + 48).toString()
-      //     : this.dormItem.buildingName.toString();
-      this.electricURL = `campus=${
-        this.dormItem.campus
-      }&roomId=${roomId}&buildingId=${this.dormItem.buildingId}`; // 用来在PayFlow中拼接 金额和密码
+    getQueryElec() {
+      this.$navigate({
+        url: "./add-room?method=query-elec"
+      });
     },
     closePayModal() {
       this.isPayModalOpen = false;
@@ -124,11 +151,34 @@ export default class ElectricCharge extends wepy.page {
     },
     putMoney(e) {
       // 校验金额
-      const value = Number(e.detail.value || e.target.dataset.charge);
+      const value = Number(e.detail.value);
       this.putCharge(value);
     },
-    changeMode(e) {
+    fastPay(e) {
+      const value = Number(e.target.dataset.charge);
+      this.putCharge(value);
+      this.openPayModal();
+    },
+    async changeMode(e) {
       this.modeIndex = e.detail.value;
+      if (this.modeIndex === "1" || this.modeIndex === 1) {
+        const publicEle = this.dormItem.roomId.substr(0, 3) + "0";
+        const data = await this.queryEleRemain(
+          this.dormItem.buildingId,
+          publicEle
+        );
+        this.dorm =
+          this.dormItem.campusName + "校区 " + data.bdName + " " + data.rmName;
+        this.$apply();
+      } else if (this.modeIndex === "0" || this.modeIndex === 0) {
+        const data = await this.queryEleRemain(
+          this.dormItem.buildingId,
+          this.dormItem.roomId
+        );
+        this.dorm =
+          this.dormItem.campusName + "校区 " + data.bdName + " " + data.rmName;
+        this.$apply();
+      }
     }
   };
   events = {
@@ -137,10 +187,105 @@ export default class ElectricCharge extends wepy.page {
       this.$apply();
     }
   };
+  async queryEleRemain(buildingId, roomId) {
+    if (this.dormItem.campus === "1" || this.dormItem.campus === 1) {
+      this.remainEle = "无法查询";
+      this.$apply();
+    } else {
+      const {
+        data: { data: remainEle }
+      } = await getRemainEle(buildingId, roomId);
+      this.remainEle = remainEle.remain || "";
+      this.$apply();
+      return remainEle;
+    }
+  }
+  openCheckModal() {
+    return wepy.showModal({
+      title: "金额确认",
+      content: `确定充值 ￥${this.charge} 到电费中吗？`,
+      showCancel: true,
+      cancelText: "否",
+      cancelColor: "#FF0000",
+      confirmText: "是",
+      confirmColor: "#3CC51F"
+    });
+  }
+  async openPayModal() {
+    if (this.visitorModeStatus) {
+      this.charge = "";
+      return this.$invoke("BaseContainer", "showVisitorTips");
+    }
+    const roomId =
+      (this.dormItem.campus === 1 || this.dormItem.campus === "1" ? "0" : "") +
+      this.dormItem.bigRoom +
+      (this.dormItem.campus === 1 || this.dormItem.campus === "1"
+        ? ""
+        : this.modeIndex === "0" || this.modeIndex === 0
+        ? this.dormItem.smallRoom
+        : "0");
+    // const buildingId =
+    //   this.dormItem.areaName === "青教"
+    //     ? Number(this.dormItem.buildingName + 48).toString()
+    //     : this.dormItem.buildingName.toString();
+    if (
+      this.dormItem &&
+      roomId &&
+      this.dormItem.buildingId &&
+      (this.dormItem.campus == 0 || this.dormItem.campus == 1)
+    ) {
+      this.electricURL = `campus=${
+        this.dormItem.campus
+      }&roomId=${roomId}&buildingId=${this.dormItem.buildingId}`; // 用来在PayFlow中拼接 金额和密码
+      if (this.charge > 0) {
+        if (this.charge > 50) {
+          const res = await this.openCheckModal();
+          if (res.confirm) {
+            this.isPayModalOpen = true;
+            this.$apply();
+          }
+        } else {
+          this.isPayModalOpen = true;
+        }
+      } else {
+        wepy
+          .showModal({
+            content: "金额错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          })
+          .then(res => {
+            this.charge = "";
+          });
+      }
+    } else {
+      wepy.showModal({
+        content: "请先添加宿舍",
+        confirmText: "知道了",
+        showCancel: false,
+        confirmColor: "#353535"
+      });
+    }
+  }
   putCharge(number) {
     this.charge = number;
   }
-  init() {
+  setDormText() {
+    this.dorm =
+      this.dormItem.campusName +
+      "校区 " +
+      this.dormItem.areaName +
+      " " +
+      this.dormItem.buildingName +
+      "栋 " +
+      this.dormItem.bigRoom +
+      (this.dormItem.campus === 1 || this.dormItem.campus === "1"
+        ? ""
+        : "-" + this.dormItem.smallRoom);
+    this.dormRoom = this.dorm;
+  }
+  async init() {
     const page = getCurrentPages();
     const nowPage = page[page.length - 1];
     this.useOnce = nowPage.data.useOnce;
@@ -149,31 +294,69 @@ export default class ElectricCharge extends wepy.page {
       if (this.useOnce !== -1 && this.useOnce !== "-1") {
         this.dormItem = this.selectRoom[this.useOnce];
       } else {
-        this.dormItem = this.selectRoom.filter(item => item.default)[0];
+        this.dormItem = this.selectRoom.find(item => item.default);
       }
-      this.dorm =
-        this.dormItem.campusName +
-        "校区 " +
-        this.dormItem.areaName +
-        " " +
-        this.dormItem.buildingName +
-        "栋 " +
-        this.dormItem.bigRoom +
-        (this.dormItem.campus === 1 || this.dormItem.campus === "1"
-          ? ""
-          : "-" + this.dormItem.smallRoom);
-      this.dormRoom = this.dorm;
+      this.setDormText();
+      await this.queryEleRemain(this.dormItem.buildingId, this.dormItem.roomId);
+    } else {
+      const {
+        data: { data, success }
+      } = await getDefaultDorm();
+      if (success && data) {
+        const {
+          area: campus,
+          yuanqu: areaName,
+          louhao: buildingId,
+          fanghao: bigRoom,
+          shihao: smallRoom
+        } = data;
+        const tempObj = {
+          areaName,
+          buildingId,
+          buildingName: parseInt(buildingId),
+          bigRoom,
+          smallRoom,
+          default: true,
+          thisTime: false
+        };
+        this.dormItem =
+          campus === "XL"
+            ? {
+                campusName: "仙林",
+                campus: 0,
+                roomId: bigRoom + smallRoom,
+                ...tempObj
+              }
+            : {
+                campusName: "三牌楼",
+                campus: 1,
+                roomId: "0" + bigRoom,
+                ...tempObj
+              };
+        wepy.setStorageSync("selectRoom", [this.dormItem]);
+        this.setDormText();
+        await this.queryEleRemain(
+          this.dormItem.buildingId,
+          this.dormItem.roomId
+        );
+      }
     }
   }
   onShow() {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
     this.init();
-    const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
-    if (!moduleStatus) {
-      // 一卡通维护中
-      wepy.redirectTo({
-        url: "../../others-page/pages/close"
-      });
+    if (!this.visitorModeStatus) {
+      const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
+      if (!moduleStatus) {
+        // 一卡通维护中
+        wepy.redirectTo({
+          url: "../../others-page/pages/close"
+        });
+      }
     }
+  }
+  onLoad(op) {
+    this.judgeStatus(op.name);
   }
 }
 </script>
@@ -183,6 +366,18 @@ export default class ElectricCharge extends wepy.page {
   display flex
   flex-direction column
   margin-top 38rpx
+  .header-tip
+    display flex
+    font-family PingFangSC-Regular
+    font-size 24rpx
+    color #888888
+    margin 0 35rpx 16rpx 35rpx
+    .image-container
+      width 46rpx
+      height 46rpx
+      background-size contain
+      background-repeat no-repeat
+      background-image url('https://static.airbob.org/under-graduate/campus-card/notice%21@2x.png')
   .head-bg
     background-image url('https://static.airbob.org/under-graduate/campus-card/elec.png')
     width 100%
@@ -220,6 +415,19 @@ export default class ElectricCharge extends wepy.page {
         color #fff
         font-size 34rpx
         font-family PingFangSC-Medium
+      .remain-electricity
+        display flex
+        flex-direction column
+        justify-content space-between
+        align-items center
+        color #fff
+        height 152rpx
+        .title
+          font-family PingFangSC-Regular
+          font-size 28rpx
+        .remains
+          font-family PingFangSC-Medium
+          font-size 80rpx
   .main-container
     margin 50rpx 35rpx 0 35rpx
     font-family PingFangSC-Regular
@@ -312,17 +520,28 @@ export default class ElectricCharge extends wepy.page {
             width 500rpx
           &:first-of-type
             color #353535
-  .enter-button
-    background #47cff5
-    border-radius 100rpx
-    width 100%
-    height 85rpx
-    line-height 85rpx
-    color rgb(255, 255, 255)
-    margin-top 60rpx
-    &:after
-      border 0
-  .button-click
-    background-image none
-    background-color #D0F5FF
+  .button-container
+    display flex
+    justify-content space-between
+    .get-query-elec
+      background #F3A930
+      border-radius 100rpx
+      width 32%
+      height 85rpx
+      line-height 85rpx
+      color rgb(255, 255, 255)
+      margin-top 60rpx
+    .enter-button
+      background #47cff5
+      border-radius 100rpx
+      width 62%
+      height 85rpx
+      line-height 85rpx
+      color rgb(255, 255, 255)
+      margin-top 60rpx
+      &:after
+        border 0
+    .button-click
+      background-image none
+      background-color #D0F5FF
 </style>

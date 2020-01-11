@@ -1,115 +1,128 @@
 <template>
-  <view class="container">
-    <view class="bg" />
-    <view class="head-container">
-      <view class="head-item">地点</view>
-      <view class="head-item">交易方式</view>
-      <view class="head-item">收支</view>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <view class="container">
+        <view class="bg"/>
+        <view class="head-container">
+          <view class="head-item">地点</view>
+          <view class="head-item">交易方式</view>
+          <view class="head-item">收支</view>
+        </view>
+        <scroll-view class="scroll-container" scroll-y @scrolltolower="loadMore">
+          <repeat for="{{detailsKeys}}" key="index">
+            <ConsumptionDetailCard :occTime="item" :list="details[item]"/>
+          </repeat>
+        </scroll-view>
+      </view>
     </view>
-    <scroll-view class="scroll-container" scroll-y @scrolltolower="loadMore">
-      <repeat for="{{detailsKeys}}" key="index">
-        <ConsumptionDetailCard :occTime="item" :list="details[item]" />
-      </repeat>
-    </scroll-view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
-  import wepy from "wepy";
-  import ConsumptionDetailCard from "../components/consumption-detail-card";
-  import { oneDayTurnOver } from "@/api/campusCard";
+import wepy from "wepy";
+import ConsumptionDetailCard from "../components/consumption-detail-card";
+import BaseContainer from "@/components/baseContainer";
+import { oneDayTurnOver } from "@/api/campusCard";
+import { mockOneDayTurnOver } from "@/mock/campusCard";
+import navigation from "@/components/qy-navigation";
 
-  export default class ConsumptionDetail extends wepy.page {
-    components = {
-      ConsumptionDetailCard
-    };
-    data = {
-      details: {},
-      detailsKeys: [],
-      page: 1,
-      loadingStatus: false // 当前是否在加载数据
-    };
-    config = {
-      navigationBarTitleText: "消费明细",
-      enablePullDownRefresh: true
-    };
-    async onLoad() {
-      // 默认获取15条
-      this.getDetails();
-    }
-    // onPullDownRefresh(){
-    //   this.page =1;
-    //   this.getDetails();
-    //   wepy.stopPullDownRefresh();
-    // };
-    async getDetails() {
-      wepy.showLoading({
-        title: "正在加载"
-      });
-      if (this.page === 1) {
-        this.detailsKeys = [];
-        this.details = {};
-      }
-      const res = await oneDayTurnOver(this.page);
-      if (res.data) {
-        res.data.data.forEach(item => {
-          if (this.details[item.occtime.slice(0, 10)]) {
-            this.details[item.occtime.slice(0, 10)] = [
-              ...this.details[item.occtime.slice(0, 10)],
-              item
-            ];
-          } else {
-            this.details[item.occtime.slice(0, 10)] = [item];
-          }
-        });
-        this.detailsKeys = Object.keys(this.details);
-        wepy.hideLoading();
-        this.loadingStatus = false;
-        this.page = this.page + 1;
-        this.$apply();
-      }
-      // this.$apply();
-    }
-    methods = {
-      loadMore() {
-        if (!this.loadingStatus) {
-          this.loadingStatus = true;
-          this.getDetails();
-        }
-      }
-    };
+export default class ConsumptionDetail extends wepy.page {
+  components = {
+    ConsumptionDetailCard,
+    BaseContainer
+  };
+  data = {
+    navTitle: "消费明细",
+    details: {},
+    detailsKeys: [],
+    page: 1,
+    loadingStatus: false, // 当前是否在加载数据
+    visitorModeStatus: false
+  };
+  config = {
+    navigationBarTitleText: "消费明细",
+    enablePullDownRefresh: true
+  };
+  async onLoad() {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    // 默认获取15条
+    this.getDetails();
   }
+  // onPullDownRefresh(){
+  //   this.page =1;
+  //   this.getDetails();
+  //   wepy.stopPullDownRefresh();
+  // };
+  async getDetails() {
+    wepy.showLoading({
+      title: "正在加载"
+    });
+    if (this.page === 1) {
+      this.detailsKeys = [];
+      this.details = {};
+    }
+    const res = !this.visitorModeStatus
+      ? await oneDayTurnOver(this.page)
+      : await mockOneDayTurnOver();
+    if (res.data) {
+      res.data.data.forEach(item => {
+        if (this.details[item.occtime.slice(0, 10)]) {
+          this.details[item.occtime.slice(0, 10)] = [
+            ...this.details[item.occtime.slice(0, 10)],
+            item
+          ];
+        } else {
+          this.details[item.occtime.slice(0, 10)] = [item];
+        }
+      });
+      this.detailsKeys = Object.keys(this.details);
+      wepy.hideLoading();
+      this.loadingStatus = false;
+      this.page = this.page + 1;
+      this.$apply();
+    }
+    // this.$apply();
+  }
+  methods = {
+    loadMore() {
+      if (!this.loadingStatus) {
+        this.loadingStatus = true;
+        this.getDetails();
+      }
+    }
+  };
+}
 </script>
 <style lang="stylus" scoped>
 .container
-	display flex
-	flex-direction column
-	.bg
-		width 100vw
-		height 100vh
-		position fixed
-		background-color #F5F5F5
-		z-index -1000
-  .scroll-container
-		height 100vh
-	.head-container
-		background-color white
-		height 89rpx
-		width 100%
-		background-size contain
-		display flex
-		background-image url("https://static.airbob.org/under-graduate/card_list_detail_bg.png")
-		justify-content space-around
-		font-size 32rpx
-		font-weight bold
-		color #353535
-		align-items center
-		.head-item
-			width 33%
-			height 67rpx
-			line-height 67rpx
-			text-align center
-			& + .head-item
-				border-left 2rpx solid #e3e3e3
+  display flex
+  flex-direction column
+  .bg
+    width 100vw
+    height 100vh
+    position fixed
+    background-color #F5F5F5
+    z-index -1000
+.scroll-container
+  height 100vh
+.head-container
+  background-color white
+  height 89rpx
+  width 100%
+  background-size contain
+  display flex
+  background-image url('https://static.airbob.org/under-graduate/card_list_detail_bg.png')
+  justify-content space-around
+  font-size 32rpx
+  font-weight bold
+  color #353535
+  align-items center
+  .head-item
+    width 33%
+    height 67rpx
+    line-height 67rpx
+    text-align center
+    & + .head-item
+      border-left 2rpx solid #e3e3e3
 </style>
 

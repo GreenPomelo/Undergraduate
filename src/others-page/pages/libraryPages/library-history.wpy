@@ -1,0 +1,160 @@
+<template>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <view class="container">
+        <repeat for="{{historyBook}}" key="index" index="index" item="item">
+          <view class="hist-container">
+            <view class="hist-header-container" @tap="{{check[index]? 'checkDetails' : 'hideDetails'}}" data-index="{{index}}">
+              <view class="hist-title">{{item.name}}</view>
+              <image class="button-down" src="https://static.airbob.org/under-graduate/image/score/button_down.png" animation="{{spin[index]}}">
+            </view>
+            <view class="hist-info-container" id="histbook{{index}}" animation="{{show[index]}}">
+              <view class="hist-item">借书日期：{{item.borrowDate}}</view>
+                <view class="hist-item">还书日期：{{item.returnDate }}</view>
+                <view class="hist-item">借书地点：{{item.location}}</view>
+              </view>
+          </view>
+        </repeat>
+        <view class="hist-pic-container" wx:if="{{noHist}}">
+          <image class="hist-emptyPic" src="https://static.airbob.org/under-graduate/pic_empty.png">
+          <view>你好像从未借书，快去图书馆淘一淘！</view>
+        </view>
+      </view>
+   </view>
+  </BaseContainer>
+</template>
+
+<script>
+  import wepy from "wepy";
+  import BaseContainer from "@/components/baseContainer";
+  import { checkBookHistory } from "@/api/library";
+  import { mockCheckBookHistory } from "@/mock/library";
+  export default class LibraryRecommened extends wepy.page {
+    config = {
+      navigationBarTitleText: "历史借阅"
+    };
+    data = {
+      navTitle: "历史借阅",
+      historyBook: [],
+      check: [],
+      spin: [],
+      show: [],
+      noHist: false,
+      visitorModeStatus: false
+    };
+    components = {
+      BaseContainer
+    };
+    methods = {
+      checkDetails(e) {
+        let index = e.currentTarget.dataset.index;
+        this.check[index] = false;
+        let show = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        let spin = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        show.height("135rpx").step();
+        spin.rotate(-90).step();
+        this.show[index] = show;
+        this.spin[index] = spin;
+        this.$apply();
+      },
+      hideDetails(e) {
+        const index = e.currentTarget.dataset.index;
+        this.check[index] = true;
+        let show = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        let spin = wepy.createAnimation({
+          duration: 300,
+          timingFunction: "ease"
+        });
+        show.height(0).step();
+        spin.rotate(0).step();
+        this.spin[index] = spin.export();
+        this.show[index] = show.export();
+        this.$apply();
+      }
+    };
+    init() {
+      wepy.showLoading({
+        title: "加载中"
+      });
+      let ifCheckBookHistory = this.visitorModeStatus
+        ? mockCheckBookHistory()
+        : checkBookHistory();
+      ifCheckBookHistory.then(res => {
+        if (res.data && res.data.data) {
+          this.historyBook = res.data.data;
+          if (!this.historyBook.length) {
+            this.noHist = true;
+          }
+          for (let i = 0; i < this.historyBook.length; i++) {
+            this.check.push(true);
+            this.show.push({});
+            this.spin.push({});
+          }
+          this.$apply();
+        }
+        wepy.hideLoading();
+      });
+    }
+    onLoad() {
+      this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+      this.init();
+    }
+  }
+</script>
+
+<style lang="stylus" scoped>
+.container
+  width 100vw
+  height 100%
+  color #353535
+  .hist-container
+    padding 26rpx 30rpx
+    width 665rpx
+    box-shadow 0rpx 0rpx 10rpx 0rpx rgba(0, 0, 0, 0.05)
+    margin 0 auto
+    margin-top 30rpx
+    box-sizing border-box
+    border-radius 20rpx
+    .hist-header-container
+      display flex
+      flex-direction row
+      justify-content space-between
+      align-items center
+      .hist-title
+        font-size 30rpx
+        font-weight bold
+        width 570rpx
+        overflow hidden
+        text-overflow ellipsis
+        white-space nowrap
+      .button-down
+        width 31rpx
+        height 16rpx
+    .hist-info-container
+      width 665rpx
+      height 0
+      font-size 24rpx
+      overflow hidden
+      .hist-item
+        line-height 45rpx
+  .hist-pic-container
+    height 100vh
+    width 100vw
+    position absolute
+    display flex
+    flex-direction column
+    align-items center
+    justify-content center
+    font-size 28rpx
+    color #999CA0
+
+</style>

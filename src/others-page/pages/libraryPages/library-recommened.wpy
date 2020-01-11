@@ -1,51 +1,79 @@
 <template>
   <view>
-    <!-- <qy-navigation :title="navTitle"></qy-navigation> -->
-    <!-- <qy-container> -->
-      <!-- <view slot="qy-content"> -->
-        <view class="divide-line"></view>
-        <view class="recommened-container">
-          <form class="recommened-form" @submit="submitRecomened">
-            <view class="recommened-title">
-              书名（必填）
-            </view>
-            <input type="text" class="recommened-input" name="bookname" placeholder="输入书名" placeholder-style="color: #999CA0" bindinput="inputBookName"/>
-            <view class="recommened-title">
-              作者（必填）
-            </view>
-            <input type="text" class="recommened-input" name="author" placeholder="输入作者名字" placeholder-style="color: #999CA0" bindinput="inputAuthor"/>
-            <view class="recommened-title">
-              出版社
-            </view>
-            <input type="text" class="recommened-input" name="publisher" placeholder="输入出版社" placeholder-style="color: #999CA0"/>
-            <view class="recommened-title">
-              出版年份
-            </view>
-            <input type="text" class="recommened-input" name="publishtime" placeholder="输入出版年份" placeholder-style="color: #999CA0"/>
-            <view class="recommened-title">
-              ISBN
-            </view>
-            <input type="text" class="recommened-input" name="ISBN" placeholder="输入该书的ISBN号，如978-7-121-16072-1" placeholder-style="color: #999CA0"/>
-            <view class="radio-group">
-              <label class="recommened-title-inline">语种</label>
-              <label class="radio" wx:for="{{languages}}" wx:for-item="lang" wx:key="key">
-                <icon type="success" wx:if="{{lang.checked}}" color="#000" size="{{(winWidth/750)*30}}"></icon>
-                <icon type="circle" wx:else size="{{(winWidth/750)*30}}"></icon>
-                <text class="radio-group-text" data-langName="{{lang.name}}" @tap="selectLanguage">{{lang.value}}</text>
-              </label>
-            </view>
-            <button class="recommened-button" form-type="submit" style="background-image:url({{necessary?submitbtn.highlight:submitbtn.disabled}});" disabled="{{!necessary}}">荐购</button>
-          </form>
+    <!-- <view slot="qy-content"> -->
+    <qy-navigation :title="navTitle"></qy-navigation>
+    <view class="divide-line"></view>
+    <view class="recommened-container">
+      <form class="recommened-form" @submit="submitRecomened">
+        <view class="recommened-title">书名（必填）</view>
+        <input
+          type="text"
+          class="recommened-input"
+          name="bookname"
+          placeholder="输入书名"
+          placeholder-style="color: #999CA0"
+          bindinput="inputBookName"
+        >
+        <view class="recommened-title">作者（必填）</view>
+        <input
+          type="text"
+          class="recommened-input"
+          name="author"
+          placeholder="输入作者名字"
+          placeholder-style="color: #999CA0"
+          bindinput="inputAuthor"
+        >
+        <view class="recommened-title">出版社</view>
+        <input
+          type="text"
+          class="recommened-input"
+          name="publisher"
+          placeholder="输入出版社"
+          placeholder-style="color: #999CA0"
+        >
+        <view class="recommened-title">出版年份</view>
+        <input
+          type="text"
+          class="recommened-input"
+          name="publishtime"
+          placeholder="输入出版年份"
+          placeholder-style="color: #999CA0"
+        >
+        <view class="recommened-title">ISBN</view>
+        <input
+          type="text"
+          class="recommened-input"
+          name="ISBN"
+          placeholder="输入该书的ISBN号，如978-7-121-16072-1"
+          placeholder-style="color: #999CA0"
+        >
+        <view class="radio-group">
+          <label class="recommened-title-inline">语种</label>
+          <label class="radio" wx:for="{{languages}}" wx:for-item="lang" wx:key="key">
+            <icon type="success" wx:if="{{lang.checked}}" color="#000" size="{{(winWidth/750)*30}}"></icon>
+            <icon type="circle" wx:else size="{{(winWidth/750)*30}}"></icon>
+            <text
+              class="radio-group-text"
+              data-lang-name="{{lang.name}}"
+              @tap="selectLanguage"
+            >{{lang.value}}</text>
+          </label>
         </view>
-      </view>
-    <!-- </qy-container> -->
+        <button
+          class="recommened-button"
+          form-type="submit"
+          style="background-image:url({{necessary?submitbtn.highlight:submitbtn.disabled}});"
+          disabled="{{!necessary}}"
+        >荐购</button>
+      </form>
+    </view>
+  </view>
   <!-- </view> -->
 </template>
 
 <script>
 import wepy from "wepy";
 import navigation from "@/components/qy-navigation";
-import container from "@/components/qy-container";
 import { recommendBook } from "@/api/library";
 
 export default class LibraryRecommened extends wepy.page {
@@ -57,8 +85,16 @@ export default class LibraryRecommened extends wepy.page {
     winWidth: 0,
     winHeight: 0,
     languages: [
-      { name: "Chinese", value: "中文", checked: true },
-      { name: "Foreign", value: "西文", checked: false }
+      {
+        name: "Chinese",
+        value: "中文",
+        checked: true
+      },
+      {
+        name: "Foreign",
+        value: "西文",
+        checked: false
+      }
     ],
     lang: "Chinese",
     submitbtn: {
@@ -73,8 +109,7 @@ export default class LibraryRecommened extends wepy.page {
     recommenedHistory: []
   };
   components = {
-    "qy-navigation": navigation,
-    "qy-container": container
+    "qy-navigation": navigation
   };
   methods = {
     selectLanguage(e) {

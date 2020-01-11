@@ -2,31 +2,31 @@
   <view class="container">
     <view class="head" @tap.stop="toggleShow">{{result.title}}</view>
     <view class="list-container" style="{{show?'':'display:none'}}">
-        <view class="grade-item">
-          <text class="grade-text">考试年份：{{result.year}}</text>
-          <text class="grade-text">考试学期：{{result.term}}</text>
-          <text class="grade-text">准考证号：{{result.number}}</text>
-          <text class="grade-text">考试成绩：{{result.result}}</text>
-        </view>
+      <view class="grade-item">
+        <text class="grade-text">考试年份：{{result.year}}</text>
+        <text class="grade-text">考试学期：{{result.term}}</text>
+        <text class="grade-text">准考证号：{{result.number}}</text>
+        <text class="grade-text">考试成绩：{{result.result}}</text>
+      </view>
     </view>
   </view>
 </template>
 <script>
-  import wepy from "wepy";
-  export default class GradeCard extends wepy.component {
-    props = {
-      result: Object,
-      show: {
-        default: false,
-        type: Boolean
-      }
-    };
-    methods = {
-      toggleShow() {
-        this.$emit("showGradeChange", this.$index);
-      }
-    };
-  }
+import wepy from "wepy";
+export default class GradeCard extends wepy.component {
+  props = {
+    result: Object,
+    show: {
+      default: false,
+      type: Boolean
+    }
+  };
+  methods = {
+    toggleShow() {
+      this.$emit("showGradeChange", this.$index);
+    }
+  };
+}
 </script>
 <style lang="stylus" scoped>
 .container
@@ -34,10 +34,10 @@
   flex-direction column
   align-items center
   margin-top 31rpx
-  min-height auto!important
+  min-height auto !important
   .head
-    font-size  30rpx
-    font-family "SimHei"
+    font-size 30rpx
+    font-family 'SimHei'
     color rgb(52, 177, 244)
     line-height 1.2
     height 100rpx
@@ -45,7 +45,7 @@
     box-shadow 0rpx 3rpx 13.8rpx 6.2rpx rgba(50, 203, 240, 0.35)
     border-radius 30rpx
     background-color rgb(255, 255, 255)
-    z-index: 40
+    z-index 40
     display flex
     align-items center
     justify-content center
@@ -66,7 +66,7 @@
       .grade-text
         font-size 29rpx
         margin-bottom 6rpx
-        font-family "SimHei"
+        font-family 'SimHei'
         color rgb(53, 53, 53)
         line-height 1.458
   .none
