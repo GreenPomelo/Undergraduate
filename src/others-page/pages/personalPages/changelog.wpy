@@ -1,113 +1,39 @@
 <template>
   <view>
+    <qy-navigation :title="navTitle"></qy-navigation>
     <view style="box-sizing: border-box;width: 100vw">
       <view style="margin-left: 70rpx" id="scroll-view">
         <repeat for="{{logList}}" key="index">
           <change-log-item :log="item"/>
         </repeat>
       </view>
-      <view class="toTop" @tap="toTop">
-        Top
-      </view>
+      <view class="toTop" @tap="toTop">Top</view>
     </view>
   </view>
 </template>
 
 <script>
 import wepy from "wepy";
-
+import navigation from "@/components/qy-navigation";
 import changeLogItem from "../../components/changeLogItem";
+import { getUpdateLog } from "@/mock/common";
 
 export default class extends wepy.page {
+  config = {
+    navigationBarTitleText: "更新日志"
+  };
+  components = {
+    "change-log-item": changeLogItem,
+    "qy-navigation": navigation
+  };
   data = {
     navTitle: "更新日志",
     logList: [
       {
         title: "小程序持续更新中",
         content: ""
-      },
-      {
-        title: "2018-11-11 新版本(V3.3.0)",
-        content: [
-          "社团招新的船新版本",
-          "新增了问卷功能",
-          "新增了失物认领添加匿名的功能",
-          "优化了图书馆功能",
-          "资讯页面的重新启动以及添加提示小红点"
-        ]
-      },
-      {
-        title: "2018-8-13 新版本(V3.2.0)",
-        content: [
-          "修改注册登录的逻辑",
-          "增加了修改绑定手机功能",
-          "更新了一卡通的页面风格",
-          "增加了电费充值绑定宿舍的功能",
-          "增加了学费查询功能",
-          "添加跳转到校谈的入口",
-          "微调了一些ui，修复了一些bug",
-          "运营在痛骂程序员不给力"
-        ]
-      },
-      {
-        title: "2018-4-20 新版本(V3.0.1)",
-        content: [
-          "登录注册添加友好错误提示",
-          "修复图书馆搜索结果bug",
-          "修复反馈对话界面的消息排版出错bug",
-          "修复挂失列表加载问题",
-          "完成考试倒计时"
-        ]
-      },
-      {
-        title: "2018-4-8 新版本(V3.0)",
-        content: [
-          "新增绑定用户手机号功能",
-          "新增电费、网费充值",
-          "新增用户消息系统",
-          "新增搜索功能页",
-          "新增GPA计算器",
-          "完善课表查询",
-          "完善考试倒计时",
-          "祭天了一个产品经理"
-        ]
-      },
-      {
-        title: "2017-10-12 (V2.4)",
-        content: [
-          "增加了青柚工作室招新",
-          "更改了欢迎页面",
-          "增加了我的反馈页面，大家可以看到自己的反馈状态",
-          "程序员已经快要祭不动了"
-        ]
-      },
-      {
-        title: "2017-9-1 (V2.3)",
-        content: [
-          "修复社团招新的一些bug",
-          "校园卡功能恢复",
-          "新增了欢迎页面",
-          "体育部功能恢复正常使用",
-          "祭天的程序员被拉出来又祭了一次"
-        ]
-      },
-      {
-        title: "2017-8-10 新版本(V2.0)",
-        content: [
-          "新增更多功能入口",
-          "新增考试查询、补考查询，等级考试，补考辅导课查询功能",
-          "新增查学费功能",
-          "新增图书馆荐购功能",
-          "新增校园卡挂失，解挂失，发布挂失消息功能",
-          "新增资讯详情页附件在线预览功能",
-          "完善更新密码的方式",
-          "完善课表查询功能"
-        ]
       }
     ]
-  };
-  components = {
-    "change-log-item": changeLogItem
   };
   methods = {
     toTop() {
@@ -117,6 +43,21 @@ export default class extends wepy.page {
       });
     }
   };
+  async onLoad() {
+    try {
+      wepy.showLoading({
+        title: "加载更新日志中...", //提示的内容,
+        mask: true //显示透明蒙层，防止触摸穿透,
+      });
+      const {
+        data: { data }
+      } = await getUpdateLog();
+      this.logList = data;
+      this.$apply();
+    } finally {
+      wepy.hideLoading();
+    }
+  }
 }
 </script>
 

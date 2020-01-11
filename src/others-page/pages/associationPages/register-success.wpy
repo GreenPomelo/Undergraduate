@@ -1,38 +1,50 @@
 <template>
   <view class="container">
+    <qy-navigation :title="navTitle"></qy-navigation>
     <view class="header"></view>
     <view class="body-container">
       <view class="body">
         <view class="register-result">
-          <image src="{{modifyStatus}}" />
+          <image src="https://static.airbob.org/association-success/QjE2MDEyMzI3LeaKpeWQjeeVjOmdoi5wbmc=">
         </view>
-        <view class="advertisement">
-          <image src="https://static.airbob.org/under-graduate/advertise_asso.jpg" />
-        </view>
+        <!-- <view class="advertisement">
+          <image src="https://static.airbob.org/under-graduate/advertise_asso.jpg">
+        </view> -->
         <view class="cut-line"></view>
         <view class="footer">
           使用南邮小程序招新系统报名社团与线下填写纸质表具有相同报名效力。
-且线上报名更加方便、快捷、环保。
+          且线上报名更加方便、快捷、环保。
         </view>
       </view>
-      <navigator open-type="navigate" hover-class="none" path="/other-pages/tag?id={{tagId}}&token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="submission">
-        <view>去校谈,聊社团</view>
-      </navigator>
+      <view
+        @tap.stop="toAssociationHome"
+        class="submission"
+      >
+        <view>查看更多社团</view>
+      </view>
     </view>
   </view>
 </template>
 
 <script>
 import wepy from "wepy";
+import navigation from "@/components/qy-navigation";
+import pageJump from "@/others-page/mixins/page-jump.js";
+
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "社团报名"
   };
+  components = {
+    "qy-navigation": navigation
+  };
   data = {
+    navTitle: "社团报名",
     modify: false,
     tagId: 0,
     schoolTalkToken: ""
   };
+  mixins = [pageJump];
   computed = {
     modifyStatus() {
       return this.modify === "true"
@@ -69,8 +81,9 @@ export default class extends wepy.page {
     align-items center
     .body
       margin 14px 12.5px 16px 12.5px
-      width 350px
-      height 536px
+      // width 350px
+      // height 536px
+      width 90vw
       background-color #ffffff
       box-shadow 0px 0px 12px 0px rgba(168, 168, 168, 0.5)
       border-radius 14px
@@ -78,11 +91,11 @@ export default class extends wepy.page {
       flex-direction column
       align-items center
       .register-result
-        margin-top 75px
-        margin-bottom 37px
+        margin-top 15px
+        margin-bottom 17px
         image
-          width 218px
-          height 153px
+          width 85vw
+          height 120vw
       .advertisement
         margin-bottom 39px
         image
@@ -92,7 +105,6 @@ export default class extends wepy.page {
         width 100%
         height 1px
         background rgba(218, 218, 218, 0.5)
-        margin-bottom 21px
       .footer
         width 246px
         height 51px
@@ -100,8 +112,9 @@ export default class extends wepy.page {
         font-family 'PingFangSC-Regular'
         font-size 12px
         color #9b9b9b
+        margin 10px 0px 10px 0px
     .submission
-      width 350px
+      width 90vw
       height 49px
       background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%)
       box-shadow 0px 0px 25px 0px rgba(168, 168, 168, 0.5)

@@ -1,0 +1,83 @@
+<template>
+  <view>
+    <view class="background">
+      <view class="content">
+        <view class="content-text">
+          <view class="content-title">记忆模式</view>
+          <p>你选择不开启记忆模式。</p>
+          <view>数据将在选择生效后被清空，且该操作不可逆。</view>
+          <view>感谢小程序能够陪伴你的大学时光。江湖再见！</view>
+          <p>请点击确定，选择生效。</p>
+        </view>
+        <button class="confirm-btn" @tap="next"><span>确定并清空数据</span></button>
+        <view class="reselect" @tap="reselect">重新选择</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  import { chooseMemoryMode } from "@/api/graduateMode";
+  export default class Login extends wepy.page {
+    data = {};
+    methods = {
+      reselect() {
+        wepy.navigateBack();
+      },
+      next() {
+        chooseMemoryMode(0);
+        wepy.navigateTo({ url: "./say-goodbye" });
+      }
+    };
+    onLoad() {}
+  }
+</script>
+
+<style lang="stylus" scoped>
+.background
+  position absolute
+  top 0
+  left 0
+  width 100vw
+  height 100vh
+  z-index 0
+  background url('https://static.airbob.org/under-graduate/memory/memory3.jpg') no-repeat
+  background-size cover
+  overflow hidden
+  display flex
+  justify-content center
+  .content
+    width 623rpx
+    margin-top 570rpx
+    color #000
+    .content-text
+      font-size 26rpx
+      color #4a4a4a
+      margin-bottom 75rpx
+      view
+        margin-bottom 20rpx
+      p
+        font-weight 700
+      .content-title
+        font-size 36rpx
+        font-weight 700
+        line-height 54rpx
+    .confirm-btn
+      width 630rpx
+      height 80rpx
+      border-radius 80rpx
+      color #fff
+      background-image linear-gradient(90deg, #ac7461 0%, #ae3506 100%),linear-gradient(#f2f2f2, #f2f2f2)
+      display flex
+      align-items center
+      justify-content center
+      margin-bottom 32rpx
+    .reselect
+      font-size 24rpx
+      color #282828
+      text-align center
+
+button:after
+  border none
+</style>

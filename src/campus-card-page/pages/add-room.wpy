@@ -1,62 +1,72 @@
 <template>
-<view>
-  <qy-tip :content.sync="tipContent" :on.sync="tipOn"/>
-  <view class="container">
-    <picker range="{{campusArray}}"  @change="changeCampus">
-      <view class="room-information">
-        <view class="arrow"></view>
-        <view class="information-name">校区</view>
-          <view class="information-item">{{campusArray[campusIndex]}}</view>
+  <BaseContainer :navTitle.sync="navigationBarTitleText">
+    <view slot="qy-content">
+      <view>
+        <qy-tip :content.sync="tipContent" :on.sync="tipOn"/>
+        <view class="container">
+          <picker range="{{campusArray}}"  @change="changeCampus">
+            <view class="room-information">
+              <view class="arrow"></view>
+              <view class="information-name">校区</view>
+                <view class="information-item">{{campusArray[campusIndex]}}</view>
+            </view>
+          </picker>
+          <picker range="{{buildingArray[campusIndex]}}" value="{{areaIndex}}" @change="changeArea">
+            <view class="room-information">
+              <view class="arrow"></view>
+              <view class="information-name">苑区</view>
+              <view class="information-item">{{buildingArray[campusIndex][areaIndex]}}</view>
+            </view>
+          </picker>
+          <picker range="{{campusIndex == 1 ? roomArray[0] : roomArray[areaIndex]}}" value="{{buildingIndex}}" @change="changeBuilding">
+            <view class="room-information">
+              <view class="arrow"></view>
+              <view class="information-name">楼栋</view>
+              <view class="information-item">{{campusIndex == 1 ? roomArray[0][buildingIndex] : roomArray[areaIndex][buildingIndex]}}栋</view>
+            </view>
+          </picker>
+          <view class="room-information">
+            <view class="information-name">大寝号</view>
+            <input placeholder="请输入大寝号，格式如101" value="{{bigRoom}}" @input="getBigRoom"/>
+          </view>
+          <view class="room-information">
+            <view class="information-name">小寝号</view>
+            <input placeholder="{{!queryElec ? '请输入小寝号，格式如1（三牌楼不填）' : '请输入小寝号，格式如1（查大寝不填）'}}" value="{{smallRoom}}" @input="getSmallRoom"/>
+          </view>
+          <view class="save {{(campusIndex == 0 && bigRoom !== '' && (queryElec || (!queryElec && smallRoom !== ''))) || (campusIndex == 1 && bigRoom !== '') ? 'active' : ''}}" @tap="queryRoom">
+            {{queryElec ? '查询' : '保存'}}
+          </view>
+        </view>
       </view>
-    </picker>
-    <picker range="{{campusIndex == 1 ? ['三牌楼'] : buildingArray}}" value="0" @change="changeArea">
-      <view class="room-information">
-        <view class="arrow"></view>
-        <view class="information-name">苑区</view>
-        <view class="information-item">{{campusIndex == 1 ? '三牌楼' : buildingArray[areaIndex]}}</view>
-      </view>
-    </picker>
-    <picker range="{{roomArray[areaIndex]}}" value="0" @change="changeBuilding">
-      <view class="room-information">
-        <view class="arrow"></view>
-        <view class="information-name">楼栋</view>
-        <view class="information-item">{{roomArray[areaIndex][buildingIndex]}}栋</view>
-      </view>
-    </picker>
-    <view class="room-information">
-      <view class="information-name">大寝号</view>
-      <input placeholder="请输入大寝号，格式如101" value="{{bigRoom}}" @input="getBigRoom"/>
     </view>
-    <view class="room-information">
-      <view class="information-name">小寝号</view>
-      <input placeholder="请输入小寝号，格式如1（三牌楼不填）" value="{{smallRoom}}" @input="getSmallRoom"/>
-    </view>
-    <view class="save {{(campusIndex == 0 && bigRoom !== '' && smallRoom !== '') || (campusIndex == 1 && bigRoom !== '') ? 'active' : ''}}" @tap="queryRoom">
-      保存
-    </view>
-  </view>
-</view>
-
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
-import QyTip from "../../components/qy-tip";
-import { getDorm } from "@/api/campusCard";
+import QyTip from "@/components/qy-tip";
+import { changeDefaultDorm } from "@/api/common";
+import { getDorm, getRemainEle } from "@/api/campusCard";
+import BaseContainer from "@/components/baseContainer";
+
 export default class addRoom extends wepy.page {
   data = {
     campusArray: ["仙林", "三牌楼"],
+    queryElec: false,
     buildingArray: [
-      "梅苑",
-      "兰苑",
-      "竹苑",
-      "菊苑",
-      "桃苑",
-      "李苑",
-      "柳苑",
-      "桂苑",
-      "荷苑",
-      "青教"
+      [
+        "梅苑",
+        "兰苑",
+        "竹苑",
+        "菊苑",
+        "桃苑",
+        "李苑",
+        "柳苑",
+        "桂苑",
+        "荷苑",
+        "青教"
+      ],
+      ["学一楼", "学二楼", "学三楼", "学四楼", "学五楼", "学六楼"]
     ],
     roomArray: [
       [1, 2, 3, 4, 5, 6],
@@ -78,13 +88,13 @@ export default class addRoom extends wepy.page {
     smallRoom: "",
     tipOn: false,
     tipContent: "",
-    storageIndex: -1
+    storageIndex: -1,
+    visitorModeStatus: false,
+    navigationBarTitleText: "新增宿舍地址"
   };
   components = {
-    "qy-tip": QyTip
-  };
-  config = {
-    navigationBarTitleText: "新增宿舍地址"
+    "qy-tip": QyTip,
+    BaseContainer
   };
   methods = {
     changeCampus(e) {
@@ -92,9 +102,15 @@ export default class addRoom extends wepy.page {
     },
     changeArea(e) {
       this.areaIndex = e.detail.value;
+      if (this.campusIndex == 1) {
+        this.buildingIndex = e.detail.value;
+      }
     },
     changeBuilding(e) {
       this.buildingIndex = e.detail.value;
+      if (this.campusIndex == 1) {
+        this.areaIndex = e.detail.value;
+      }
     },
     getBigRoom(e) {
       this.bigRoom = e.detail.value;
@@ -103,6 +119,49 @@ export default class addRoom extends wepy.page {
       this.smallRoom = e.detail.value;
     },
     async queryRoom() {
+      if (this.visitorModeStatus) {
+        return this.$invoke("BaseContainer", "showVisitorTips");
+      }
+      const roomIndex = this.campusIndex == 1 ? 0 : this.areaIndex;
+      const roomId =
+        this.campusIndex === 1 || this.campusIndex === "1"
+          ? "0" + this.bigRoom
+          : this.bigRoom + this.smallRoom;
+      const building =
+        this.areaIndex === 9 || this.areaIndex === "9"
+          ? Number(
+              this.roomArray[roomIndex][this.buildingIndex] + 48
+            ).toString()
+          : this.roomArray[roomIndex][this.buildingIndex].toString();
+      const buildingId =
+        new Array(Number(4 - building.length)).fill(0).join("") + building;
+      if (this.queryElec) {
+        if (this.campusIndex === "1" || this.campusIndex === 1) {
+          return wepy.showModal({
+            title: "无法查询",
+            content: "三牌楼电费暂时无法查询，请耐心等待一段时间哟~",
+            confirmColor: "#47CFF5",
+            showCancel: false,
+            confirmText: "知道了"
+          });
+        }
+        const newRoomId =
+          this.smallRoom === ""
+            ? this.bigRoom + "0"
+            : this.bigRoom + this.smallRoom;
+        const {
+          data: { data }
+        } = await getRemainEle(buildingId, newRoomId);
+        wepy.hideLoading();
+        return wepy.showModal({
+          title: data.bdName + "" + data.rmName,
+          content:
+            data.remain + "度\r\n" + "(电费充值成功后查询会有五分钟延迟哟~)",
+          confirmColor: "#47CFF5",
+          showCancel: false,
+          confirmText: "知道了"
+        });
+      }
       if (
         ((this.campusIndex === 0 || this.campusIndex === "0") &&
           this.bigRoom !== "" &&
@@ -111,44 +170,18 @@ export default class addRoom extends wepy.page {
           this.bigRoom !== "")
       ) {
         wepy.showLoading();
-        const roomId =
-          this.campusIndex === 1 || this.campusIndex === "1"
-            ? "0" + this.bigRoom
-            : this.bigRoom + this.smallRoom;
-        const building =
-          this.areaIndex === 9 || this.areaIndex === "9"
-            ? Number(
-                this.roomArray[this.areaIndex][this.buildingIndex] + 48
-              ).toString()
-            : this.roomArray[this.areaIndex][this.buildingIndex].toString();
-        const buildingId =
-          new Array(Number(4 - building.length)).fill(0).join("") + building;
         const res = await getDorm(this.campusIndex, roomId, buildingId);
         if (
           JSON.parse(res.data.data).query_elec_roominfo.retcode === 0 ||
           JSON.parse(res.data.data).query_elec_roominfo.retcode === "0"
         ) {
-          wepy.showToast({
-            title: "成功",
-            icon: "success",
-            duration: 2000
-          });
-          setTimeout(() => {
-            wepy.hideLoading();
-            wepy.navigateBack({
-              delta: 1
-            });
-          }, 2000);
           let item = {
             campus: this.campusIndex,
             roomId: roomId,
             buildingId: buildingId,
             campusName: this.campusArray[this.campusIndex],
-            areaName:
-              this.campusIndex === 1 || this.campusIndex === "1"
-                ? "三牌楼"
-                : this.buildingArray[this.areaIndex],
-            buildingName: this.roomArray[this.areaIndex][this.buildingIndex],
+            areaName: this.buildingArray[this.campusIndex][this.areaIndex],
+            buildingName: this.roomArray[roomIndex][this.buildingIndex],
             bigRoom: this.bigRoom,
             smallRoom: this.smallRoom,
             buildingIndex: this.buildingIndex,
@@ -157,8 +190,45 @@ export default class addRoom extends wepy.page {
           };
           if (this.storageIndex !== -1) {
             let storage = wepy.getStorageSync("selectRoom");
+            if (storage[this.storageIndex].default) {
+              item.default = true;
+              let changeRoom = {};
+              const rowDefaultRoom = storage.find(room => room.default);
+              Object.entries(rowDefaultRoom).forEach(([key, value]) => {
+                if (
+                  [
+                    "campus",
+                    "areaName",
+                    "buildingId",
+                    "bigRoom",
+                    "smallRoom"
+                  ].includes(key)
+                ) {
+                  if (rowDefaultRoom[key] !== item[key]) {
+                    changeRoom[key] = item[key];
+                  }
+                }
+              });
+              if (Object.keys(changeRoom).length) {
+                console.log(changeRoom);
+                const { studentId } =
+                  wepy.getStorageSync("userInfo") ||
+                  wepy.getStorageSync("User");
+                const {
+                  data: { data, success }
+                } = await changeDefaultDorm(changeRoom, studentId);
+                if (!success || !data) {
+                  return wepy.showToast({
+                    title: "不知道为什么失败了呢~",
+                    icon: "none",
+                    duration: 2000
+                  });
+                }
+              }
+            }
             storage[this.storageIndex] = item;
             wepy.setStorageSync("selectRoom", storage);
+            this.backToPrePage();
           } else {
             if (!wepy.getStorageSync("selectRoom")) {
               wepy.setStorageSync("selectRoom", [item]);
@@ -167,12 +237,14 @@ export default class addRoom extends wepy.page {
               rooms.push(item);
               wepy.setStorageSync("selectRoom", rooms);
             }
+            this.backToPrePage();
           }
         } else {
           this.tipOn = true;
           this.tipContent = JSON.parse(
             res.data.data
           ).query_elec_roominfo.errmsg;
+          wepy.hideLoading();
           this.$apply();
         }
       } else {
@@ -181,23 +253,49 @@ export default class addRoom extends wepy.page {
       }
     }
   };
+  backToPrePage() {
+    wepy.showToast({
+      title: "成功",
+      icon: "success",
+      duration: 2000
+    });
+    setTimeout(() => {
+      wepy.hideLoading();
+      wepy.navigateBack({
+        delta: 1
+      });
+    }, 2000);
+  }
   onLoad(e) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    if (e.method === "query-elec") {
+      this.navigationBarTitleText = "电费查询";
+      this.queryElec = true;
+    }
     if (e.item) {
       e.item = JSON.parse(e.item);
       this.campusIndex = e.item.campus;
-      let area = this.buildingArray
-        .map((item, index) => (item = { name: item, index: index }))
+      let area = this.buildingArray[this.campusIndex]
+        .map(
+          (item, index) =>
+            (item = {
+              name: item,
+              index: index
+            })
+        )
         .filter((item, index) => item.name === e.item.areaName);
-      if (this.campusIndex === 1 || this.campusIndex === "1") {
-        area = [
-          {
-            name: "三牌楼",
-            index: 0
-          }
-        ];
-      }
+      // if (this.campusIndex === 1 || this.campusIndex === "1") {
+      //   area = [
+      //     {
+      //       name: "三牌楼",
+      //       index: 0
+      //     }
+      //   ];
+      // }
       this.areaIndex = area[0].index;
-      this.buildingIndex = e.item.buildingIndex;
+      this.buildingIndex = e.item.buildingIndex
+        ? e.item.buildingIndex
+        : this.roomArray[this.areaIndex].indexOf(e.item.buildingName);
       this.bigRoom = e.item.bigRoom;
       this.smallRoom = e.item.smallRoom;
       this.storageIndex = Number(e.index);

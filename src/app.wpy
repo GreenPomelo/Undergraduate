@@ -5,8 +5,14 @@
 
 <script>
 import wepy from "wepy";
+import { setStore } from "wepy-redux";
+import configStore from "./store/index";
 // 抽离api
 import "wepy-async-function";
+// redux store
+const store = configStore();
+setStore(store);
+wepy.$store = store;
 
 // override showToast
 export default class extends wepy.app {
@@ -22,6 +28,7 @@ export default class extends wepy.app {
           "pages/information-box",
           "pages/libraryPages/library",
           "pages/libraryPages/library-recommened",
+          "pages/libraryPages/library-history",
           "pages/run",
           "pages/feedbackPages/feedback",
           "pages/feedbackPages/myfeedback",
@@ -35,6 +42,7 @@ export default class extends wepy.app {
           "pages/display-webview",
           "pages/tuition",
           "pages/personalPages/change-phone",
+          "pages/personalPages/change-password",
           "pages/associationPages/association",
           "pages/associationPages/association-detail",
           "pages/associationPages/association-register",
@@ -45,7 +53,8 @@ export default class extends wepy.app {
           "pages/questionnairePages/questionnaire",
           "pages/nicpPages/nicp-check-in",
           "pages/nicpPages/nicp-vote",
-          "pages/nicpPages/nicp-more"
+          "pages/nicpPages/nicp-more",
+          "pages/school-bus"
         ]
       },
       {
@@ -55,6 +64,7 @@ export default class extends wepy.app {
           "pages/check-grade",
           "pages/cut-down",
           "pages/course",
+          "pages/search-course",
           "pages/score-inquire",
           "pages/credit"
         ]
@@ -64,7 +74,12 @@ export default class extends wepy.app {
         pages: [
           "pages/pe-score",
           "pages/GpaCalculator",
-          "pages/calendar"
+          "pages/calendar",
+          "graduatePages/index",
+          "graduatePages/memory-choose",
+          "graduatePages/memory-mode",
+          "graduatePages/clear-memory",
+          "graduatePages/say-goodbye"
           // "pages/avatar"
         ]
       },
@@ -74,6 +89,7 @@ export default class extends wepy.app {
           "pages/campus-card-index",
           "pages/campus-card-charge",
           "pages/campus-card-loss",
+          "pages/money-log",
           "pages/campus-card-lossPage",
           "pages/consumption-detail",
           "pages/electric-charge",
@@ -84,14 +100,16 @@ export default class extends wepy.app {
       }
     ],
     window: {
-      backgroundTextStyle: "light",
+      backgroundTextStyle: "dark",
       navigationBarBackgroundColor: "#ffffff",
       navigationBarTitleText: "NJUPT",
-      navigationBarTextStyle: "black"
+      navigationBarTextStyle: "black",
+      navigationStyle: "custom"
     },
     tabBar: {
       color: "#353535",
       selectedColor: "#47CFF5",
+      backgroundColor: "#ffffff",
       list: [
         {
           pagePath: "pages/index",
@@ -112,7 +130,8 @@ export default class extends wepy.app {
           selectedIconPath: "assets/profile-active.png"
         }
       ]
-    }
+    },
+    navigateToMiniProgramAppIdList: ["wx7d66d77988bbeab3", "wxf8b4559a02c8266d"]
   };
   globalData = {
     cancelTokenData: {
@@ -185,8 +204,8 @@ export default class extends wepy.app {
       {
         name: "GPA计算器",
         src: "https://static.airbob.org/under-graduate/more/gpa.png",
-        isIndex: false,
-        id: 15,
+        isIndex: true,
+        id: 21,
         path: "../others-edu-page/pages/GpaCalculator",
         module: "正方",
         isOpen: true,
@@ -207,7 +226,22 @@ export default class extends wepy.app {
     this.use("requestfix");
     this.use("promisify");
   }
-  onLaunch() {}
+  onLaunch() {
+    const updateManager = wx.getUpdateManager();
+
+    updateManager.onUpdateReady(function() {
+      wepy
+        .showModal({
+          title: "更新提示",
+          content: "新版本已经准备好，是否重启应用？"
+        })
+        .then(res => {
+          if (res.confirm) {
+            updateManager.applyUpdate();
+          }
+        });
+    });
+  }
   showTip(title = "请求发生错误") {
     wepy.showToast({
       title,

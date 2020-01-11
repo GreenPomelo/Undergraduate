@@ -1,0 +1,78 @@
+<template>
+  <view>
+    <view class="background">
+      <view class="content">
+        <view class="content-text">
+          <view class="content-title">亲爱的{{name}}</view>
+          <view>这可能是你在校园里最后一次打开南邮小程序。 当你离开校园后，你的正方、智慧校园等系统账号将被注销，无法再次登录，数据将被清空，南邮小程序也无法再通过接口更新这些数据。</view>
+          <view>这些存在数据库里的 0 和 1 ，见证了你的南邮青春，是你大学四年回忆的一部分。</view>
+          <view>肖辰旭有幸能从 2017 年 6 月起，陪伴你走过两年的大学时光，并和你一起成长。临别之际，肖辰旭准备了一份礼物，帮你记录下这部分数据记忆。</view>
+          <p>点击下一步，进入“南邮小程序 · 记忆模式”。</p>
+        </view>
+        <button class="next-btn" @tap="next"><span>下一步</span></button>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  export default class Login extends wepy.page {
+    data = {
+      name: ""
+    };
+    methods = {
+      next() {
+        wepy.navigateTo({
+          url: "./memory-choose"
+        });
+      }
+    };
+    onLoad({ name }) {
+      this.name = name;
+    }
+  }
+</script>
+
+<style lang="stylus" scoped>
+.background
+  position absolute
+  top 0
+  left 0
+  width 100vw
+  height 100vh
+  z-index 0
+  background url('https://static.airbob.org/under-graduate/memory/memory1.jpg') no-repeat
+  background-size cover
+  overflow hidden
+  display flex
+  justify-content center
+  .content
+    width 623rpx
+    margin-top 570rpx
+    color #000
+    .content-text
+      font-size 26rpx
+      color #4a4a4a
+      margin-bottom 75rpx
+      view
+        margin-bottom 20rpx
+      p
+        font-weight 700
+      .content-title
+        font-size 36rpx
+        font-weight 700
+        line-height 54rpx
+    .next-btn
+      width 630rpx
+      height 80rpx
+      border-radius 80rpx
+      color #fff
+      background-image linear-gradient(82deg, #94e6f4 0%, #68d5f2 86%, #3bc3f0 100%),linear-gradient(#f2f2f2, #f2f2f2)
+      display flex
+      align-items center
+      justify-content center
+
+button:after
+  border none
+</style>

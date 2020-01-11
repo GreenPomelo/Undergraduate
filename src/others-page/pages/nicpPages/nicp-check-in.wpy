@@ -1,5 +1,6 @@
 <template>
   <view class="nicp-check-in">
+    <!-- <qy-navigation :title="navTitle" :background="background"></qy-navigation> -->
     <view id="login-cloak">
       <view class="left-pane {{ isOthersOpen ? 'open' : '' }}">
         <view class="keyhole" @tap="scanCode">
@@ -10,24 +11,18 @@
           </view>
         </view>
       </view>
-      <view class="middle-pane {{ isOthersOpen ? 'open' : '' }}" @tap="viewMore"></view>
+      <view class="middle-pane {{ isOthersOpen ? 'open' : '' }}"></view>
       <view class="right-pane {{ isOthersOpen ? 'open' : '' }}"></view>
     </view>
 
     <view class="content">
-      <view class="logo">
-        <image class="logo-image" src="https://static.airbob.org/nicp/cxb_logo.png"/>
-      </view>
-      <view class="checked">
-        <image class="checked-image" src="https://static.airbob.org/nicp/right.png" mode="widthFix"/>
-      </view>
-      <view class="info">{{ userInfo.studentId }} {{ userInfo.name }}</view>
-      <view class="time">{{ now }}</view>
-      <view class="more">
-        <button @tap="viewMore">查看更多创新杯信息</button>
-      </view>
+      <view class="user-info">{{ userInfo.name }} {{ userInfo.studentId }}</view>
       <view class="qy-logo">
         <image class="pomelo" src="https://static.airbob.org/report-2018-06/logo-min.png"/>
+      </view>
+
+      <view class="copy-right">
+        <image class="copy-right-image" src="https://static.airbob.org/nicp/copyright.png" mode="widthFix"/>
       </view>
     </view>
   </view>
@@ -37,14 +32,16 @@
 <script>
 import wepy from "wepy";
 import qs from "qs";
+import { addEntry } from "@/api/common";
+import navigation from "@/components/qy-navigation";
 
 export default class NicpVote extends wepy.page {
-  config = {
-    navigationBarTitleText: "创新杯签到",
-    navigationBarBackgroundColor: "#ecd6e8"
+  components = {
+    "qy-navigation": navigation
   };
-
   data = {
+    navTitle: "柚子秒签",
+    background: "transparent",
     open: false,
     isHoleOpen: false,
     isOthersOpen: false,
@@ -69,50 +66,45 @@ export default class NicpVote extends wepy.page {
 
   checkLogin() {
     if (wepy.getStorageSync("token") === "") {
-      wepy.redirectTo({ url: "/others-page/pages/login" });
+      wepy.redirectTo({
+        url: "/others-page/pages/login"
+      });
     }
   }
 
   async handleScene(sceneValue) {
-    console.log(sceneValue);
     if (sceneValue === "undefined") {
       return;
     }
+    sceneValue = decodeURIComponent(sceneValue);
     const type = sceneValue.split("@")[1];
-    if (type !== "1") {
-      console.error("二维码 type 不为 1");
-      return;
-    }
     const sessionId = wepy.getStorageSync("token");
     const timestamp = Math.floor(Date.now() / 1000);
-    const params = { type, scene: sceneValue, timestamp };
-    console.log(params);
+    const params = {
+      type,
+      scene: sceneValue,
+      timestamp
+    };
 
     try {
       const {
         data: { success, ...err }
-      } = await this.$parent.axios.post(
-        "https://wechat.njupt.edu.cn/nicp/addEntry",
-        qs.stringify(params),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        }
-      );
+      } = await addEntry(qs.stringify(params));
 
       if (success) {
         console.log("签到成功");
         this.handleOpen();
       } else {
         if (err.errCode === 8) {
-          wepy.redirectTo({ url: "../../pages/login" });
+          wepy.redirectTo({
+            url: "../../pages/login"
+          });
         }
         console.error(err);
         wepy.showToast({
           title: err.errMsg,
           icon: "none",
-          duration: 2000
+          duration: 5000
         });
       }
     } catch (e) {
@@ -125,13 +117,9 @@ export default class NicpVote extends wepy.page {
       wepy
         .scanCode()
         .then(res => {
-          console.log(res);
           this.handleCodeRes(res.path);
         })
         .catch(err => console.error(err));
-    },
-    viewMore() {
-      wepy.navigateTo({ url: "./nicp-more" });
     }
   };
 
@@ -158,6 +146,44 @@ export default class NicpVote extends wepy.page {
 
 <style lang="stylus" scoped>
 vendors = official
+
+.content
+  position relative
+  width 100vw
+  height 100vh
+  background url('https://static.airbob.org/nicp/bg_1.png')
+  background-size cover
+  background-position bottom
+  .user-info
+    position absolute
+    top 52%
+    left 19vw
+    width 62%
+    padding 12rpx 0
+    font-size 34rpx
+    color #e55425
+    text-align center
+    border-radius 60rpx
+    background rgba(255, 255, 255, 0.8)
+  .pomelo
+    position absolute
+    right 2vw
+    bottom 10rpx
+    width 50rpx
+    height 50rpx
+    animation rotating 5s linear infinite
+    @keyframes rotating
+      from
+        transform rotate(0deg)
+      to
+        transform rotate(360deg)
+  .copy-right
+    position fixed
+    bottom 0
+    width 100vw
+    text-align center
+    .copy-right-image
+      width 30%
 
 flexbox()
   display flex
@@ -300,48 +326,4 @@ order($val)
       width 1px
       content ' '
       background rgb(178, 178, 178)
-
-.content
-  position relative
-  width 100vw
-  height 100vh
-  background url('https://static.airbob.org/nicp/bg.png')
-  background-size cover
-  background-position bottom
-  .logo,
-  .checked,
-  .info,
-  .time
-    text-align center
-  .logo
-    padding-top 10vh
-    width 100%
-    .logo-image
-      width 24vw
-      height 24vw
-  .checked
-    margin-top 6vh
-    width 100%
-    .checked-image
-      width 40vw
-  .info
-    margin-top 4vh
-  .info, .time
-    line-height 1.5
-  .more
-    margin-top 6vh
-    button
-      width 500rpx
-  .pomelo
-    position absolute
-    right 2vw
-    bottom 2vw
-    width 50rpx
-    height 50rpx
-    animation rotating 5s linear infinite
-    @keyframes rotating
-      from
-        transform rotate(0deg)
-      to
-        transform rotate(360deg)
 </style>

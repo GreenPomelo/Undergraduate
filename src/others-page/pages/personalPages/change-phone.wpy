@@ -1,34 +1,37 @@
 <template>
   <view class="container">
-    <view class="toggle-body {{centerBody}}">
-      <view class="content-body">
-        <view class="container-main">
-          <view class="input-container">
-            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/%E5%AF%86%E7%A0%81.png"/>
-            <input type="password" @input="getPassword" class="input" placeholder="请输入初次绑定的正方密码" />
+    <qy-navigation :title="navTitle"></qy-navigation>
+    <view class="content">
+      <view class="toggle-body {{centerBody}}">
+        <view class="content-body">
+          <view class="container-main">
+            <view class="input-container">
+              <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/%E5%AF%86%E7%A0%81.png"/>
+              <input type="password" @input="getPassword" class="input" placeholder="请输入小程序密码" />
+            </view>
+            <view class="login-btn" @tap="getCheck">验证密码</view>
           </view>
-          <view class="login-btn" @tap="getCheck">验证密码</view>
         </view>
-      </view>
-      <view class="content-body">
-        <view class="container-main">
-          <view class="input-container">
-            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
-            <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+        <view class="content-body">
+          <view class="container-main">
+            <view class="input-container">
+              <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
+              <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+            </view>
+            <view class="input-container">
+              <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/verification.png"/>
+              <input type="number" @input="getVertication" class="input" placeholder="请输入验证码" maxlength="6"/>
+              <button class="input-after {{flag ? '' : 'btn-disabled'}}" @tap="fetchVertication">{{verticationMsg}}</button>
+            </view>
+            <view class="login-btn" @tap="goLogin">下一步</view>
           </view>
-          <view class="input-container">
-            <image mode="widthFix" class="input-image" src="https://static.airbob.org/under-graduate/image/png/login/verification.png"/>
-            <input type="number" @input="getVertication" class="input" placeholder="请输入验证码" maxlength="6"/>
-            <button class="input-after {{flag ? '' : 'btn-disabled'}}" @tap="fetchVertication">{{verticationMsg}}</button>
-          </view>
-          <view class="login-btn" @tap="goLogin">下一步</view>
         </view>
-      </view>
-      <view class="content-body">
-        <view class="container-main">
-          <view class="success-container">
-            <view class="image-container"></view>
-            <view class="change-success">修改成功^-^</view>
+        <view class="content-body">
+          <view class="container-main">
+            <view class="success-container">
+              <view class="image-container"></view>
+              <view class="change-success">修改成功^-^</view>
+            </view>
           </view>
         </view>
       </view>
@@ -37,6 +40,7 @@
 </template>
 <script>
 import wepy from "wepy";
+import navigation from "@/components/qy-navigation";
 import {
   changePhone,
   checkPhone,
@@ -48,9 +52,13 @@ export default class ChangePhone extends wepy.page {
   config = {
     navigationBarTitleText: "更改绑定手机"
   };
+  components = {
+    "qy-navigation": navigation
+  };
   mixins = [];
 
   data = {
+    navTitle: "更改绑定手机",
     step: 0,
     verticationMsg: "请输入验证码",
     zfPassword: "",
@@ -138,6 +146,14 @@ export default class ChangePhone extends wepy.page {
 }
 </script>
 <style lang="stylus" scoped>
+.content
+  position absolute
+  display flex
+  flex-direction column
+  width 100vw
+  height 100vh
+  z-index 0
+  overflow hidden
 .toggle-body
   display flex
   width 300vw
@@ -154,6 +170,11 @@ export default class ChangePhone extends wepy.page {
   min-height 90vh
   .content-body
     width 100vw
+    .container-main
+      height 100vh
+      display flex
+      flex-direction column
+      justify-content center
     .success-container
       display flex
       justify-content center

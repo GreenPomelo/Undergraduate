@@ -1,73 +1,123 @@
 <template>
-  <view>
-    <view class="container" wx:if="{{!bindModalVisible}}">
-      <view class="bg" />
-      <view class="head">
-        <view class="tip">余额（元）</view>
-        <view class="balance">{{balance}}</view>
-        <view class="tip">截止时间：{{time}}</view>
-        <view class="card-text">卡号：{{cardNumber}}</view>
-      </view>
-      <view class="list">
-        <block wx:for="{{listitems1}}" wx:key="index">
-          <view class="item-container" @tap.stop="navigate" data-path="{{item.navigateURL}}">
-            <image class="iconx" src="{{item.thumb}}" mode="widthFix" />
-            <view class="content" style="justify-content:space-between;">
-              <text>{{item.text}}</text>
-              <view class="iconright"></view>
-            </view>
-          </view>
-        </block>
-      </view>
-      <view class="list">
-        <block wx:for="{{listitems2}}" wx:key="index">
-          <view class="item-container" @tap.stop="navigate" data-path="{{item.navigateURL}}">
-            <image class="iconx" src="{{item.thumb}}" mode="widthFix" />
-            <view class="content" style="justify-content:space-between;">
-              <text>{{item.text}}</text>
-              <view class="iconright"></view>
-            </view>
-          </view>
-        </block>
-      </view>
-      <view class="chart-container" style="height:{{chartContainerHeight}}">
-        <text class="title">消费水平</text>
-        <view class="tab-list">
-          <view class="tab {{chartTab==='week'?'active':'unactive'}}" @tap.stop="changeToWeek">近7天</view>
-          <view class="tab {{chartTab==='halfYear'?'active':'unactive'}}" @tap.stop="changeToYear">近半年</view>
+  <BaseContainer navTitle="一卡通" placeholder="6位校园卡密码" :passwordModelOptions.sync="passwordModelOptions">
+    <view slot="qy-content">
+      <YktBindModal :maskClosable="maskClosable" width="500rpx" :visible.sync="yktBindModalVisible">
+        <view slot="content" class="bind-container">
+          <input
+            class="bind-input"
+            placeholder="请输入一卡通卡号"
+            password="{{false}}"
+            @input="bindCardID"
+            placeholder-style="color: #999CA0"
+          >
+          <input
+            class="bind-input"
+            placeholder="请输入一卡通查询密码"
+            password="{{true}}"
+            @input="bindCardPassword"
+            placeholder-style="color: #999CA0"
+          >
+          <button class="bind-button" @tap.stop="goBindCard" hover-class="button-click">立即绑定</button>
         </view>
-        <canvas class="canvas" disable-scroll="true" canvas-id="chartCanvas" style="width:{{width}}px;height:{{height}}px"></canvas>
+      </YktBindModal>
+      <view class="container">
+        <view class="bg"/>
+        <view class="head">
+          <view class="tip">余额（元）</view>
+          <view class="balance">{{balance}}</view>
+          <view class="tip">截止时间：{{time}}</view>
+          <view class="card-text">卡号：{{cardNumber}}</view>
+        </view>
+        <view class="list">
+          <block wx:for="{{listitems1}}" wx:key="index">
+            <view
+              class="item-container"
+              @tap.stop="navigate"
+              data-path="{{item.navigateURL}}"
+              data-name="{{item.text}}"
+            >
+              <image class="iconx" src="{{item.thumb}}" mode="widthFix">
+              <view class="content" style="justify-content:space-between;">
+                <text>{{item.text}}</text>
+                <view class="iconright"></view>
+              </view>
+            </view>
+          </block>
+        </view>
+        <view class="list">
+          <block wx:for="{{listitems2}}" wx:key="index">
+            <view
+              class="item-container"
+              @tap.stop="navigate"
+              data-path="{{item.navigateURL}}"
+              data-name="{{item.text}}"
+            >
+              <image class="iconx" src="{{item.thumb}}" mode="widthFix">
+              <view class="content" style="justify-content:space-between;">
+                <text>{{item.text}}</text>
+                <view class="iconright"></view>
+              </view>
+            </view>
+          </block>
+        </view>
+        <view class="chart-container" style="height:{{chartContainerHeight}}">
+          <text class="title">消费水平</text>
+          <view class="tab-list">
+            <view class="tab {{chartTab==='week'?'active':'unactive'}}" @tap.stop="changeToWeek">近7天</view>
+            <view
+              class="tab {{chartTab==='halfYear'?'active':'unactive'}}"
+              @tap.stop="changeToYear"
+            >近半年</view>
+          </view>
+          <canvas
+            class="canvas"
+            disable-scroll="true"
+            canvas-id="chartCanvas"
+            style="width:{{width}}px;height:{{height}}px"
+          ></canvas>
+        </view>
       </view>
     </view>
-    <QyModal :maskClosable="maskClosable" width="500rpx" :visible.sync="bindModalVisible">
-      <view slot="content" class="bind-container">
-        <input class="bind-input" placeholder="{{placeholder}}" maxlength="6" type="number" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
-        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
-      </view>
-    </QyModal>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
 import Chart from "../components/wxcharts-min.js";
-import QyModal from "@/components/qy-modal";
+import BaseContainer from "@/components/baseContainer";
+import JudgeStatus from "@/mixins/module";
 import {
   campusCardRequestInfo,
   sevenDayTurnOver,
-  yearTurnOver
+  yearTurnOver,
+  yktBind
 } from "@/api/campusCard";
+import {
+  mockCampusCardRequestInfo,
+  mockSevenDayTurnOver,
+  mockYearTurnOver
+} from "@/mock/campusCard";
 import { changeSecretCode } from "@/api/common";
+import { connect } from "wepy-redux";
+import QyModal from "@/components/qy-modal";
 
+@connect({
+  graduateIdentity(state) {
+    return state.graduateReducer.graduateIdentity;
+  }
+})
 export default class CampusCard extends wepy.page {
   components = {
-    QyModal
+    BaseContainer,
+    YktBindModal: QyModal
   };
+  mixins = [JudgeStatus];
   config = {
     navigationBarTitleText: "一卡通",
     enablePullDownRefresh: true
   };
   data = {
+    navTitle: "一卡通",
     balance: 0,
     cardNumber: 0,
     time: "",
@@ -100,6 +150,12 @@ export default class CampusCard extends wepy.page {
         text: "校园卡挂失",
         thumb: "https://static.airbob.org/under-graduate/card_icon_lost.png",
         navigateURL: "./campus-card-loss"
+      },
+      {
+        text: "金额操作记录",
+        thumb:
+          "https://static.airbob.org/under-graduate/campus-card/jiao-yi-ming-xi@2x.png",
+        navigateURL: "./money-log"
       }
     ],
     chartCanvasStyle: {},
@@ -114,10 +170,25 @@ export default class CampusCard extends wepy.page {
     chartInstance: {},
     maskClosable: false,
     bindInputPassword: "",
-    bindModalVisible: false,
     chartContainerHeight: "auto",
     yktStatus: true,
-    placeholder: ""
+    placeholder: "",
+    passwordModelOptions: {
+      placeholder: "6位校园卡密码",
+      passwordModelProps: false,
+      bindInfo: { username: "", domainType: "7" },
+      checkPassword: function(pwd) {
+        return /^[0-9]*$/.test(pwd) && pwd.length === 6;
+      },
+      checkErrMsg: "一卡通密码必须6位数字",
+      refreshData: function() {
+        return null;
+      }
+    },
+    visitorModeStatus: false,
+    yktBindModalVisible: false,
+    yktBindModalCardID: "",
+    yktBindModalPassword: ""
   };
   watch = {
     chartTab(val) {
@@ -154,25 +225,25 @@ export default class CampusCard extends wepy.page {
   };
   async onPullDownRefresh() {
     if (this.yktStatus) {
-      this.init();
-    }
-    wepy.stopPullDownRefresh();
-  }
-  async onLoad() {
-    wepy.showLoading({
-      title: "正在加载"
-    });
-    const moduleStatus = wepy.getStorageSync("moduleStatus");
-    this.yktStatus = moduleStatus && moduleStatus[0] && moduleStatus[0].open;
-    if (!this.yktStatus) {
-      // 一卡通维护中
-      wepy.redirectTo({
-        url: "../../others-page/pages/close"
+      await this.init();
+      wepy.stopPullDownRefresh();
+      wepy.showToast({
+        title: "刷新成功",
+        icon: "success",
+        duration: 1000
       });
-    } else {
+    }
+  }
+  onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(op.name).then(async () => {
+      wepy.showLoading({
+        title: "正在加载"
+      });
+      this.passwordModelOptions.refreshData = this.init.bind(this);
       await this.init();
       wepy.hideLoading();
-    }
+    });
   }
   methods = {
     changeToWeek() {
@@ -185,48 +256,44 @@ export default class CampusCard extends wepy.page {
         this.chartTab = "halfYear";
       }
     },
+    bindCardID(e) {
+      this.yktBindModalCardID = e.detail.value;
+    },
     bindCardPassword(e) {
-      this.bindInputPassword = e.detail.value;
+      this.yktBindModalPassword = e.detail.value;
     },
     navigate(e) {
+      const name = e.currentTarget.dataset.name;
       wepy.navigateTo({
-        url: e.currentTarget.dataset.path
+        url: `${e.currentTarget.dataset.path}?name=${name}`
       });
     },
-    async bindHandle() {
-      const isNumber =
-        /^[0-9]*$/.test(this.bindInputPassword) &&
-        this.bindInputPassword.length === 6;
-      if (isNumber) {
-        await changeSecretCode("", this.bindInputPassword, "7").then(res => {
-          if (res.data && res.data.data) {
-            // 绑定成功
-            this.placeholder = "";
-            this.bindModalVisible = false;
-            // this.$invoke("QyModal", "close");
-            this.init();
-          } else {
-            wepy.showModal({
-              content: res.data.errMsg
-                ? res.data.errMsg
-                : "不知道什么原因呢= =",
-              confirmText: "知道了",
-              showCancel: false,
-              confirmColor: "#353535"
-            });
-          }
-        });
-      } else {
-        wepy.showModal({
-          content: "一卡通密码必须6位数字",
-          confirmText: "知道了",
-          showCancel: false,
-          confirmColor: "#353535"
-        });
+    async goBindCard() {
+      wepy.showLoading({
+        title: "绑定中...", //提示的内容,
+        mask: true //显示透明蒙层，防止触摸穿透,
+      });
+      const { data: response } = await yktBind(
+        this.yktBindModalCardID,
+        this.yktBindModalPassword
+      );
+      wepy.hideLoading();
+      if (response) {
+        if (response.data) {
+          wepy.showToast({
+            title: "成功绑定一卡通",
+            icon: "success",
+            duration: 2000
+          });
+          this.yktBindModalVisible = false;
+          this.$apply();
+          this.init();
+        } else {
+          this.$parent.showTip("绑定失败，请重试");
+        }
       }
     }
   };
-  events = {};
   async init() {
     // 初始化页面
     const systemInfo = await wepy.getSystemInfo();
@@ -234,24 +301,43 @@ export default class CampusCard extends wepy.page {
     this.height = Math.floor(this.width / 1.6);
     this.chartContainerHeight = "auto";
     const tempDate = new Date();
-    this.time = `${tempDate.getFullYear()}-${tempDate.getMonth() +
-      1}-${tempDate.getDate()}`;
-    const res = await campusCardRequestInfo();
-    if (res.data) {
-      this.balance =
-        (Number(res.data.data.db_balance) +
-          Number(res.data.data.unsettle_amount)) /
-        100;
-      this.cardNumber = res.data.data.sno;
-      this.getWeek();
-      this.getYear();
-      this.$apply();
-    } else {
-      // 密码错误
-      this.chartContainerHeight = 0;
-      this.placeholder = "6位校园卡密码";
-      this.bindModalVisible = true;
-      this.$apply();
+    const formatTimeString = raw =>
+      raw.toString().length < 2 ? "0" + raw.toString() : raw.toString();
+    this.time = this.graduateIdentity
+      ? `2019-6-20 毕业典礼`
+      : `${tempDate.getFullYear()}-${tempDate.getMonth() +
+          1}-${tempDate.getDate()} ${formatTimeString(
+          tempDate.getHours()
+        )}:${formatTimeString(tempDate.getMinutes())}:${formatTimeString(
+          tempDate.getSeconds()
+        )}`;
+    const { data: response } = !this.visitorModeStatus
+      ? await campusCardRequestInfo(this.graduateIdentity)
+      : await mockCampusCardRequestInfo();
+    if (response) {
+      if (response.data) {
+        const yktInfoCache = { data: response.data, time: new Date() };
+        wepy.setStorageSync("yktInfo", yktInfoCache);
+        this.balance =
+          (Number(response.data.db_balance) +
+            Number(response.data.unsettle_amount)) /
+            100 ||
+          (Number(response.data.db_balance) +
+            Number(response.data.unset_balance)) /
+            100;
+        this.cardNumber = response.data.sno;
+        this.getWeek();
+        this.getYear();
+        this.$apply();
+      } else if (response.errCode === 24) {
+        this.chartContainerHeight = 0;
+        this.placeholder = "6位校园卡密码";
+        this.passwordModelOptions.passwordModelProps = true;
+        this.$apply();
+      } else if (response.errCode === 34) {
+        this.yktBindModalVisible = true;
+        this.$apply();
+      }
     }
   }
   async getWeek() {
@@ -261,7 +347,9 @@ export default class CampusCard extends wepy.page {
     for (let i = 6; i >= 0; i--) {
       this.labels1.push(new Date(now - i * 1000 * 3600 * 24).getDate());
     }
-    const { data: week } = await sevenDayTurnOver();
+    const { data: week } = this.visitorModeStatus
+      ? await mockSevenDayTurnOver()
+      : await sevenDayTurnOver();
     if (week.data && week.data.slice) {
       this.chartdata1 = week.data.slice().reverse();
       if (Object.keys(this.chartInstance).length === 0) {
@@ -298,7 +386,9 @@ export default class CampusCard extends wepy.page {
   }
   async getYear() {
     // 获取月流水
-    const { data: now_month } = await yearTurnOver();
+    const { data: now_month } = !this.visitorModeStatus
+      ? await yearTurnOver()
+      : await mockYearTurnOver();
     if (now_month.data) {
       this.labels2 = [];
       this.labels2 = now_month.data.resmonth.slice(-6);
@@ -369,64 +459,83 @@ export default class CampusCard extends wepy.page {
       .unactive
         color #999CA0
         border 2rpx solid #999CA0
-</style>
-
-<style lang="stylus" scoped>
 .bind-container
-	display flex
-	flex-direction column
-	align-items center
-	background-image url("https://static.airbob.org/under-graduate/model_pic_password.png")
-	background-repeat no-repeat
-	height 485rpx
-	border-radius 30rpx
-	background-size cover
-	.bind-input
-		font-size 26rpx
-		margin 221rpx 0 56rpx
-		width 438rpx
-		border-bottom 2rpx solid #999CA0
-	.bind-button
-		margin-top 26rpx
-		background-color #6AE4FF
-		text-align center
-		width 410rpx
-		height 80rpx
-		line-height 80rpx
-		color #ffffff
-		border-radius 50px
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 785rpx
+  border-radius 30rpx
+  background-size cover
+  .bind-input
+    font-size 26rpx
+    margin 221rpx 0 56rpx
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
 .button-click
-	background-image none
-	background-color #D0F5FF
+  background-image none
+  background-color #D0F5FF
 .item-container
-	display flex
-	height 98rpx
-	background-color rgb(255,255,255)
-	position relative
-	align-items center
-	&:last-child > .content
-		border-style none!important
-	.iconx
-		width 38rpx
-		margin 0 45rpx 0 25rpx
-	.iconright
-		width 35rpx
-		height 35rpx
-		background-image url("https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png")
-		background-position center
-		background-repeat no-repeat
-		background-size contain
-    margin-right 16rpx
-		// position absolute
-		// left 685rpx
-	.content
-		width 100%
-		height 96rpx
-		display flex
-		align-items center
-		margin-right 20rpx
-		border-bottom 2rpx solid #E3E3E3
-	.text
-		font-size 32rpx
-		color #353535
+  display flex
+  height 98rpx
+  background-color rgb(255, 255, 255)
+  position relative
+  align-items center
+  margin-right 16rpx
+  &:last-child > .content
+    border-style none !important
+  .iconx
+    width 38rpx
+    margin 0 45rpx 0 25rpx
+  .iconright
+    width 35rpx
+    height 35rpx
+    background-image url('https://static.airbob.org/under-graduate/%E5%8F%B3%E7%AE%AD%E5%A4%B4.png')
+    background-position center
+    background-repeat no-repeat
+    background-size contain
+  .content
+    width 100%
+    height 96rpx
+    display flex
+    align-items center
+    margin-right 20rpx
+    border-bottom 2rpx solid #E3E3E3
+.text
+  font-size 32rpx
+  color #353535
+.bind-container
+  display flex
+  flex-direction column
+  align-items center
+  background-image url('https://static.airbob.org/under-graduate/model_pic_password.png')
+  background-repeat no-repeat
+  height 285rpx
+  border-radius 30rpx
+  background-size cover
+  padding-top 200rpx;
+  .bind-input
+    font-size 26rpx
+    margin 21rpx 0
+    width 438rpx
+    border-bottom 2rpx solid #999CA0
+  .bind-button
+    margin-top 26rpx
+    background-color #6AE4FF
+    text-align center
+    width 410rpx
+    height 80rpx
+    line-height 80rpx
+    color #ffffff
+    border-radius 50px
 </style>

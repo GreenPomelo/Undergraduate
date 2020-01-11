@@ -1,185 +1,236 @@
 <template>
-  <view>
-    <view class="perfect-info" wx:if="{{commandInfoStatus}}" @tap="closeCommandInfo">
-      <view class="perfect-info-body">
-        <view class="perfect-img">
-          <image src="https://static.airbob.org/under-graduate/kl.png" />
+  <BaseContainer navTitle="NJUPT" :openPage.sync="openPage">
+    <view slot="qy-content">
+      <view wx:if="{{hiGraduateModal}}" class="hi-graduate" @tap="hideHiGraduate">
+        <image src="https://static.airbob.org/under-graduate/memory/xiao.png" class="hi-graduate-img">
+        <view class="hi-graduate-talk">
+          <view class="graduate-talk-title">南邮记忆</view>
+          <view class="graduate-talk-content">亲爱的{{graduateName}}</view>
+          <view class="graduate-talk-content">欢迎回来！</view>
+          <view class="graduate-divide"></view>
+          <view class="graduate-talk-content">小程序将永久安全地保存你校园记忆，</view>
+          <view class="graduate-talk-content">你可以随时查看，</view>
+          <view class="graduate-talk-content">但无法再次刷新这些数据。</view>
+          <view class="graduate-divide"></view>
+          <view class="graduate-talk-content">你可以在“我的”中关闭记忆模式，</view>
+          <view class="graduate-talk-content">关闭后数据将全部清空，</view>
+          <view class="graduate-talk-content">且操作不可逆。</view>
         </view>
-        <view class="perfect-info-card">
-          <view class="command-avatar">
-            <view>
-              <image class="command-avatar-img" src="{{assoInfo.avatar}}" />
+      </view>
+      <!-- <QyPopUp :openPage.sync="openPage" link="https://qingyou.njupt.edu.cn/bgd3" /> -->
+      <view class="perfect-info" wx:if="{{commandInfoStatus}}" @tap="closeCommandInfo">
+        <view class="perfect-info-body">
+          <view class="perfect-img">
+            <image src="https://static.airbob.org/under-graduate/kl.png">
+          </view>
+          <view class="perfect-info-card">
+            <view class="command-avatar">
+              <view>
+                <image class="command-avatar-img" src="{{assoInfo.avatar}}">
+              </view>
+            </view>
+            <view class="perfect-info-tip">发现了社团口令{{assoInfo.command}}</view>
+            <view class="command-name">{{assoInfo.info.fullname}}</view>
+            <view class="submission" @tap.stop="codeToDetail">
+              <view>点击查看</view>
             </view>
           </view>
-          <view class="perfect-info-tip">发现了社团口令{{assoInfo.command}}</view>
-          <view class="command-name">{{assoInfo.info.fullname}}</view>
-          <view class="submission" @tap.stop="codeToDetail">
-            <view>点击查看</view>
+        </view>
+      </view>
+      <view class="perfect-info" wx:if="{{importantInfoStatus}}" @tap.stop="closeNotification" data-id="{{importantInfo.id}}">
+        <view class="perfect-info-body notification" @tap.stop="prevent">
+          <view class="perfect-img notification">
+            <image src="https://static.airbob.org/under-graduate/QjE2MDEyMzI3LXl1cm9uZy5wbmc=?tdsourcetag=s_pctim_aiomsg">
+          </view>
+          <view class="perfect-info-card notification">
+            <view class="perfect-info-tip notification">{{importantInfo.title}}</view>
+            <view class="notification-info">
+              <repeat for="{{importantInfo.content}}" key="index" index="index" item="content">
+                <view>{{content}}</view>
+              </repeat>
+            </view>
+            <view class="notification-close" @tap.stop="closeNotification" data-id="{{importantInfo.id}}">
+              我知道了
+            </view>
           </view>
         </view>
       </view>
-    </view>
-    <view
-      @tap.stop="navigateToWebview"
-      class="open-page-container"
-      hidden="{{!openPage}}"
-      style="background-image:url('{{displayPic}}');"
-    >
-      <view class="pass-open-page-container" @tap.stop="passOpenPage">
-        <view class="pass-open-page">跳过{{passTime}}秒</view>
-      </view>
-    </view>
-    <view
-      class="container"
-      hidden="{{openPage}}"
-      style="position: {{commandInfoStatus ? 'fixed' : 'static'}}"
-    >
-      <view class="navbar">
-        <view class="search-bar" @tap="goSearch">
-          <view class="virsual-placeholder">
-            <image
-              src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png"
-              class="search-icon"
-            />
-            <text>{{schoolTalkText}}</text>
-          </view>
-          <input type="text" class="search-input" @focus="focus" />
+      <navigator
+        class="open-page-container"
+        target="{{navigatorTarget}}"
+        app-id="{{navigatorAppId}}"
+        url="{{navigatorUrl}}"
+        style="background-image:url('{{displayPic}}');"
+        hidden="{{!openPage}}"
+      >
+        <view class="pass-open-page-container" @tap.stop="passOpenPage">
+          <view class="pass-open-page">跳过{{passTime}}秒</view>
         </view>
-        <!-- <image src="{{isNewInfo ? 'https://static.airbob.org/under-graduate/alert-active.png' : 'https://static.airbob.org/under-graduate/alert.png'}}" class="alert-img {{isNewInfo ? 'shake' : ''}}" @tap="goInfobox"/> -->
-      </view>
-      <view class="functional">
-        <repeat for="{{functionalList}}">
-          <view class="functional-item" @tap="moveTo" data-path="{{item.path}}" data-module="{{item.module}}" data-name="{{item.name}}" data-isnew="{{item.isNew}}">
-            <image src="{{item.src}}" class="functional-item-image" /> {{item.name}}
-            <view class="image-red-dot" hidden="{{ !item.isNew }}"></view>
+      </navigator>
+      <view
+        class="container"
+        hidden="{{openPage}}"
+        style="position: {{commandInfoStatus || annualStatus ? 'fixed' : 'static'}}"
+      >
+        <view class="navbar">
+          <view class="search-bar" @tap="goSearch">
+            <view class="virsual-placeholder">
+              <image
+                src="https://static.airbob.org/under-graduate/%E6%90%9C%E7%B4%A2.png"
+                class="search-icon"
+              >
+              <text>{{schoolTalkText}}</text>
+            </view>
+            <input type="text" class="search-input" @focus="focus">
           </view>
-        </repeat>
-      </view>
-      <view class="splitLine"></view>
-      <view class="notification-container" @tap="goInfobox" wx:if="{{!swiperInfo[0]}}">
-        <view class="notification-image"></view>
-        <view class="notification-content">
-          <view class="swiper-content">你没有新消息哟～</view>
+          <!-- <image src="{{isNewInfo ? 'https://static.airbob.org/under-graduate/alert-active.png' : 'https://static.airbob.org/under-graduate/alert.png'}}" class="alert-img {{isNewInfo ? 'shake' : ''}}" @tap="goInfobox"/> -->
+        </view>
+        <view class="functional">
+          <repeat for="{{functionalList}}">
+            <view
+              class="functional-item"
+              @tap="moveTo"
+              data-path="{{item.path}}"
+              data-module="{{item.module}}"
+              data-name="{{item.name}}"
+              data-isnew="{{item.isNew}}"
+            >
+              <image src="{{item.src}}" class="functional-item-image">
+              {{item.name}}
+              <view class="image-red-dot" hidden="{{ !item.isNew }}"></view>
+            </view>
+          </repeat>
+        </view>
+        <view class="splitLine"></view>
+        <!-- <navigator open-type="navigate" target="miniProgram" app-id="wx7d66d77988bbeab3" style="width:750rpx;">
+        <view class="school-talk-container">
+          <image src="https://static.airbob.org/under-graduate/跳转bar.png" mode="aspectFit" class="school-talk" />
+        </view>
+        </navigator>-->
+        <view class="notification-container" @tap="goInfobox" wx:if="{{!swiperInfo[0]}}">
+          <view class="notification-image"></view>
+          <view class="notification-content">
+            <view class="swiper-content">你没有新消息哟～</view>
+            <view class="notification-arrow"></view>
+          </view>
+        </view>
+        <view class="notification-container" @tap="goInfobox" wx:else>
+          <view class="notification-image">
+            <view class="notification-oval {{isNewInfo?'move':''}}">
+              <span>{{swiperInfo.length}}</span>
+            </view>
+          </view>
+          <swiper class="notification-content" autoplay="true" vertical="true" circular="true">
+            <repeat for="{{swiperInfo}}" item="item" index="index" key="key">
+              <swiper-item>
+                <view class="swiper-content">{{item.title}}</view>
+              </swiper-item>
+            </repeat>
+          </swiper>
           <view class="notification-arrow"></view>
         </view>
-      </view>
-      <view class="notification-container" @tap="goInfobox" wx:else>
-        <view class="notification-image">
-          <view class="notification-oval {{isNewInfo?'move':''}}">
-            <span>{{swiperInfo.length}}</span>
+        <!-- <navigator open-type="navigate" target="miniProgram" app-id="wxa16acae9f9d131fb" style="width:750rpx;">
+                            <view class="school-talk-container">
+                                <image src="https://static.airbob.org/under-graduate/home-bannerbar-chat@3x.png" mode="aspectFit" class="school-talk"/>
+                            </view>
+        </navigator>-->
+        <!-- <navigator url="../others-page/pages/association" style="width:750rpx;">
+                            <view class="school-talk-container">
+                                <image src="https://static.airbob.org/club-enter.png" mode="aspectFill" class="school-talk"/>
+                            </view>
+        </navigator>-->
+        <!-- <navigator url="../others-edu-page/pages/avatar" style="width:750rpx;">
+                            <view class="school-talk-container">
+                                <image src="https://static.airbob.org/under-graduate/wsj_index.png" mode="aspectFit" class="school-talk"/>
+                            </view>
+        </navigator>-->
+        <view class="split-line"></view>
+        <view class="course-container">
+          <view class="container-top">
+            <view class="container-top-title">今日课表</view>
+            <span @tap="showAllCourse" data-name="课表">完整课表</span>
+            <view class="arrow"></view>
           </view>
+          <view class="boxLoading" hidden="{{loadHide}}"></view>
+          <view class="nocourse-list" wx:if="{{noCourseItem}}">
+            <view class="nocourse-image"></view>
+            <view class="nocourse-word" wx:if="{{!graduateIdentity}}">今日无课，要合理安排时间哦</view>
+            <view class="graduate-word" wx:else>
+              <view>毕业的你，已经不会再有新的大学课程</view>
+              <view>但人生处处都是课堂</view>
+            </view>
+          </view>
+          <scroll-view class="course-list" scroll-x="true" wx:if="{{!noCourseItem}}" scroll-into-view="{{courseToView}}" scroll-with-animation="true">
+            <repeat for="{{courses}}" index="index" key="key" item="item">
+              <view class="course-item" style="background: {{item.bgc}}" id="course{{index+1}}">
+                <view class="course-thing">
+                  <view style="font-size:28rpx;">{{item.name}}</view>
+                  <view>{{item.time}}</view>
+                  <view>
+                    {{item.locale}}
+                    <span wx:if="{{item.locale}}">| {{item.teacher}}</span>
+                  </view>
+                </view>
+              </view>
+            </repeat>
+          </scroll-view>
         </view>
-        <swiper class="notification-content" autoplay="true" vertical="true" circular="true">
-          <repeat for="{{swiperInfo}}" item="item" index="index" key="key">
-            <swiper-item>
-              <view class="swiper-content">{{item.title}}</view>
-            </swiper-item>
-          </repeat>
-        </swiper>
-        <view class="notification-arrow"></view>
-      </view>
-      <!-- <navigator open-type="navigate" target="miniProgram" app-id="wxa16acae9f9d131fb" style="width:750rpx;">
-          <view class="school-talk-container">
-              <image src="https://static.airbob.org/under-graduate/home-bannerbar-chat@3x.png" mode="aspectFit" class="school-talk"/>
+        <view class="split-line"></view>
+        <view class="card-container">
+          <view class="container-top">
+            <view class="container-top-title">一卡通</view>
+            <span @tap.stop="goYkt" data-name="一卡通">完整记录</span>
+            <view class="arrow"></view>
           </view>
-      </navigator>-->
-      <!-- <navigator url="../others-page/pages/association" style="width:750rpx;">
-          <view class="school-talk-container">
-              <image src="https://static.airbob.org/club-enter.png" mode="aspectFill" class="school-talk"/>
-          </view>
-      </navigator>-->
-      <!-- <navigator url="../others-edu-page/pages/avatar" style="width:750rpx;">
-          <view class="school-talk-container">
-              <image src="https://static.airbob.org/under-graduate/wsj_index.png" mode="aspectFit" class="school-talk"/>
-          </view>
-      </navigator>-->
-      <view class="split-line"></view>
-      <view class="course-container">
-        <view class="container-top">
-          <view class="container-top-title">今日课表</view>
-          <span @tap="showAllCourse">完整课表</span>
-          <view class="arrow"></view>
-        </view>
-        <view class="boxLoading" hidden="{{loadHide}}"></view>
-        <view class="nocourse-list" wx:if="{{noCourseItem}}">
-          <view class="nocourse-image"></view>
-          <view class="nocourse-word">今日无课，要合理安排时间哦</view>
-        </view>
-        <scroll-view class="course-list" scroll-x="true" wx:if="{{!noCourseItem}}">
-          <repeat for="{{courses}}" index="index" key="key" item="item">
-            <view class="course-item" style="background-image:url({{item.bgc}})">
-              <view class="course-thing">
-                <view style="font-size:28rpx;">{{item.name}}</view>
-                <view>{{item.time}}</view>
-                <view>
-                  {{item.teacher}}
-                  <span wx:if="{{item.locale}}">| {{item.locale}}</span>
+          <view class="campus-card">
+            <view class="content">
+              <view class="content-container" >
+                <view wx:if="{{isBalanceOk}}">
+                  <span>余额:</span>
+                  <span class="bigger">{{balance}}</span>
+                  <span>元</span>
+                  <view>更新时间：{{time}}</view>
+                </view>
+                <view wx:else>
+                  <span class="bigger">{{balance}}</span>
+                </view>
+                <view class="refresh-container">
+                  <image class="refresh {{isRefreshYkt?'refresh-rolling':''}}" @tap.stop="refreshYtkInfo" src="https://static.airbob.org/index_fresh/QjE2MDEyMzI3LeWIt+aWsEAzeC5wbmc=" />
                 </view>
               </view>
             </view>
-          </repeat>
-        </scroll-view>
-      </view>
-      <!-- <view class="split-line"></view> -->
-      <!-- <view class="laboratory-container" wx:if="{{showLaboratory}}">
-      <view class="container-top">
-        <view class="container-top-title">新功能实验室</view>
-      </view>
-      <view class="newfunction-container">
-        <repeat for="{{newfunctionalList}}">
-          <view class="functional-item" @tap="moveTo" data-path="{{item.path}}" data-module="{{item.module}}" data-name="{{item.name}}">
-            <image src="{{item.src}}" class="functional-item-image" /> {{item.name}}
-          </view>
-        </repeat>
-      </view>
-      </view>-->
-      <view class="split-line"></view>
-      <view class="card-container">
-        <view class="container-top">
-          <view class="container-top-title">一卡通</view>
-          <span @tap.stop="goYkt">完整记录</span>
-          <view class="arrow"></view>
-        </view>
-        <view class="campus-card">
-          <view class="content">
-            <view wx:if="{{balance !== '暂停服务' && balance !== '密码需要更新' && balance !== '请求失败'}}">
-              <span>余额:</span>
-              <span class="bigger">{{balance}}</span>
-              <span>元</span>
-              <view>截止时间：{{time}}</view>
-            </view>
-            <view wx:else>
-              <span class="bigger">{{balance}}</span>
-            </view>
           </view>
         </view>
-      </view>
-      <view class="split-line"></view>
-      <view class="card-container" style="border:none">
-        <view class="container-top">
-          <view class="container-top-title">晨跑</view>
-          <span @tap="showRuntime">完整记录</span>
-          <view class="arrow"></view>
-        </view>
-        <view class="run-card">
-          <view class="run-detail">
-            <view wx:if="{{runTime !== -1 && runTime !== '-1'}}">
-              <view wx:if="{{runTime !== 0 && runTime !== '0'}}">跑操总数：
-                <span>{{runTime}}</span>次
+        <view class="split-line"></view>
+        <view class="card-container" style="border:none">
+          <view class="container-top">
+            <view class="container-top-title">晨跑</view>
+            <span @tap="showRuntime" data-name="晨跑">完整记录</span>
+            <view class="arrow"></view>
+          </view>
+          <view class="run-card">
+            <view class="run-detail">
+              <view wx:if="{{runTime !== -1 && runTime !== '-1'}}">
+                <view>
+                  跑操总数：
+                  <span>{{runTime}}</span>次
+                </view>
               </view>
+              <view wx:else>抱歉,查询失败了呢。。。</view>
             </view>
-            <view wx:else>抱歉,查询失败了呢。。。</view>
           </view>
         </view>
       </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
-import { assoicationDetail } from "@/api/recruit";
-import { getNotification } from "@/api/notification";
+import BaseContainer from "@/components/baseContainer";
+import { associationDetail } from "@/api/recruit";
+import { getNotification, setMessageRead } from "@/api/notification";
+import { mockGetNotification } from "@/mock/notification";
 import {
   getDisplay,
   getUserInfo,
@@ -188,52 +239,99 @@ import {
   runningCount,
   getPromotionInformation
 } from "@/api/common";
-import { classSchedule } from "@/api/education";
+import { mockGetExercise } from "@/mock/common";
+import { classSchedule, getCourses, assignTimetable } from "@/api/education";
 import { campusCardRequestInfo } from "@/api/campusCard";
 import { educationSystemInformation } from "@/api/education";
-// import { connect } from "wepy-redux";
+import { mockClassSchedule } from "@/mock/education";
+import { mockCampusCardRequestInfo } from "@/mock/campusCard";
+import { connect } from "wepy-redux";
 import ClassMixin from "../mixins/class.js";
-// @connect({})
+import QyPopUp from "@/components/qy-popup";
+import {
+  judgeMemoryModeStatus,
+  judgeGraduateStatus
+} from "@/store/actions/index";
+
+@connect(
+  {
+    graduateIdentity(state) {
+      return state.graduateReducer.graduateIdentity;
+    },
+    chooseMemoryMode(state) {
+      return state.graduateReducer.chooseMemoryMode;
+    }
+  },
+  {
+    judgeMemoryModeStatus,
+    judgeGraduateStatus
+  }
+)
 export default class Index extends wepy.page {
   config = {
-    navigationBarTitleText: "NJUPT",
-    enablePullDownRefresh: true
+    navigationBarTitleText: "NJUPT"
+    // enablePullDownRefresh: true
   };
   mixins = [];
+  components = {
+    QyPopUp,
+    BaseContainer
+  };
   data = {
     moreFunc: {},
-    courseColor: [
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%80.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%B8%89.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%8C.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E4%BA%94.png",
-      "https://static.airbob.org/under-graduate/%E8%AF%BE%E7%A8%8B%E5%9B%9B.png"
-    ],
+    courseColor: ["#6AD5E1", "#87E5DA", "#F7C562", "#FFB677", "#FF8364"],
     courses: [],
     noCourseItem: false,
-    balance: "",
+    balance: "正在加载...",
     time: "",
     functionalList: "",
     swiperInfo: [],
     isNewInfo: false,
     runTime: "",
-    isGoYkt: true,
-    isGoRun: true,
-    isGoCourse: true,
     loadHide: false,
     openPage: false,
     passTime: 5,
-    displayWebviewLink: "",
-    displayPic: "",
-    displayColor: "",
     schoolTalkText: "搜点什么吧~",
     // 是否检测到口令
     commandInfoStatus: false,
+    // 是否有重要通知
+    importantInfoStatus: false,
+    // 重要通知
+    importantInfo: {},
     // 社团信息
     assoInfo: {},
-    showLaboratory: true
+    showLaboratory: true,
+    annualStatus: false, // 年报弹窗
+    //开屏跳转
+    navigatorTarget: "",
+    navigatorAppId: "",
+    navigatorUrl: "",
+    displayPic: "",
+    displayColor: "",
+    avatarUrl: [
+      "https://static.airbob.org/under-graduate/profile/avatar1.png",
+      "https://static.airbob.org/under-graduate/profile/avatar2.png",
+      "https://static.airbob.org/under-graduate/profile/avatar3.png"
+    ],
+    hiGraduateModal: false,
+    graduateName: "",
+    visitorModeStatus: false,
+    classInfo: {},
+    isRefreshYkt: false,
+    courseToView: "course0"
   };
-  computed = {};
+  computed = {
+    isBalanceOk() {
+      const exceptions = [
+        "暂停服务",
+        "密码需要更新",
+        "请求失败",
+        "正在加载...",
+        "需要绑定一卡通"
+      ];
+      return !exceptions.includes(this.balance);
+    }
+  };
   // 首页广告
   watch = {
     openPage(newValue, oldValue) {
@@ -273,6 +371,22 @@ export default class Index extends wepy.page {
           this.$apply();
         }, 1000);
       }
+    },
+    classInfo(newValue) {
+      const { extraCourse, timetable, assign } = newValue;
+      if (timetable) {
+        const mergedCourse = extraCourse
+          ? timetable.concat(extraCourse)
+          : timetable;
+        if (assign) {
+          const { week, specialDayNum } = assign;
+          this.dealCourse(mergedCourse, week, specialDayNum);
+        } else {
+          this.dealCourse(mergedCourse);
+        }
+        this.loadHide = true;
+        this.$apply();
+      }
     }
   };
   methods = {
@@ -286,11 +400,10 @@ export default class Index extends wepy.page {
         url: "../others-page/pages/information-box"
       });
     },
-    goYkt() {
+    goYkt(e) {
+      const name = e.currentTarget.dataset.name;
       this.$navigate({
-        url: this.isGoYkt
-          ? "../campus-card-page/pages/campus-card-index"
-          : "../others-page/pages/close"
+        url: `../campus-card-page/pages/campus-card-index?name=${name}`
       });
     },
     async moveTo(e) {
@@ -316,50 +429,22 @@ export default class Index extends wepy.page {
       ) {
         wepy.setStorageSync("indexIcon", this.functionalList);
       }
-      if (wepy.getStorageSync("moduleStatus")) {
-        for (let i of wepy.getStorageSync("moduleStatus")) {
-          if (
-            !e.currentTarget.dataset.module ||
-            e.currentTarget.dataset.module === ""
-          ) {
-            this.$navigate({
-              url: e.currentTarget.dataset.path
-            });
-            break;
-          } else {
-            if (i.moduleName === e.currentTarget.dataset.module) {
-              if (!i.open && e.currentTarget.dataset.name !== "课表") {
-                this.$navigate({
-                  url: "../others-page/pages/close"
-                });
-              } else {
-                this.$navigate({
-                  url: e.currentTarget.dataset.path
-                });
-              }
-              break;
-            }
-          }
-        }
-      } else {
-        await this.moduleStatusJudge();
-        this.$navigate({
-          url: e.currentTarget.dataset.path
-        });
-      }
-    },
-    showAllCourse() {
       this.$navigate({
-        url: this.isGoCourse
-          ? "../edu-admin-page/pages/course"
-          : "../others-page/pages/close"
+        url: `${e.currentTarget.dataset.path}?name=${
+          e.currentTarget.dataset.name
+        }`
       });
     },
-    showRuntime() {
+    showAllCourse(e) {
+      const name = e.currentTarget.dataset.name;
       this.$navigate({
-        url: this.isGoRun
-          ? "../others-page/pages/run"
-          : "../others-page/pages/close"
+        url: `../edu-admin-page/pages/course?name=${name}`
+      });
+    },
+    showRuntime(e) {
+      const name = e.currentTarget.dataset.name;
+      this.$navigate({
+        url: `../others-page/pages/run?name=${name}`
       });
     },
     // 首页广告
@@ -377,75 +462,161 @@ export default class Index extends wepy.page {
       });
       wepy.showTabBar();
     },
-    navigateToWebview() {
-      if (this.displayWebviewLink) {
-        wepy.setNavigationBarColor({
-          frontColor: "#000000",
-          backgroundColor: "#fff",
-          animation: {
-            duration: 0
-          }
-        });
-        wepy.setNavigationBarTitle({
-          title: "NJUPT"
-        });
-        wepy.showTabBar();
-        this.$apply();
-        this.$navigate({
-          url: "../others-page/pages/display-webview"
-        });
-      }
-    },
     // 通过口令跳转到社团详情
     codeToDetail() {
+      this.commandInfoStatus = false;
+      this.$apply();
       wepy.navigateTo({
-        url: `../others-page/pages/associationPages/association-detail?info=${JSON.stringify(
-          this.assoInfo.info
-        )}&koulingStatus=true&command=${this.assoInfo.command}`
+        url: `../others-page/pages/associationPages/association-detail?associationName=${
+          this.assoInfo.info.associationName
+        }&koulingStatus=true&command=${this.assoInfo.command}&fullname=${
+          this.assoInfo.info.fullname
+        }`
       });
       wepy.setClipboardData({
         data: "剪贴板清空惹~"
       });
-    }
-  };
-  events = {};
-  mixins = [ClassMixin];
-  async getBalance() {
-    const moduleStatus = wepy.getStorageSync("moduleStatus");
-    // 先判断是否可用
-    if (moduleStatus[0] && !moduleStatus[0].open) {
-      this.balance = "暂停服务";
-    } else {
-      const tempDate = new Date();
-      this.time = `${tempDate.getFullYear()}-${tempDate.getMonth() +
-        1}-${tempDate.getDate()}`;
-      campusCardRequestInfo().then(res => {
-        if (res.data.success) {
-          this.balance =
-            (Number(res.data.data.db_balance) +
-              Number(res.data.data.unsettle_amount)) /
-            100;
-          wepy.setStorageSync("sno", res.data.data.sno);
+    },
+    hideHiGraduate() {
+      this.hiGraduateModal = false;
+      wepy.setStorageSync("graduateModal", true);
+    },
+    closeCommandInfo() {
+      this.commandInfoStatus = false;
+    },
+    async refreshYtkInfo() {
+      const moduleStatus = wepy.getStorageSync("moduleStatus");
+      const ytkModuleStatus = moduleStatus.find(x => x.moduleName === "一卡通");
+      if (ytkModuleStatus && !ytkModuleStatus.open) {
+        this.balance = "暂停服务";
+        this.$apply();
+      } else {
+        this.isRefreshYkt = true;
+        this.$apply();
+        const { data: response } = await this.judgeCampusCard();
+        this.isRefreshYkt = false;
+        this.$apply();
+        if (response.data) {
+          const yktInfoCache = { data: response.data, time: new Date() };
+          wepy.setStorageSync("yktInfo", yktInfoCache);
+          const { data, time } = yktInfoCache;
+          const tempDate = new Date(time);
+          const formatTimeString = raw =>
+            raw.toString().length < 2 ? "0" + raw.toString() : raw.toString();
+          this.time = this.graduateIdentity
+            ? `2019-6-20 毕业典礼`
+            : `${tempDate.getFullYear()}-${tempDate.getMonth() +
+                1}-${tempDate.getDate()} ${formatTimeString(
+                tempDate.getHours()
+              )}:${formatTimeString(tempDate.getMinutes())}:${formatTimeString(
+                tempDate.getSeconds()
+              )}`;
+
+          if (this.graduateIdentity) {
+            this.balance =
+              (Number(data.db_balance) + Number(data.unset_balance)) / 100;
+          } else {
+            this.balance =
+              (Number(data.db_balance) + Number(data.unsettle_amount)) / 100;
+          }
+          this.$apply();
+          wepy.setStorageSync("sno", data.sno);
         } else {
-          if (res.data.errCode === 24) {
+          if (response.errCode === 24) {
             this.balance = "密码需要更新";
+          } else if (response.errCode === 34) {
+            this.balance = "需要绑定一卡通";
+          } else if (response.errCode === 668) {
+            this.$parent.showTip(response.errMsg);
           } else {
             this.balance = "请求失败";
           }
+          this.$apply();
         }
+      }
+    },
+    prevent() {},
+    async closeNotification(e) {
+      const { id } = e.currentTarget.dataset;
+      this.importantInfoStatus = false;
+      const res = await setMessageRead(id);
+      if (res.data && res.data.data) {
+        this.swiperInfo = this.swiperInfo.filter(info => info.id !== id);
         this.$apply();
-      });
+      }
     }
+  };
+  events = {
+    changeAnnualStatus() {
+      this.annualStatus = false;
+    }
+  };
+  mixins = [ClassMixin];
+  async getBalance() {
+    let yktInfoCache = wepy.getStorageSync("yktInfo");
+    if (!yktInfoCache) {
+      const moduleStatus = wepy.getStorageSync("moduleStatus");
+      const ytkModuleStatus = this.visitorModeStatus
+        ? { open: true }
+        : moduleStatus.find(x => x.moduleName === "一卡通");
+      if (ytkModuleStatus && !ytkModuleStatus.open) {
+        this.balance = "暂停服务";
+        this.$apply();
+      } else {
+        const { data: response } = await this.judgeCampusCard();
+        if (response.data) {
+          yktInfoCache = { data: response.data, time: new Date() };
+          wepy.setStorageSync("yktInfo", yktInfoCache);
+        } else {
+          if (response.errCode === 24) {
+            this.balance = "密码需要更新";
+          } else if (response.errCode === 34) {
+            this.balance = "需要绑定一卡通";
+          } else {
+            this.balance = "请求失败";
+          }
+          this.$apply();
+          return;
+        }
+      }
+    }
+    const { data, time } = yktInfoCache;
+    const tempDate = new Date(time);
+    const formatTimeString = raw =>
+      raw.toString().length < 2 ? "0" + raw.toString() : raw.toString();
+    this.time = this.graduateIdentity
+      ? `2019-6-20 毕业典礼`
+      : `${tempDate.getFullYear()}-${tempDate.getMonth() +
+          1}-${tempDate.getDate()} ${formatTimeString(
+          tempDate.getHours()
+        )}:${formatTimeString(tempDate.getMinutes())}:${formatTimeString(
+          tempDate.getSeconds()
+        )}`;
+    if (this.graduateIdentity) {
+      this.balance =
+        (Number(data.db_balance) + Number(data.unset_balance)) / 100;
+    } else {
+      this.balance =
+        (Number(data.db_balance) + Number(data.unsettle_amount)) / 100;
+    }
+    this.$apply();
+    wepy.setStorageSync("sno", data.sno);
   }
-  dealCourse(course) {
+  dealCourse(course, assignWeek = 0, assignDayNum = 0) {
+    const now = new Date();
     let common = wepy.getStorageSync("common");
-    let nowWeek = parseInt(common.week);
+    let nowWeek =
+      assignWeek !== 0
+        ? assignWeek
+        : this.visitorModeStatus
+        ? 4
+        : parseInt(common.week);
     let todayCourse = this.handleCourses(course, nowWeek);
-    let today = new Date().getDay() - 1;
+    let today = assignDayNum !== 0 ? assignDayNum - 1 : now.getDay() - 1;
     today = today === -1 ? 6 : today;
     let allcourses = todayCourse[0][today];
-    if (todayCourse[2][today].length >= 1) {
-      allcourses.push(...todayCourse[2][today]);
+    if (todayCourse[1][today].length >= 1) {
+      allcourses.push(...todayCourse[1][today]);
     }
     let colorArr = this.courseColor;
     let nowCourses = [];
@@ -472,15 +643,47 @@ export default class Index extends wepy.page {
     }
     this.noCourseItem = this.courses.length === 0;
     this.loadHide = true;
+    const allMinutes = now.getHours() * 60 + now.getMinutes();
+    let courseIndex =
+      [
+        [8, 45],
+        [9, 35],
+        [10, 35],
+        [11, 25],
+        [12, 15],
+        [14, 30],
+        [15, 20],
+        [16, 20],
+        [17, 10],
+        [19, 15],
+        [20, 10],
+        [21, 5]
+      ].findIndex(x => x[0] * 60 + x[1] > allMinutes) + 1;
+    if (courseIndex === 0) {
+      courseIndex = 12;
+    }
+    let currentCourse =
+      this.courses.findIndex(x => x.sectionend >= courseIndex) + 1;
+    if (currentCourse === 0) {
+      currentCourse = this.courses.length + 1;
+    }
+    for (let i = 0; i < currentCourse - 1; i++) {
+      this.courses[i].bgc = "#D8D8D8";
+    }
     this.$apply();
-  }
-  closeCommandInfo() {
-    this.commandInfoStatus = false;
+    setTimeout(() => {
+      this.courseToView = `course${Math.min(
+        currentCourse,
+        this.courses.length
+      )}`;
+      this.$apply();
+    }, 200);
   }
   async moduleStatusJudge() {
     const moduleStatus = await getModuleStatus();
-    const cantUse = [];
-    const newModule = [];
+    const newModule = wepy.getStorageSync("newModule")
+      ? wepy.getStorageSync("newModule")
+      : [];
     if (moduleStatus.data) {
       const moduleStatusData = moduleStatus.data.data;
       if (wepy.getStorageSync("moduleStatus")) {
@@ -488,35 +691,27 @@ export default class Index extends wepy.page {
         for (let i of moduleStatusData) {
           for (let j of preModuleStatus) {
             if (i.moduleName === j.moduleName) {
-              if (i.isNew && i.notificationHash !== j.notificationHash) {
+              if (
+                i.isNew &&
+                i.notificationHash !== j.notificationHash &&
+                !newModule.includes(i)
+              ) {
                 newModule.push(i);
               }
             }
           }
         }
-        wepy.setStorageSync("newModule", newModule);
-        for (let i of newModule) {
-          for (let j of this.functionalList) {
-            if (i.moduleName === j.name) {
-              j.isNew = true;
+        if (newModule.length) {
+          wepy.setStorageSync("newModule", newModule);
+          for (let i of newModule) {
+            for (let j of this.functionalList) {
+              if (i.moduleName === j.name || j.name === "更多") {
+                j.isNew = true;
+              }
             }
           }
         }
       }
-      moduleStatusData.forEach(module => {
-        if (!module.open) {
-          cantUse.push(module);
-          if (module.moduleName === "一卡通") {
-            this.isGoYkt = false;
-          }
-          if (module.moduleName === "正方") {
-            this.isGoCourse = false;
-          }
-          if (module.moduleName === "晨跑") {
-            this.isGoRun = false;
-          }
-        }
-      });
       wepy.setStorageSync("moduleStatus", moduleStatusData);
     }
     const functionalItem = this.functionalList.find(item => item.id === 15);
@@ -524,6 +719,42 @@ export default class Index extends wepy.page {
       functionalItem.module = "正方";
     }
   }
+  async mockInit() {
+    this.functionalList = this.$parent.globalData.modules.slice(0, 8);
+    wepy.setStorageSync("indexIcon", this.functionalList);
+    this.getBalance();
+    mockClassSchedule().then(res => {
+      if (res.data) {
+        wepy.setStorageSync("timetable", res.data.data);
+        this.dealCourse(res.data.data);
+        this.loadHide = true;
+        this.$apply();
+      }
+    });
+    mockGetNotification().then(res => {
+      if (res.data) {
+        const {
+          data: { data: notificationList }
+        } = res;
+        this.swiperInfo = notificationList
+          .filter(notification => {
+            return !notification.read;
+          })
+          .sort((prev, next) => prev.createDate < next.createDate);
+        if (this.swiperInfo.length > 0) {
+          this.isNewInfo = true;
+        }
+        this.$apply();
+      }
+    });
+    mockGetExercise().then(res => {
+      if (res.data.data) {
+        this.runTime = res.data.data.totalCount;
+        this.$apply();
+      }
+    });
+  }
+
   async init() {
     const indexIconList = wepy.getStorageSync("indexIcon");
     if (indexIconList && indexIconList.length === 8) {
@@ -531,11 +762,19 @@ export default class Index extends wepy.page {
     } else {
       this.functionalList = this.$parent.globalData.modules.slice(0, 8);
     }
+    // this.functionalList = this.$parent.globalData.modules.slice(0, 8);
     wepy.setStorageSync("indexIcon", this.functionalList);
     const userInfoResponse = await getUserInfo();
-    if (userInfoResponse.data !== undefined) {
-      const userInfo = userInfoResponse.data.data;
+    if (userInfoResponse.data) {
+      await this.methods.judgeGraduateStatus(
+        userInfoResponse.data.data.graduate
+      );
+      let userInfo = userInfoResponse.data.data;
+      userInfo.nativeInformation.avatar = this.avatarUrl[
+        Math.floor(Math.random() * 3)
+      ];
       wepy.setStorageSync("User", userInfo);
+
       if (!wepy.getStorageSync("token") || !userInfo.enabled) {
         wepy.reLaunch({
           url: "/others-page/pages/login"
@@ -553,137 +792,291 @@ export default class Index extends wepy.page {
               })
               .sort((prev, next) => prev.createDate < next.createDate);
             if (this.swiperInfo.length > 0) {
+              //  判断未读消息中是否有重要通知
+              const importantMsg = this.swiperInfo.find(msg => msg.type === 0);
+              if (importantMsg) {
+                this.importantInfoStatus = true;
+                this.importantInfo = {
+                  ...importantMsg,
+                  content: importantMsg.content.trim().split("\n")
+                };
+              }
               this.isNewInfo = true;
             }
             this.$apply();
           }
         });
-        await this.moduleStatusJudge();
-        const common = await commonInformation();
-        common.data && wepy.setStorageSync("common", common.data.data);
-        const userInfoCache = wepy.getStorageSync("userInfo");
-        if (!userInfoCache || !userInfoCache.studentId) {
-          educationSystemInformation().then(res => {
-            wepy.setStorageSync("userInfo", res.data.data);
-          });
-        }
-
+        this.moduleStatusJudge();
         runningCount().then(res => {
           if (res.data.data) {
             this.runTime = res.data.data.totalCount;
             this.$apply();
           }
         });
+        commonInformation().then(common => {
+          common.data && wepy.setStorageSync("common", common.data.data);
+        });
+
+        this.methods.judgeMemoryModeStatus().then(() => {
+          this.checkGraduateMode(userInfo.name);
+
+          this.getBalance();
+
+          // 本科生走 if 里的逻辑
+          if (!this.graduateIdentity) {
+            classSchedule().then(timetable => {
+              if (timetable.data && timetable.data.data) {
+                const timetableData = timetable.data.data.timetable;
+                wepy.setStorageSync("timetable", timetableData);
+                this.classInfo.timetable = timetableData;
+                this.$apply();
+              }
+            });
+            getCourses().then(extraCourse => {
+              if (extraCourse.data && extraCourse.data.data) {
+                const extraCourseData = extraCourse.data.data.map(
+                  item => item.courseModel
+                );
+                wepy.setStorageSync("extraCourse", extraCourseData);
+                this.classInfo.extraCourse = extraCourseData;
+                this.$apply();
+              }
+            });
+            assignTimetable().then(assign => {
+              if (assign.data && assign.data.data) {
+                const {
+                  semester,
+                  specialDayNum,
+                  week,
+                  year
+                } = assign.data.data;
+                this.classInfo.assign = { week, specialDayNum };
+              }
+            });
+            const userInfoCache = wepy.getStorageSync("userInfo");
+
+            if (!userInfoCache || !userInfoCache.studentId) {
+              educationSystemInformation().then(res => {
+                if (res.data && res.data.data) {
+                  wepy.setStorageSync("userInfo", res.data.data);
+                }
+              });
+            }
+          }
+        });
+      }
+    }
+  }
+
+  /**
+   * 检查毕业生身份相关逻辑
+   */
+  checkGraduateMode(name) {
+    this.graduateName = name;
+    if (this.graduateIdentity && !this.chooseMemoryMode) {
+      wepy.navigateTo({
+        url: `../others-edu-page/graduatePages/index?name=${name}`
+      });
+    }
+    if (
+      this.graduateIdentity &&
+      this.chooseMemoryMode &&
+      !wepy.getStorageSync("graduateModal")
+    ) {
+      this.hiGraduateModal = true;
+    }
+    if (this.graduateIdentity) {
+      this.noCourseItem = true;
+      this.loadHide = true;
+    }
+    this.$apply();
+  }
+
+  judgeCampusCard() {
+    return this.visitorModeStatus
+      ? mockCampusCardRequestInfo()
+      : campusCardRequestInfo(this.geaduateIdentity);
+  }
+  async onShow() {
+    wepy.setNavigationBarColor({
+      frontColor: "#000000",
+      backgroundColor: "#fff",
+      animation: {
+        duration: 0
+      }
+    });
+    wepy.setNavigationBarTitle({
+      title: "NJUPT"
+    });
+    wepy.showTabBar();
+    const token = wepy.getStorageSync("token");
+    const userInfo = wepy.getStorageSync("User");
+    if (!this.visitorModeStatus && userInfo) {
+      if (token && userInfo && userInfo.enabled) {
         this.getBalance();
-        classSchedule().then(timetable => {
-          if (timetable.data) {
-            wepy.setStorageSync("timetable", timetable.data.data.timetable);
-            this.dealCourse(timetable.data.data.timetable);
-            this.loadHide = true;
+        const timetable = wepy.getStorageSync("timetable");
+        if (timetable) {
+          this.loadWrong = false;
+        }
+        // 判断口令
+        const copyData = await wepy.getClipboardData();
+        const filterStr = copyData.data.match(/€(.+?)€/g);
+        if (filterStr !== null) {
+          const filterCommand = filterStr[0].substring(
+            1,
+            filterStr[0].length - 1
+          );
+          if (this.assoInfo && filterCommand !== this.assoInfo.command) {
+            associationDetail(filterCommand).then(res => {
+              if (res.data.data) {
+                this.commandInfoStatus = true;
+                const { assoInfo, assoInfoDetails } = res.data.data;
+                const associationItem = assoInfoDetails.find(x => x.type === 1);
+                if (associationItem) {
+                  const avatar = associationItem.picUrl;
+                  this.assoInfo = {
+                    avatar,
+                    command: filterCommand,
+                    info: assoInfo
+                  };
+                  this.commandInfoStatus = true;
+                  this.$apply();
+                }
+              }
+            });
+          }
+        }
+        //  刷新消息
+        getNotification().then(res => {
+          if (res.data) {
+            const {
+              data: { data: notificationList }
+            } = res;
+            this.swiperInfo = notificationList
+              .filter(notification => {
+                return !notification.read;
+              })
+              .sort((prev, next) => prev.createDate < next.createDate);
+            if (this.swiperInfo.length > 0) {
+              this.isNewInfo = true;
+            }
             this.$apply();
-            // classSchedule(null, null, "courseRefresh").then(response => {
-            //   wepy.setStorageSync("timetable", response.data.data.timetable);
-            //   this.dealCourse(response.data.data.timetable);
-            //   this.$apply();
-            // });
+          }
+        });
+      }
+    }
+  }
+  /**
+   * onLoad后主要是先判断是否为游客模式
+   *  如果不是就同时获取开屏，资讯页信息，调用init
+   */
+  onLoad() {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    if (this.visitorModeStatus) {
+      wepy.$store.dispatch({ type: `SET_GRADUATE_FALSE` });
+      this.mockInit();
+    } else {
+      const token = wepy.getStorageSync("token");
+      if (token) {
+        // 首页开屏
+        getDisplay().then(res => {
+          const display = wepy.getStorageSync("display");
+          if (res.data && res.data.data !== null) {
+            const {
+              displayId,
+              color,
+              picture,
+              link,
+              appId,
+              type
+            } = res.data.data;
+            if (type === 0) {
+              this.navigatorTarget = "miniProgram";
+              this.navigatorAppId = appId;
+            } else if (type === 1) {
+              this.navigatorTarget = "self";
+              this.navigatorUrl =
+                `../others-page/pages/display-webview?link=` + link;
+            } else if (type === 4) {
+              this.navigatorTarget = "self";
+              this.navigatorUrl = link;
+            }
+            let count = wepy.getStorageSync("openthePage") || 0;
+            switch (true) {
+              case displayId !== display.displayId:
+                count = 0;
+                wepy.setStorageSync("display", {
+                  displayPic: picture,
+                  displayColor: color,
+                  displayId
+                });
+              case count < 5:
+                this.openPage = true;
+                this.displayPic = picture;
+                this.displayColor = color;
+                count++;
+                wepy.setStorageSync("openthePage", count);
+                break;
+              default:
+                break;
+            }
+            this.$apply();
           }
         });
         getPromotionInformation(1, 10).then(res => {
           const { success, data } = res.data;
           if (success) {
             if (data.totalAdCount !== wepy.getStorageSync("newsListSum")) {
-              wepy.showTabBarRedDot({ index: 1 });
+              wepy.showTabBarRedDot({
+                index: 1
+              });
             }
           }
         });
       }
+      this.init();
     }
   }
-  async onShow() {
-    const token = wepy.getStorageSync("token");
-    const userInfo = wepy.getStorageSync("User");
-    if (token && userInfo && userInfo.enabled) {
-      const timetable = wepy.getStorageSync("timetable");
-      if (timetable) {
-        this.loadWrong = false;
-        this.dealCourse(timetable);
-      }
-      // 判断口令
-      const copyData = await wepy.getClipboardData();
-      const filterStr = copyData.data.match(/€(.+?)€/g);
-      if (filterStr !== null) {
-        const filterCommand = filterStr[0].substring(
-          1,
-          filterStr[0].length - 1
-        );
-        if (this.assoInfo && filterCommand !== this.assoInfo.command) {
-          assoicationDetail(filterCommand).then(res => {
-            if (res.data.data) {
-              this.commandInfoStatus = true;
-              const { assoInfo, assoInfoDetails } = res.data.data;
-              const associationItem = assoInfoDetails.filter(x => x.type === 1);
-              if (associationItem) {
-                const avatar = associationItem.picUrl;
-                this.assoInfo = {
-                  avatar,
-                  command: filterCommand,
-                  info: assoInfo
-                };
-                this.commandInfoStatus = true;
-                this.$apply();
-              }
-            }
-          });
-        }
-      }
-    }
-  }
-  onLoad() {
-    const token = wepy.getStorageSync("token");
-    if (token) {
-      // 首页开屏
-      getDisplay().then(res => {
-        const display = wepy.getStorageSync("display");
-        if (res.data && res.data.data !== null) {
-          const { displayId, color, picture, link } = res.data.data;
-          this.displayWebviewLink = link;
-          let count = wepy.getStorageSync("openthePage") || 0;
-          switch (true) {
-            case displayId !== display.displayId:
-              count = 0;
-              wepy.setStorageSync("display", {
-                displayPic: picture,
-                displayColor: color,
-                displayId
-              });
-            case count < 5:
-              this.openPage = true;
-              this.displayPic = picture;
-              this.displayColor = color;
-              count++;
-              wepy.setStorageSync("openthePage", count);
-              break;
-            default:
-              break;
-          }
-          this.$apply();
-        }
-      });
-    }
-    this.init();
-  }
-  async onPullDownRefresh() {
-    if (!this.openPage) {
-      await this.init();
-    }
-    wepy.stopPullDownRefresh();
-  }
+  // async onPullDownRefresh() {
+  //   if (!this.openPage) {
+  //     await this.init();
+  //   }
+  //   wepy.stopPullDownRefresh();
+  // }
 }
 </script>
+
 <style lang="stylus" scoped>
 vendors = official
 @import '../css/search-input'
 @import '../css/loading'
+.hi-graduate
+  position fixed
+  background-color rgba(0,0,0,0.8)
+  z-index 30000
+  width 100vw
+  height 100vh
+  .hi-graduate-img
+    width 311rpx
+    height 413rpx
+    position absolute
+    top 244rpx
+    left 318rpx
+  .hi-graduate-talk
+    width 450rpx
+    position absolute
+    top 544rpx
+    left 151rpx
+    color #ffffff
+    .graduate-talk-title
+      font-weight 400
+      font-size 36rpx
+      margin-bottom 23rpx
+    .graduate-talk-content
+      font-size 24rpx
+      font-weight 200
+    .graduate-divide
+      height 23rpx
 .split-line
   width 750rpx
   height 15rpx
@@ -900,7 +1293,7 @@ vendors = official
     width 710rpx
     height 150rpx
     display flex
-    align-item center
+    align-items center
     background #FFFFFF
     box-shadow 0 0 20rpx 0 rgba(0, 0, 0, 0.1)
     border-radius 30rpx
@@ -919,26 +1312,30 @@ vendors = official
       line-height 150rpx
       color #353535
       letter-spacing -0.62px
+    .graduate-word
+      font-size 26rpx
+      font-family PingFangSC-Regular
+      color #353535
   .course-list
     width 100%
     white-space nowrap
     color #fff
     .course-item
       display inline-block
-      margin-right 30rpx
-      width 300rpx
+      margin-right 10rpx
+      width 270rpx
       height 150rpx
       font-size 24rpx
-      background-position center
-      background-repeat no-repeat
-      background-size contain
+      border-radius 16rpx
+      padding 20rpx
+      box-sizing border-box
       .course-thing
         width 270rpx
-        height 150rpx
-        margin-top 22rpx
-        margin-left 30rpx
+        display flex
+        flex-direction column
+        justify-content space-between
         view
-          line-height 40rpx
+          line-height 38rpx
           overflow hidden
           text-overflow ellipsis
           white-space nowrap
@@ -985,6 +1382,26 @@ vendors = official
     .bigger
       font-size 40rpx
       font-weight 600
+    .content-container
+      display flex
+      justify-content center
+      align-items center
+      flex-direction column
+      .refresh-container
+        width 160rpx
+        height 60rpx
+        background-color rgba(255,255,255,0.8)
+        display flex
+        align-items center
+        justify-content center
+        border-radius 30rpx
+        margin-top 10rpx
+        box-shadow 1rpx 1rpx 3rpx rgba(84,218,255,0.5)
+        .refresh
+          width 40rpx
+          height 40rpx
+        .refresh-rolling
+          animation rolling 0.4s linear 0s infinite;
 .run-card
   width 710rpx
   height 280rpx
@@ -1010,8 +1427,27 @@ vendors = official
   display flex
   justify-content center
   .perfect-info-body
-    margin-top 111px
+    margin auto
     height 300px
+    &.notification
+      height auto
+      .notification-tip
+        height 60rpx
+        font-size 1rem
+        margin-top 20rpx
+        line-height 60rpx
+        text-align center
+        color #cecece
+      .notification-close
+        width 90%
+        height 70rpx
+        display flex
+        align-items center
+        justify-content center
+        border-top 2rpx solid #e3e3e3
+        font-size 30rpx
+        color #1d1d1d
+        font-weight 800
     .perfect-img
       display flex
       justify-content center
@@ -1019,6 +1455,11 @@ vendors = official
       image
         width 186px
         height 152px
+      &.notification
+        transform translateY(70rpx)
+        image
+          width 360rpx
+          height 340rpx
     .perfect-info-card
       width 250px
       height 188px
@@ -1028,6 +1469,12 @@ vendors = official
       align-items center
       flex-direction column
       position relative
+      &.notification
+        height auto
+        min-height 376rpx
+        border-top 32rpx solid #50b3cc
+        justify-content flex-start
+        border-radius 24rpx
       .command-avatar
         position absolute
         top -20px
@@ -1064,6 +1511,19 @@ vendors = official
         font-size 20px
         color #606266
         padding-bottom 22px
+      .notification-info
+        width 85%
+        text-align left
+        min-height 205rpx
+        max-height 50vh
+        font-size 1rem
+        color #787777
+        margin 15rpx
+        overflow hidden
+        text-overflow ellipsis
+        display -webkit-box
+        -webkit-line-clamp 16
+        -webkit-box-orient vertical
       .perfect-info-tip
         font-size 14px
         color #606266
@@ -1071,4 +1531,28 @@ vendors = official
         height 20px
         text-align center
         padding 43px 0 3px 0
+        &.notification
+          padding 16rpx 0 0 20rpx
+          border-bottom 2rpx solid #e3e3e3
+          width 90%
+          height auto
+          color #1d1d1d
+          text-align left
+          font-weight 800
+          overflow hidden
+          text-overflow ellipsis
+          display -webkit-box
+          -webkit-line-clamp 2
+          -webkit-box-orient vertical
+@keyframes rolling{
+  0% {
+    transform rotate(0deg);
+  }
+  50% {
+    transform rotate(180deg);
+  }
+  100% {
+    transform rotate(360deg);
+  }
+}
 </style>

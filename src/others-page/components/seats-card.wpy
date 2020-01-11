@@ -4,10 +4,16 @@
     <view class="floor-room">
       <repeat for="{{lib.rooms}}" key="key" index="index" item="item">
         <view class="circleProgress-wrapper">
-          <view class="right" style="-webkit-transform:rotate({{(item.curSeats/item.totalSeats)*360<=180?(item.curSeats/item.totalSeats)*360:0}}deg);background-color:{{(item.curSeats/item.totalSeats)*360<=180?'#f5f5f5':'#39c9ff'}};">
+          <view
+            class="right"
+            style="-webkit-transform:rotate({{(item.curSeats/item.totalSeats)*360<=180?(item.curSeats/item.totalSeats)*360:0}}deg);background-color:{{(item.curSeats/item.totalSeats)*360<=180?'#f5f5f5':'#39c9ff'}};"
+          >
             <view class="clip-right"></view>
           </view>
-          <view class="left" style="-webkit-transform:rotate({{(item.curSeats/item.totalSeats)*360<=180?0:(item.curSeats/item.totalSeats-0.5)*360}}deg)">
+          <view
+            class="left"
+            style="-webkit-transform:rotate({{(item.curSeats/item.totalSeats)*360<=180?0:(item.curSeats/item.totalSeats-0.5)*360}}deg)"
+          >
             <view class="clip-left"></view>
           </view>
           <view class="seats-left">{{item.curSeats}}</view>

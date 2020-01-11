@@ -1,25 +1,39 @@
 <template>
   <view>
+    <qy-navigation :title="navTitle"></qy-navigation>
     <qy-tip :on.sync="tipsOn" :content.sync="tipsContent"/>
     <view style="position:relative;">
       <view class="index-application">
         <view class="application">首页应用</view>
         <view hidden="{{showEdit}}">
           <repeat for="{{indexIcon}}" key="key" index="index" item="item">
-            <view class="application-image" style="background-image:url('{{item.src}}');width:{{IconWidth}}rpx;height:90rpx;"></view>
+            <view
+              class="application-image"
+              style="background-image:url('{{item.src}}');width:{{IconWidth}}rpx;height:90rpx;"
+            ></view>
           </repeat>
         </view>
-          <view hidden="{{!showEdit}}" class="edit-index">（首页需放置7个功能入口）</view>
+        <view hidden="{{!showEdit}}" class="edit-index">（首页需放置7个功能入口）</view>
         <view class="edit" @tap="toEdit">{{!showEdit ? '编辑' : '完成'}}</view>
       </view>
       <view class="classification" id="show-index" animation="{{showDetailAnimation}}">
         <view class="classification-detail">
           <repeat for="{{indexIcon}}" index="index" key="key" item="item">
             <view class="detail-info">
-              <view class="detail-info-container" style="background:#F5F5F5;" animation="{{deleteAnimation[index]}}">
+              <view
+                class="detail-info-container"
+                style="background:#F5F5F5;"
+                animation="{{deleteAnimation[index]}}"
+              >
                 <view class="detail-image" style="position:relative;">
-                  <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
-                  <view class="add-or-delete" style="background-image:url('https://static.airbob.org/under-graduate/more/delete.png')" @tap.stop="deleteIcon" data-index="{{index}}" data-item="{{item}}"></view>
+                  <image src="{{item.src}}" mode="aspectFit" class="detail-image">
+                  <view
+                    class="add-or-delete"
+                    style="background-image:url('https://static.airbob.org/under-graduate/more/delete.png')"
+                    @tap.stop="deleteIcon"
+                    data-index="{{index}}"
+                    data-item="{{item}}"
+                  ></view>
                 </view>
                 <view class="detail-name">{{item.name}}</view>
               </view>
@@ -34,11 +48,22 @@
           <repeat for="{{details.library}}" index="index" key="key" item="item">
             <view class="detail-info">
               <view animation="{{deleteIconAnimation[item.id]}}">
-                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                <view
+                  class="detail-info-container"
+                  animation="{{animationData}}"
+                  @tap.stop="nav"
+                  data-item="{{item}}"
+                >
                   <view class="detail-image" style="position:relative;">
-                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image">
                     <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
-                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                    <view
+                      hidden="{{!showEdit}}"
+                      @tap="changeStatus"
+                      data-item="{{item}}"
+                      class="add-or-delete"
+                      style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"
+                    ></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
                 </view>
@@ -53,11 +78,22 @@
           <repeat for="{{details.card}}" index="index" key="key" item="item">
             <view class="detail-info">
               <view animation="{{deleteIconAnimation[item.id]}}">
-                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                <view
+                  class="detail-info-container"
+                  animation="{{animationData}}"
+                  @tap.stop="nav"
+                  data-item="{{item}}"
+                >
                   <view class="detail-image" style="position:relative;">
-                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image">
                     <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
-                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                    <view
+                      hidden="{{!showEdit}}"
+                      @tap="changeStatus"
+                      data-item="{{item}}"
+                      class="add-or-delete"
+                      style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"
+                    ></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
                 </view>
@@ -72,11 +108,22 @@
           <repeat for="{{details.course}}" index="index" key="key" item="item">
             <view class="detail-info">
               <view animation="{{deleteIconAnimation[item.id]}}">
-                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                <view
+                  class="detail-info-container"
+                  animation="{{animationData}}"
+                  @tap.stop="nav"
+                  data-item="{{item}}"
+                >
                   <view class="detail-image" style="position:relative;">
-                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image">
                     <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
-                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                    <view
+                      hidden="{{!showEdit}}"
+                      @tap="changeStatus"
+                      data-item="{{item}}"
+                      class="add-or-delete"
+                      style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"
+                    ></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
                 </view>
@@ -91,11 +138,22 @@
           <repeat for="{{details.campus}}" index="index" key="key" item="item">
             <view class="detail-info">
               <view animation="{{deleteIconAnimation[item.id]}}">
-                <view class="detail-info-container" animation="{{animationData}}" @tap.stop="nav" data-item="{{item}}">
+                <view
+                  class="detail-info-container"
+                  animation="{{animationData}}"
+                  @tap.stop="nav"
+                  data-item="{{item}}"
+                >
                   <view class="detail-image" style="position:relative;">
-                    <image src="{{item.src}}" mode="aspectFit" class="detail-image"/>
+                    <image src="{{item.src}}" mode="aspectFit" class="detail-image">
                     <view class="image-red-dot" hidden="{{ !item.isNew||showEdit }}"></view>
-                    <view hidden="{{!showEdit}}" @tap="changeStatus" data-item="{{item}}" class="add-or-delete" style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"></view>
+                    <view
+                      hidden="{{!showEdit}}"
+                      @tap="changeStatus"
+                      data-item="{{item}}"
+                      class="add-or-delete"
+                      style="background-image:url('{{item.isIndex ? 'https://static.airbob.org/under-graduate/more/delete.png' : 'https://static.airbob.org/under-graduate/more/add.png'}}')"
+                    ></view>
                   </view>
                   <view class="detail-name">{{item.name}}</view>
                 </view>
@@ -112,12 +170,18 @@
 import wepy from "wepy";
 import { getModuleStatus } from "@/api/common";
 import tip from "@/components/qy-tip";
+import navigation from "@/components/qy-navigation";
 
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "更多"
   };
+  components = {
+    "qy-tip": tip,
+    "qy-navigation": navigation
+  };
   data = {
+    navTitle: "更多",
     IconWidth: 0,
     showEdit: false,
     tipsOn: false,
@@ -267,9 +331,8 @@ export default class extends wepy.page {
         },
         {
           name: "补考查询",
-          src:
-            "https://static.airbob.org/under-graduate/more/resit.png?title=supplements",
-          isIndex: true,
+          src: "https://static.airbob.org/under-graduate/more/resit.png",
+          isIndex: false,
           id: 13,
           path: "../edu-admin-page/pages/supplement-and-tutorials",
           module: "正方",
@@ -282,8 +345,7 @@ export default class extends wepy.page {
             "https://static.airbob.org/under-graduate/more/prenatal class.png",
           isIndex: false,
           id: 14,
-          path:
-            "../edu-admin-page/pages/supplement-and-tutorials?title=tutorials",
+          path: "../edu-admin-page/pages/supplement-and-tutorials",
           module: "正方",
           isOpen: true,
           isNew: false
@@ -291,7 +353,7 @@ export default class extends wepy.page {
         {
           name: "GPA计算器",
           src: "https://static.airbob.org/under-graduate/more/gpa.png",
-          isIndex: false,
+          isIndex: true,
           id: 15,
           path: "../others-edu-page/pages/GpaCalculator",
           module: "一卡通",
@@ -313,7 +375,7 @@ export default class extends wepy.page {
         {
           name: "校历",
           src: "https://static.airbob.org/under-graduate/more/calendar.png",
-          isIndex: true,
+          isIndex: false,
           id: 17,
           path: "../others-edu-page/pages/calendar",
           module: "校历",
@@ -371,6 +433,17 @@ export default class extends wepy.page {
           module: "正方",
           isOpen: true,
           isNew: false
+        },
+        {
+          name: "校车",
+          src:
+            "https://static.airbob.org//under-graduate/bus/QjE2MDEyMzI3LWJ1cy5wbmc=",
+          isIndex: false,
+          id: 23,
+          path: "../others-page/pages/school-bus",
+          module: "校车",
+          isOpen: true,
+          isNew: false
         }
         // {
         //   name: "认证",
@@ -386,16 +459,14 @@ export default class extends wepy.page {
     },
     animationData: {},
     indexIcon: [],
-    moreFunc: {}
+    moreFunc: {},
+    fromIconListDeleteIndexIcon: {}
   };
   computed = {
     functionalList() {
       let length = wepy.getStorageSync("indexIcon").length;
       return wepy.getStorageSync("indexIcon").slice(0, parseInt(length - 1));
     }
-  };
-  components = {
-    "qy-tip": tip
   };
   methods = {
     nav(e) {
@@ -419,21 +490,21 @@ export default class extends wepy.page {
           }
           this.$apply();
         }
-
-        if (!item.isOpen) {
-          item.path = "../others-page/pages/close";
-        }
         if (item.name === "检索书目") {
           this.$navigate({
-            url: "../" + item.path + "?page=search"
+            url: `../${item.path}?page=search&name=图书馆`
           });
         } else if (item.name === "座位查询") {
           this.$navigate({
-            url: "../" + item.path + "?page=seats"
+            url: `../${item.path}?page=seats&name=图书馆`
+          });
+        } else if (item.name === "已借书目") {
+          this.$navigate({
+            url: `../${item.path}?name=图书馆`
           });
         } else {
           this.$navigate({
-            url: "../" + item.path
+            url: `../${item.path}?name=${item.name}`
           });
         }
       }
@@ -510,8 +581,7 @@ export default class extends wepy.page {
             for (let things of this.indexIcon) {
               if (things.id === detailItem.id) {
                 if (detailItem.isIndex) {
-                  this.tipsOn = true;
-                  this.tipsContent = "首页已有此应用";
+                  this.deleteIconFromListAnimation(item);
                 }
                 this.$apply();
                 return 0;
@@ -525,10 +595,54 @@ export default class extends wepy.page {
           }
         }
       } else {
-        return 0;
+        this.deleteIconFromListAnimation(item);
       }
     }
   };
+  deleteIconFromListAnimation(item) {
+    if (item.isIndex) {
+      this.fromIconListDeleteIndexIcon = this.indexIcon.find(
+        indexItem => indexItem.name === item.name
+      );
+      this.deleteIconFromList();
+    } else {
+      this.tipsOn = true;
+      this.tipsContent = "首页已有此应用";
+    }
+  }
+  deleteIconFromList() {
+    let item = this.fromIconListDeleteIndexIcon;
+    for (let i in this.details) {
+      let detailItem = this.details[i].find(e => e.id === item.id);
+      if (detailItem !== undefined) {
+        detailItem.isIndex = !detailItem.isIndex;
+        break;
+      }
+    }
+    let indexIcon = this.indexIcon;
+    let index;
+    this.indexIcon.forEach((item2, index2) => {
+      if (item2.name === item.name) {
+        index = index2;
+      }
+    });
+    let deleteAnimation = wepy.createAnimation({
+      duration: 300
+    });
+    deleteAnimation.opacity(0).step();
+    this.deleteAnimation[index] = deleteAnimation.export();
+    this.$apply();
+    setTimeout(() => {
+      indexIcon.splice(index, 1);
+      this.indexIcon = indexIcon;
+      let deleteAnimation = wepy.createAnimation({
+        duration: 0
+      });
+      deleteAnimation.opacity(1).step();
+      this.deleteAnimation[index] = deleteAnimation.export();
+      this.$apply();
+    }, 300);
+  }
   async onShow() {
     let that = this;
     const module = await getModuleStatus();

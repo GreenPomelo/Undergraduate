@@ -1,5 +1,6 @@
 <template>
   <view class="auth">
+    <qy-navigation :title="navTitle" :background="background"></qy-navigation>
     <view id="login-cloak">
       <view class="left-pane {{ isOthersOpen ? 'open' : '' }}">
         <view class="keyhole" @tap="scanCode">
@@ -25,6 +26,7 @@
 import wepy from "wepy";
 import Crypto from "../../utils/Crypto.js";
 import { ME } from "@/api/common";
+import navigation from "@/components/qy-navigation";
 
 const KEY = Crypto.utf8Encode("75564012e1db214d");
 const IV = Crypto.utf8Encode("ee3e54c80a55628d");
@@ -35,8 +37,12 @@ export default class Auth extends wepy.page {
     navigationBarTitleText: "认证",
     navigationBarBackgroundColor: "#45D3FB"
   };
-
+  components = {
+    "qy-navigation": navigation
+  };
   data = {
+    background: "#45D3FB",
+    navTitle: "认证",
     open: false,
     isHoleOpen: false,
     isOthersOpen: false
@@ -83,7 +89,6 @@ export default class Auth extends wepy.page {
       wepy
         .scanCode()
         .then(res => {
-          console.log(res);
           this.handleCodeRes(res.path);
         })
         .catch(err => console.error(err));

@@ -1,60 +1,94 @@
 <template>
-  <view class="container">
-    <view class="head-bg">
-      <view class="head-bg-title">账户余额（元）</view>
-      <view class="head-bg-remain">{{balance}}</view>
-    </view>
-    <view class="main-container">
-      <view class="pay-account">充值账号：{{sno}}</view>
-      <view class="pay-way">支付方式：银行卡绑定校园卡</view>
-      <view class="quick-pay-container">
-        <view class="quick-pay-item" @tap.stop="put" data-charge="5">5元</view>
-        <view class="quick-pay-item" @tap.stop="put" data-charge="10">10元</view>
-        <view class="quick-pay-item" @tap.stop="put" data-charge="20">20元</view>
-        <view class="quick-pay-item" @tap.stop="put" data-charge="30">30元</view>
-      </view>
-      <view class="list">
-        <view class="list-item-quick">
-          <view class="list-item-text item"> 充值金额</view>
-          <input class="list-item-text  input" type="digit" @input="put" value="{{charge}}" placeholder="可输入1-300元整数金额" placeholder-style="font-size:30rpx;color:#888888" cursor-spacing="130" />
+  <BaseContainer navTitle="校园网充值">
+    <view slot="qy-content">
+      <view class="container">
+        <view class="head-bg">
+          <view class="head-bg-title">账户余额（元）</view>
+          <view class="head-bg-remain">{{balance}}</view>
         </view>
+        <view class="main-container">
+          <view class="pay-account">充值账号：{{sno}}</view>
+          <view class="pay-way">支付方式：银行卡绑定校园卡</view>
+          <view class="quick-pay-container">
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="5">5元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="10">10元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="20">20元</view>
+            <view class="quick-pay-item" @tap.stop="fastPay" data-charge="30">30元</view>
+          </view>
+          <view class="list">
+            <view class="list-item-quick">
+              <view class="list-item-text item">充值金额</view>
+              <input
+                class="list-item-text input"
+                type="digit"
+                @input="put"
+                value="{{charge}}"
+                placeholder="可输入1-300元整数金额"
+                placeholder-style="font-size:30rpx;color:#888888"
+                cursor-spacing="130"
+              />
+            </view>
+          </view>
+          <button
+            @tap.stop="openPayModal"
+            class="enter-button {{(charge==='' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}"
+            hover-class="button-click"
+            disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}"
+          >确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}</button>
+        </view>
+        <PayFlow
+          :open.sync="isPayModalOpen"
+          :charge.sync="charge"
+          type="net"
+          payWay="银行卡绑定校园卡"
+          operateContent="校园卡/银行卡转账"
+        />
       </view>
-      <button @tap.stop="openPayModal" class="enter-button {{(charge==='' || charge === 'NAN' || charge === NAN || !charge) ? 'button-click' : ''}}" hover-class="button-click" disabled="{{(charge==='' || charge === 'NAN' || charge === NAN || !charge)?true:false}}">
-        确认充值{{(charge && charge !== '') ? ' ¥' + charge : ''}}
-      </button>      
     </view>
-    <PayFlow :open.sync="isPayModalOpen" :charge.sync="charge" type="net" payWay="银行卡绑定校园卡" operateContent="校园卡/银行卡转账" />
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
 import PayFlow from "../components/pay-flow";
+import JudgeStatus from "@/mixins/module";
 import { internetRemain } from "@/api/campusCard";
+import { mockInternetRemain } from "@/mock/campusCard";
+import BaseContainer from "@/components/baseContainer";
 
 export default class NetCharge extends wepy.page {
   data = {
     balance: "0.00",
     charge: "",
     isPayModalOpen: false,
-    sno: ""
+    sno: "",
+    visitorModeStatus: false
   };
   config = {
     navigationBarTitleText: "校园网充值",
     enablePullDownRefresh: true
   };
   components = {
-    PayFlow
+    PayFlow,
+    BaseContainer
   };
-  onLoad() {
-    const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
-    if (!moduleStatus) {
-      // 一卡通维护中
-      wepy.redirectTo({
-        url: "../../others-page/pages/close"
+  mixins = [JudgeStatus];
+  onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    if (this.visitorModeStatus) {
+      this.getRemain();
+    } else {
+      const moduleStatus = wepy.getStorageSync("moduleStatus")[0].open;
+      if (!moduleStatus) {
+        // 一卡通维护中
+        wepy.redirectTo({
+          url: "../../others-page/pages/close"
+        });
+      }
+      this.judgeStatus(op.name).then(() => {
+        this.getRemain();
       });
     }
-    this.getRemain();
   }
   onShow() {
     this.getRemain();
@@ -62,9 +96,17 @@ export default class NetCharge extends wepy.page {
   onPullDownRefresh() {
     this.getRemain();
     wepy.stopPullDownRefresh();
+    wepy.showToast({
+      title: "刷新成功",
+      icon: "success",
+      duration: 1000
+    });
+  }
+  judgeRemain() {
+    return this.visitorModeStatus ? mockInternetRemain() : internetRemain();
   }
   getRemain() {
-    internetRemain().then(res => {
+    this.judgeRemain().then(res => {
       if (res.data) {
         this.balance = res.data.data / 100;
         this.sno = wepy.getStorageSync("sno");
@@ -72,16 +114,57 @@ export default class NetCharge extends wepy.page {
       }
     });
   }
+  openCheckModal() {
+    return wepy.showModal({
+      title: "金额确认",
+      content: `确定充值 ￥${this.charge} 到网费中吗？`,
+      showCancel: true,
+      cancelText: "否",
+      cancelColor: "#FF0000",
+      confirmText: "是",
+      confirmColor: "#3CC51F"
+    });
+  }
   methods = {
-    openPayModal() {
-      this.isPayModalOpen = true;
-    },
     closePayModal() {
       this.isPayModalOpen = false;
     },
     put(e) {
-      const value = Number(e.detail.value || e.target.dataset.charge);
+      const value = Number(e.detail.value);
       this.putCharge(value);
+    },
+    fastPay(e) {
+      const value = Number(e.target.dataset.charge);
+      this.putCharge(value);
+      this.openPayModal();
+    },
+    async openPayModal() {
+      if (this.visitorModeStatus) {
+        this.charge = "";
+        return this.$invoke("BaseContainer", "showVisitorTips");
+      }
+      if (this.charge > 0) {
+        if (this.charge > 30) {
+          const res = await this.openCheckModal();
+          if (res.confirm) {
+            this.isPayModalOpen = true;
+            this.$apply();
+          }
+        } else {
+          this.isPayModalOpen = true;
+        }
+      } else {
+        wepy
+          .showModal({
+            content: "金额错误",
+            confirmText: "知道了",
+            showCancel: false,
+            confirmColor: "#353535"
+          })
+          .then(res => {
+            this.charge = "";
+          });
+      }
     }
   };
   events = {
@@ -90,6 +173,34 @@ export default class NetCharge extends wepy.page {
       this.$apply();
     }
   };
+  async openPayModal() {
+    if (this.visitorModeStatus) {
+      this.charge = "";
+      return this.$invoke("BaseContainer", "showVisitorTips");
+    }
+    if (this.charge > 0) {
+      if (this.charge > 30) {
+        const res = await this.openCheckModal();
+        if (res.confirm) {
+          this.isPayModalOpen = true;
+          this.$apply();
+        }
+      } else {
+        this.isPayModalOpen = true;
+      }
+    } else {
+      wepy
+        .showModal({
+          content: "金额错误",
+          confirmText: "知道了",
+          showCancel: false,
+          confirmColor: "#353535"
+        })
+        .then(res => {
+          this.charge = "";
+        });
+    }
+  }
   putCharge(number) {
     this.charge = number;
   }

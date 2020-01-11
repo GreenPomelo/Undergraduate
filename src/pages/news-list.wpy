@@ -1,5 +1,6 @@
 <template>
   <view class="container">
+    <qy-navigation :title="navTitle"></qy-navigation>
     <qy-tip :on.sync="isWrong" :content="tip"/>
     <view class="top-scroll-container">
       <scroll-view class="top-scroll" scroll-x="true">
@@ -45,6 +46,8 @@
 import wepy from "wepy";
 import QyTip from "@/components/qy-tip";
 import QySwiper from "@/components/qy-swiper";
+import navigation from "@/components/qy-navigation";
+
 import {
   getCarousel,
   getPromotionInformation,
@@ -57,8 +60,8 @@ export default class NewsList extends wepy.page {
   config = {
     navigationBarTitleText: "资讯"
   };
-
   data = {
+    navTitle: "资讯",
     isWrong: false,
     tip: "请求有误！",
     chosenIndex: 0,
@@ -129,11 +132,14 @@ export default class NewsList extends wepy.page {
 
   components = {
     "qy-tip": QyTip,
-    "qy-swiper": QySwiper
+    "qy-swiper": QySwiper,
+    "qy-navigation": navigation
   };
 
   onLoad() {
-    wepy.hideTabBarRedDot({ index: 1 });
+    wepy.hideTabBarRedDot({
+      index: 1
+    });
     this.getNewsList();
     this.getAds();
     this.getCarouselAds();

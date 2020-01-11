@@ -1,5 +1,6 @@
 <template>
   <view class="nicp-vote">
+    <qy-navigation :title="navTitle" :background="background"></qy-navigation>
     <view class="content">
       <view class="logo">
         <image class="logo-image" src="https://static.airbob.org/nicp/cxb_logo.png"/>
@@ -17,11 +18,21 @@
 <script>
 import wepy from "wepy";
 import qs from "qs";
+import navigation from "@/components/qy-navigation";
 
 export default class NicpVote extends wepy.page {
   config = {
     navigationBarTitleText: "创新杯投票",
     navigationBarBackgroundColor: "#ecd6e8"
+  };
+
+  components = {
+    "qy-navigation": navigation
+  };
+
+  data = {
+    navTitle: "创新杯投票",
+    background: "#ecd6e8"
   };
 
   ejectParamsFromPath(path) {
@@ -41,20 +52,24 @@ export default class NicpVote extends wepy.page {
 
   checkLogin() {
     if (wepy.getStorageSync("token") === "") {
-      wepy.redirectTo({ url: "/others-page/pages/login" });
+      wepy.redirectTo({
+        url: "/others-page/pages/login"
+      });
     }
   }
 
   async handleScene(sceneValue) {
-    console.log(sceneValue);
     if (sceneValue === "undefined") {
       return;
     }
     const type = sceneValue.split("@")[1];
     const sessionId = wepy.getStorageSync("token");
     const timestamp = Math.floor(Date.now() / 1000);
-    const params = { type, scene: sceneValue, timestamp };
-    console.log(params);
+    const params = {
+      type,
+      scene: sceneValue,
+      timestamp
+    };
 
     try {
       const {
@@ -74,7 +89,9 @@ export default class NicpVote extends wepy.page {
         this.handleOpen();
       } else {
         if (err.errCode === 8) {
-          wepy.redirectTo({ url: "../../pages/login" });
+          wepy.redirectTo({
+            url: "../../pages/login"
+          });
         }
         console.error(err);
         wepy.showToast({

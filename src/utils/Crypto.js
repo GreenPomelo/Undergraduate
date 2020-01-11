@@ -38,9 +38,9 @@ export default class Crypto {
    * 解密函数
    */
   decrypt(data) {
-    return CryptoJS.AES.decrypt(data, this.key, { iv: this.iv }).toString(
-      CryptoJS.enc.Utf8
-    );
+    return CryptoJS.AES.decrypt(data, this.key, {
+      iv: this.iv
+    }).toString(CryptoJS.enc.Utf8);
   }
 
   jsonDecrypt(data) {

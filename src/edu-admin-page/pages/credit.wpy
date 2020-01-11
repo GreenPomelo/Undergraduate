@@ -1,69 +1,78 @@
+
 <template>
-  <view>
-    <QyModal width="500rpx">
-			<view slot="content" class="bind-container">
-				<input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
-				<button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
-			</view>
-		</QyModal>
-    <view class="credit-top">
-      <view class="credit-top-item">
-        <view class="credit-name">创新有效学分</view>
-        <view class="credit-count">{{innovationValidScore}}</view>
-      </view>
-      <view class="credit-top-item">
-        <view class="credit-name">创新总学分</view>
-        <view class="credit-count">{{innovationScore}}</view>
-      </view>
-      <view class="credit-top-item">
-         <view class="credit-name">有效学分</view>
-        <view class="credit-count">{{totalValidScore}}</view>
-      </view>
-      <view class="credit-top-item" style="border:none;">
-        <view class="credit-name">总学分</view>
-        <view class="credit-count">{{totalScore}}</view>
-      </view>
-    </view>
-    <view class="detailed">
-      <view class="detail-circle"></view>
-      <view class="detail-info">详细信息</view>
-    </view>
-    <view class="main-load" hidden="{{loadHide}}">        
-      <view class="boxLoading"></view>        
-    </view>
-    <view class="main-container">
-      <repeat for="{{creditDetails}}" key="key" index="index" item="item">
-        <view class="credit-info" @tap="showCreditDetail(index)">
-          <view class="credit-main-info">
-            <view class="credit-semester">{{item.semester}}</view>
-            <view class="credit-standard">{{item.standard}}</view>
-            <view class="credit-score">{{item.score}}学分</view>
-          </view>
-          <view class="credit-detail-info" animation="{{showDetailAnimation[index]}}">
-            <view>所属内容：{{item.project}}</view>
-            <view>考核内容：{{item.content}}</view>
-            <view>考核标准：{{item.standard}}</view>
-            <view>级别：{{item.level}}</view>          
-          </view>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <QyModal width="500rpx">
+        <view slot="content" class="bind-container">
+          <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword" placeholder-style="color: #999CA0" />
+          <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
         </view>
-      </repeat>
+      </QyModal>
+      <view class="credit-top">
+        <view class="credit-top-item">
+          <view class="credit-name">创新有效学分</view>
+          <view class="credit-count">{{innovationValidScore}}</view>
+        </view>
+        <view class="credit-top-item">
+          <view class="credit-name">创新总学分</view>
+          <view class="credit-count">{{innovationScore}}</view>
+        </view>
+        <view class="credit-top-item">
+          <view class="credit-name">有效学分</view>
+          <view class="credit-count">{{totalValidScore}}</view>
+        </view>
+        <view class="credit-top-item" style="border:none;">
+          <view class="credit-name">总学分</view>
+          <view class="credit-count">{{totalScore}}</view>
+        </view>
+      </view>
+      <view class="detailed">
+        <view class="detail-circle"></view>
+        <view class="detail-info">详细信息</view>
+      </view>
+      <view class="main-load" hidden="{{loadHide}}">
+        <view class="boxLoading"></view>
+      </view>
+      <view class="main-container">
+        <repeat for="{{creditDetails}}" key="key" index="index" item="item">
+          <view class="credit-info" @tap="showCreditDetail(index)">
+            <view class="credit-main-info">
+              <view class="credit-semester">{{item.semester}}</view>
+              <view class="credit-standard">{{item.standard}}</view>
+              <view class="credit-score">{{item.score}}学分</view>
+            </view>
+            <view class="credit-detail-info" animation="{{showDetailAnimation[index]}}">
+              <view>所属内容：{{item.project}}</view>
+              <view>考核内容：{{item.content}}</view>
+              <view>考核标准：{{item.standard}}</view>
+              <view>级别：{{item.level}}</view>
+            </view>
+          </view>
+        </repeat>
+      </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
 import QyModal from "@/components/qy-modal";
 import { changeSecretCodeLower, ownGraduateGrade } from "@/api/common";
+import { mockOwnGraduateGrade } from "@/mock/common";
+import JudgeStatus from "@/mixins/module";
+import BaseContainer from "@/components/baseContainer";
 
 export default class extends wepy.page {
   components = {
-    QyModal
+    QyModal,
+    BaseContainer
   };
   config = {
     navigationBarTitleText: "自主学分"
   };
+  mixins = [JudgeStatus];
   data = {
+    navTitle: "自主学分",
     bindInputPassword: "",
     creditDetails: [],
     isShow: [],
@@ -73,7 +82,8 @@ export default class extends wepy.page {
     innovationValidScore: "",
     totalScore: "",
     totalValidScore: "",
-    placeholder: ""
+    placeholder: "",
+    visitorModeStatus: false
   };
   methods = {
     bindCardPassword(e) {
@@ -112,8 +122,10 @@ export default class extends wepy.page {
   };
   async init() {
     let that = this;
-    const creditDetail = await ownGraduateGrade();
-    if (!creditDetail.data) {
+    const creditDetail = this.visitorModeStatus
+      ? await mockOwnGraduateGrade()
+      : await ownGraduateGrade();
+    if (!creditDetail.data.data) {
       this.placeholder = "自主学分密码";
       this.$invoke("QyModal", "open");
       this.$apply();
@@ -127,8 +139,11 @@ export default class extends wepy.page {
       that.$apply();
     }
   }
-  async onLoad() {
-    this.init();
+  onLoad(op) {
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(op.name).then(() => {
+      this.init();
+    });
   }
 }
 </script>

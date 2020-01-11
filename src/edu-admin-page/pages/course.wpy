@@ -1,19 +1,13 @@
 <template>
-  <view>
-    <qy-modal width="500rpx">
-      <view slot="content" class="bind-container">
-        <input class="bind-input" placeholder="{{placeholder}}" password="true" @input="bindCardPassword"
-               placeholder-style="color: #999CA0"/>
-        <button class="bind-button" @tap.stop="bindHandle" hover-class="button-click">立即绑定</button>
-      </view>
-    </qy-modal>
+<BaseContainer :navTitle.sync="navTitle" :passwordModelOptions.sync="passwordModelOptions">
+  <view slot="qy-content">
     <view class="course">
-      <view class="hide-page" @tap.stop="hideDetailCourse" hidden="{{swiperHide}}" @touchmove.stop="stopDrag">
+      <view class="hide-page" @tap.stop="hideDetailCourse" hidden="{{swiperHide}}">
         <scroll-view scroll-x="{{detailCourseScroll}}">
           <view class="swiper-thing">
-            <view class="swiper-item" style="background:{{swiperCourse[0].bgc}};" @tap.stop="errorBind"
-                  @touchstart="startTouching" @touchend="endTouching" animation="{{firstCourseAnimation}}">
+            <view class="swiper-item" style="background:{{swiperCourse[0].bgc}};" @tap.stop="errorBind" @touchstart="startTouching" @touchend="endTouching" animation="{{firstCourseAnimation}}">
               <view class="course-container">
+                <view class="course-delete" wx:if="{{swiperCourse[0].md5}}" @tap="deleteAddCourse" data-md5="{{swiperCourse[0].md5}}">× 移除</view>
                 <view class="course-name">{{swiperCourse[0].name}}</view>
                 <view class="course-info">
                   <view class="detail-info"><span>教师：</span>{{swiperCourse[0].teacher}}</view>
@@ -23,441 +17,690 @@
               </view>
             </view>
             <repeat for="{{swiperCourse}}" index="index" key="key" item="item">
-              <view wx:if="{{index !== 0}}" class="swiper-behind" @tap.stop="errorBind"
-                    style="left:{{90 * index}}rpx;background:{{item.bgc}};z-index:{{-index}};"
-                    @touchstart="startTouching" @touchend="endTouching" animation="{{otherCourseAnimation[index-1]}}">
+              <view wx:if="{{index !== 0}}" class="swiper-item swiper-behind" @tap.stop="errorBind" style="left:{{72 * index}}rpx;background:{{item.bgc}};z-index:{{-index}};" @touchstart="startTouching" @touchend="endTouching" animation="{{otherCourseAnimation[index-1]}}">
                 <view class="course-container">
-                  <view class="course-name">{{item.name}}</view>
+                  <view class="course-delete" wx:if="{{swiperCourse[0].md5}}" @tap="deleteAddCourse" data-md5="{{swiperCourse[0].md5}}">× 移除</view>
+                  <view class="course-name">{{swiperCourse[0].name}}</view>
                   <view class="course-info">
-                    <view class="detail-info"><span>教师：</span>{{item.teacher}}</view>
-                    <view class="detail-info"><span>教室：</span>{{item.locale}}</view>
-                    <view class="detail-info"><span>周数：</span>{{item.week}}</view>
+                    <view class="detail-info"><span>教师：</span>{{swiperCourse[0].teacher}}</view>
+                    <view class="detail-info"><span>教室：</span>{{swiperCourse[0].locale}}</view>
+                    <view class="detail-info"><span>周数：</span>{{swiperCourse[0].week}}</view>
                   </view>
                 </view>
               </view>
-              <view wx:if="{{index === swiperCourse.length - 1}}" class="swiper-behind"
-                    style="opacity:0;left:{{90 * index + 90}}rpx;background:{{item.bgc}};z-index:-300;"
-                    animation="{{otherCourseAnimation[index-1]}}">
-              </view>
             </repeat>
-          </view>
-        </scroll-view>
-      </view>
-      <view class="animation-button" @tap="putAway">
-        <view class="animation-button-image"></view>
-      </view>
-      <view class="chooseItem" hidden="{{packup}}">
-        <view class="choose-item-container">
-          <view class="change-choose">
-            <view class="change-container">更改学期</view>
-          </view>
-          <scroll-view class="topScroll" scroll-x="true">
-            <repeat for="{{terms}}" key="key" index="index" item="item">
-              <view @tap="changeTerm" class="course-choose" data-item="{{item}}" id="{{item}}"
-                    style="background-image:url({{chosenTerm === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_term_selected.png' : ''}});border-radius:25rpx;">
-                {{item}}
-              </view>
-            </repeat>
+              <repeat for="{{swiperCourse}}" index="index" key="key" item="item">
+                <view wx:if="{{index !== 0}}" class="swiper-item swiper-behind" @tap.stop="errorBind" style="left:{{72 * index}}rpx;background:{{item.bgc}};z-index:{{-index}};" @touchstart="startTouching" @touchend="endTouching" animation="{{otherCourseAnimation[index-1]}}">
+                  <view class="course-container">
+                    <view class="course-delete" wx:if="{{item.md5}}" @tap="deleteAddCourse" data-md5="{{item.md5}}" data-item="{{item}}">× 移除</view>
+                    <view class="course-name">{{item.name}}</view>
+                    <view class="course-info">
+                      <view class="detail-info"><span>教师：</span>{{item.teacher}}</view>
+                      <view class="detail-info"><span>教室：</span>{{item.locale}}</view>
+                      <view class="detail-info"><span>周数：</span>{{item.week}}</view>
+                    </view>
+                  </view>
+                </view>
+                <view wx:if="{{index === swiperCourse.length - 1}}" class="swiper-behind" style="opacity:0;left:{{72 * index + 72}}rpx;background:{{item.bgc}};z-index:-300;" animation="{{otherCourseAnimation[index-1]}}">
+                </view>
+              </repeat>
+            </view>
           </scroll-view>
         </view>
-        <view class="choose-item-container" style="border:none;">
-          <view class="change-choose">
-            <view class="change-container">更改周次</view>
+        <view class="animation-button animation-icon" @tap="putAway">
+          <view class="animation-button-image"></view>
+        </view>
+        <view class="chooseItem" hidden="{{packup}}">
+          <view class="choose-item-container">
+            <view class="animation-button"></view>
+            <view class="change-choose">
+              <view class="change-container">更改学期</view>
+            </view>
+            <scroll-view class="topScroll" scroll-x="true">
+              <repeat for="{{terms}}" key="key" index="index" item="item">
+                <view @tap="changeTerm" class="course-choose course-choose-text" data-item="{{item}}" id="term{{index+1}}" style="background: {{chosenTerm === item ? '#6ad5e1' : ''}};">
+                  {{item}}
+                </view>
+              </repeat>
+            </scroll-view>
           </view>
-          <scroll-view class="topScroll" scroll-x="true">
-            <repeat for="{{weeks}}" key="key" index="index" item="item">
-              <view @tap="changeWeek" data-index="{{index}}" class="course-choose-circle" id="{{item}}"
-                    style="background-image:url({{chosenWeek === item ? 'https://static.airbob.org/under-graduate/image/course/timetable_button_week_selected.png' : ''}})">
-                {{index + 1}}
+          <view class="choose-item-container">
+            <view class="animation-button"></view>
+            <view class="change-choose">
+              <view class="change-container">更改周次</view>
+            </view>
+            <scroll-view class="topScroll" scroll-x="true" scroll-into-view="{{toView}}">
+              <repeat for="{{weeks}}" key="key" index="index" item="item">
+                <view @tap="changeWeek" data-index="{{index}}" class="course-choose course-choose-circle" id="week{{index+1}}" style="background: {{chosenWeek === item ? '#6ad5e1' : ''}}">{{index + 1}}</view>
+              </repeat>
+            </scroll-view>
+          </view>
+          <view class="choose-item-container">
+            <view class="animation-button"></view>
+            <view class="change-choose">
+              <view class="change-container">更改模式</view>
+            </view>
+            <scroll-view class="topScroll">
+              <repeat for="{{models}}" key="key" index="index" item="item">
+                <view @tap="changeModel" data-index="{{index}}" class="course-choose course-choose-text" style="background: {{chosenModel === item ? '#6ad5e1' : ''}}">{{item}}</view>
+              </repeat>
+            </scroll-view>
+          </view>
+          <view class="choose-item-container">
+            <view class="animation-button"></view>
+            <view class="change-choose">
+              <view class="change-container">更改样式</view>
+            </view>
+            <scroll-view class="topScroll">
+              <repeat for="{{styles}}" key="key" index="index" item="item">
+                <view @tap="changeStyle" data-index="{{index}}" class="course-choose course-choose-text" style="background: {{chosenStyle === item ? '#6ad5e1' : ''}}">{{item}}</view>
+              </repeat>
+            </scroll-view>
+          </view>
+        </view>
+        <view class="main" animation="{{animationData}}">
+          <view class="lines_1">
+            <view class="row">
+              <repeat for="{{days}}" index="index" key="key" item="item">
+                <view class="top-line">
+                  <view class="top-line-day {{!showDetail?'top-line-full':''}}">{{item.day}}</view>
+                  <view wx:if="{{showDetail}}" class="top-line-date">{{item.date}}</view>
+                </view>
+              </repeat>
+            </view>
+            <repeat for="{{classNumber}}" index="index" key="key" item="item">
+              <view class="lines" style="border-top-style:{{index.sequence === 0 ? 'solid' : 'dotted'}}"></view>
+            </repeat>
+          </view>
+          <view class="column_1">
+            <repeat for="{{classNumber}}" index="index" key="key" item="item">
+              <view class="left-column">
+                <view class="left-column-sequence {{!showDetail?'left-column-full':''}}">{{item.sequence}}</view>
+                <view wx:if="{{showDetail}}" class="left-column-time">{{item.duration}}</view>
               </view>
             </repeat>
-          </scroll-view>
-        </view>
-      </view>
-      <view class="main" animation="{{animationData}}">
-        <view class="lines_1">
-          <view class="row">
-            <repeat for="{{days}}" index="index" key="key" item="item">
-              <view class="top-line">{{item}}</view>
-            </repeat>
           </view>
-          <repeat for="{{classNumber}}" index="index" key="key" item="item">
-            <view class="lines" style="border-top-style:{{index === 0 ? 'solid' : 'dotted'}}"></view>
-          </repeat>
-        </view>
-        <view class="column_1">
-          <repeat for="{{classNumber}}" index="index" key="key" item="item">
-            <view class="left-column">{{item}}</view>
-          </repeat>
-        </view>
-        <view hidden="{{!isExam}}" class="cover-column" style="width:750rpx;left:0rpx;">
-          <view class="is-exam">
-            <image
-              src="{{chooseWeek <= 20 ? 'https://static.airbob.org/under-graduate/image/course/pic_exam.png' :'https://static.airbob.org/under-graduate/image/course/pic_celebrate.png'}}"
-              mode="aspectFit"/>
-            <view class="is-exam-text" wx:if="{{chooseWeek <= 20}}">考试周啦，不如去看看考试倒计时</view>
-            <view class="is-exam-text" wx:else>放假啦也要合理安排时间哦</view>
-            <view class="is-exam-nav" wx:if="{{chooseWeek <= 20}}">前往考试倒计时</view>
+          <view hidden="{{!isExam}}" class="cover-column" style="width:750rpx;left:0rpx;">
+            <view class="is-exam">
+              <image src="{{chooseWeek <= 20 ? 'https://static.airbob.org/under-graduate/image/course/pic_exam.png' :'https://static.airbob.org/under-graduate/image/course/pic_celebrate.png'}}" mode="aspectFit" />
+              <view class="is-exam-text" wx:if="{{chooseWeek <= 20}}">考试周啦，不如去看看考试倒计时</view>
+              <view class="is-exam-text" wx:else>放假啦也要合理安排时间哦</view>
+              <view class="is-exam-nav" wx:if="{{chooseWeek <= 20}}" @tap="navigateToCountDownPage">前往考试倒计时</view>
+            </view>
           </view>
-        </view>
           <view class="cover-column" hidden="{{isExam}}">
             <repeat for="{{nowCourse}}" index="index" key="key" item="item">
               <view class="column">
                 <repeat for="{{item}}" index="courseIndex" item="dailyCourse">
-                  <view class="course-item"
-                        style="top:{{dailyCourse.elementTop}};height:{{dailyCourse.elementHeight}};background:{{dailyCourse.bgc}}"
-                        @tap="showCourse" data-index="{{index}}" data-id="{{courseIndex}}">
-                    <view class="class-name">
+                  <view class="course-item {{dailyCourse.name==='+'?'course-add-item':''}}" style="top:{{dailyCourse.elementTop}};height:{{dailyCourse.elementHeight}};background:{{dailyCourse.name==='+'?'#b2ee76':dailyCourse.bgc}}" @tap="{{dailyCourse.name==='+'?'navigateToSearchCourse':'showCourse'}}"
+                    data-index="{{index}}" data-id="{{courseIndex}}">
+                    <view class="course-text {{dailyCourse.name==='+'?'course-add':'class-name'}}">
                       {{dailyCourse.name}}
                     </view>
-                    <view class="class-teacher">
+                    <view class="course-text class-teacher">
                       {{dailyCourse.locale}}
                     </view>
                     <view wx:if="{{dailyCourse.withMoreCourse}}">
-                    <view class="bottom-angel" style="border-top:22rpx solid {{dailyCourse.bgc === '#D8D8D8' ? '#8e8e8e' : dailyCourse.borderColor}}"></view>
-                    <view class="bottom-angel-2"></view>
+                      <view class="bottom-angel" style="border-top:22rpx solid {{dailyCourse.bgc === '#D8D8D8' ? '#8e8e8e' : dailyCourse.borderColor}}"></view>
+                      <view class="bottom-angel-2"></view>
+                    </view>
                   </view>
-                </view>
-              </repeat>
-            </view>
-          </repeat>
+                </repeat>
+              </view>
+            </repeat>
+          </view>
         </view>
-      </view>
     </view>
   </view>
+</BaseContainer>
 </template>
 
 <script>
-import wepy from "wepy";
-import ClassMixin from "../../mixins/class.js";
-import QyModal from "../../components/qy-modal";
-import { changeSecretCode, commonInformation } from "@/api/common";
-import { classSchedule } from "@/api/education";
-
-export default class Course extends wepy.page {
-  config = {
-    navigationBarTitleText: "课程表",
-    enablePullDownRefresh: true
-  };
-  data = {
-    navBackground: "#fff",
-    isExam: false,
-    weekScorllLeft: 0,
-    swiperHide: true,
-    packup: true,
-    weeks: [],
-    classNumber: [],
-    nowCourse: [],
-    elseCourse: [],
-    unshowCourse: [],
-    swiperCourse: [],
-    chooseWeek: "",
-    chosenWeek: "#",
-    chosenTerm: "",
-    days: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
-    terms: [],
-    animationData: {},
-    firstCourseAnimation: {},
-    otherCourseAnimation: [],
-    Day: "",
-    detailCourseScroll: false,
-    trueCourses: [],
-    chosenRequestYear: "",
-    chosenRequestTerm: "",
-    placeholder: ""
-  };
-  components = {
-    "qy-modal": QyModal
-  };
-  mixins = [ClassMixin];
-  methods = {
-    bindCardPassword(e) {
-      this.bindInputPassword = e.detail.value;
-    },
-    async bindHandle() {
-      await changeSecretCode(
-        wepy.getStorageSync("User").studentId,
-        this.bindInputPassword,
-        "1"
-      ).then(res => {
-        if (res.data && res.data.data) {
-          // 绑定成功
-          this.placeholder = "";
-          this.$invoke("qy-modal", "close");
-          this.init();
-        } else {
-          wepy.showModal({
-            content: "密码错误",
-            confirmText: "知道了",
-            showCancel: false,
-            confirmColor: "#353535"
-          });
+  import wepy from "wepy";
+  import ClassMixin from "../../mixins/class.js";
+  import { changeSecretCode, commonInformation } from "@/api/common";
+  import { classSchedule, deleteCourse, getCourses } from "@/api/education";
+  import { mockClassSchedule, mockGetAddCourses } from "@/mock/education";
+  import JudgeStatus from "@/mixins/module";
+  import BaseContainer from "@/components/baseContainer";
+  export default class Course extends wepy.page {
+    config = {
+      navigationBarTitleText: "课程表",
+      enablePullDownRefresh: true
+    };
+    data = {
+      navBackground: "#fff",
+      isExam: false,
+      weekScorllLeft: 0,
+      swiperHide: true,
+      packup: true,
+      weeks: [],
+      models: ["显示单双周", "只显示本周"],
+      styles: ["简洁模式", "详细模式"],
+      classNumber: [
+        { sequence: 1, duration: "8:00 8:45" },
+        { sequence: 2, duration: "8:50 9:35" },
+        { sequence: 3, duration: "9:50 10:35" },
+        { sequence: 4, duration: "10:40 11:25" },
+        { sequence: 5, duration: "11:30 12:15" },
+        { sequence: 6, duration: "13:45 14:30" },
+        { sequence: 7, duration: "14:35 15:20" },
+        { sequence: 8, duration: "15:35 16:20" },
+        { sequence: 9, duration: "16:25 17:10" },
+        { sequence: 10, duration: "18:30 19:15" },
+        { sequence: 11, duration: "19:25 20:10" },
+        { sequence: 12, duration: "20:20 21:05" }
+      ],
+      nowCourse: [],
+      elseCourse: [],
+      unshowCourse: [],
+      swiperCourse: [],
+      addCourses: [],
+      chooseWeek: "",
+      chosenWeek: "#",
+      chosenTerm: "",
+      commonWeek: "",
+      commonTerm: "",
+      dataStart: "",
+      chosenModel: "",
+      chosenStyle: "",
+      days: [
+        {
+          day: "周一",
+          date: ""
+        },
+        {
+          day: "周二",
+          date: ""
+        },
+        {
+          day: "周三",
+          date: ""
+        },
+        {
+          day: "周四",
+          date: ""
+        },
+        {
+          day: "周五",
+          date: ""
+        },
+        {
+          day: "周六",
+          date: ""
+        },
+        {
+          day: "周日",
+          date: ""
         }
-      });
-    },
-    putAway() {
-      if (!this.swiperHide) {
-        return;
-      }
-      this.chosenWeek = `第${this.chooseWeek}周`;
-      const animation = wepy.createAnimation({
-        duration: 100
-      });
-      if (this.packup) {
-        animation.translate(0, 90).step();
-        this.packup = false;
-      } else {
-        animation.translate(0, 0).step();
-        this.packup = true;
-      }
-      this.animationData = animation.export();
-    },
-    showCourse(e) {
-      let index = e.currentTarget.dataset.index;
-      let id = e.currentTarget.dataset.id;
-      let thisCourse = this.nowCourse[index][id];
-      this.swiperCourse.push(thisCourse);
-      for (let i of this.elseCourse[index]) {
-        if (
-          i.sectionstart === thisCourse.sectionstart &&
-          i.sectionend === thisCourse.sectionend
-        ) {
-          this.swiperCourse.push(i);
+      ],
+      terms: [],
+      animationData: {},
+      firstCourseAnimation: {},
+      otherCourseAnimation: [],
+      Day: "",
+      detailCourseScroll: false,
+      trueCourses: [],
+      chosenRequestYear: "",
+      chosenRequestTerm: "",
+      addCourseIcon: {
+        day: 7,
+        name: "+",
+        locale: "添加课程",
+        sectionstart: 8,
+        sectionend: 9,
+        week: "第1-18周",
+        weekarr: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+        weekend: 18,
+        weekstart: 1
+      },
+      passwordModelOptions: {
+        passwordModelProps: false,
+        placeholder: "正方密码",
+        refreshData: this.init,
+        bindInfo: {
+          usename: wepy.getStorageSync("User").studentId,
+          domainType: "1"
         }
+      },
+      visitorModeStatus: false,
+      toView: "week0"
+    };
+    components = {
+      BaseContainer
+    };
+    computed = {
+      navTitle() {
+        return `第${this.chooseWeek}周`;
+      },
+      showDetail() {
+        return this.chosenStyle === "详细模式";
       }
-      this.swiperHide = false;
-      this.navBackground = "#808080";
-      this.detailCourseScroll = true;
-      this.$apply();
-    },
-    hideDetailCourse() {
-      this.swiperHide = true;
-      let firstCourseAnimation = wepy.createAnimation({
-        duration: 0
-      });
-      firstCourseAnimation.translate(0, 0).step();
-      this.firstCourseAnimation = firstCourseAnimation.export();
-      for (let i = 0; i < this.swiperCourse.length - 1; i++) {
-        let otherCourseAnimation = wepy.createAnimation({
-          duration: 0
-        });
-        otherCourseAnimation.translate(0, 0).step();
-        this.otherCourseAnimation[i] = otherCourseAnimation.export();
-        this.$apply();
-      }
-      this.swiperCourse = [];
-      this.detailCourseScroll = false;
-      this.navBackground = "#fff";
-      this.$apply();
-    },
-    async changeTerm(e) {
-      let that = this;
-      let item = e.currentTarget.dataset.item;
-      let requestYear = item.substr(0, 9);
-      let requestTerm;
-      if (item.indexOf("一") === -1 || item.indexOf("一") === "-1") {
-        requestTerm = 2;
-      } else {
-        requestTerm = 1;
-      }
-      this.chosenRequestYear = requestYear;
-      this.chosenRequestTerm = requestTerm;
-      let changedTermCourse = await classSchedule(requestYear, requestTerm);
-      if (changedTermCourse.data.success) {
-        that.trueCourses = changedTermCourse.data.data.timetable;
-        let dealedCourse = that.handleCourses(
-          that.trueCourses,
-          that.chooseWeek
-        );
-        that.nowCourse = dealedCourse[0];
-        that.elseCourse = dealedCourse[1];
-        that.unshowCourse = dealedCourse[2];
-        that.chosenTerm = item;
-        that.$apply();
-      }
-    },
-    changeWeek(e) {
-      this.isExam = false;
-      this.chosenWeek = this.weeks[e.currentTarget.dataset.index];
-      this.chooseWeek = parseInt(e.currentTarget.dataset.index + 1);
-      let dealedCourse = this.handleCourses(this.trueCourses, this.chooseWeek);
-      this.nowCourse = dealedCourse[0];
-      this.elseCourse = dealedCourse[1];
-      this.unshowCourse = dealedCourse[2];
-      this.$apply();
-    },
-    errorBind(e) {
-      this.detailCourseScroll = true;
-    }
-  };
-
-  startTouching(e) {
-    if (e.touches.length === 1) {
-      this.startX = e.touches[0].clientX;
-    }
-  }
-
-  async endTouching(e) {
-    if (e.changedTouches.length === 1) {
-      this.endX = e.changedTouches[0].clientX;
-      if (
-        parseInt(this.startX - this.endX) >= 10 &&
-        this.swiperCourse.length > 1
-      ) {
-        if (this.otherCourseAnimation.length === 0) {
-          for (let i = 0; i < this.swiperCourse.length - 1; i++) {
-            this.otherCourseAnimation.push({});
-          }
+    };
+    mixins = [ClassMixin, JudgeStatus];
+    methods = {
+      navigateToCountDownPage() {
+        wepy.navigateTo({ url: "cut-down" });
+      },
+      bindCardPassword(e) {
+        this.bindInputPassword = e.detail.value;
+      },
+      putAway() {
+        if (!this.swiperHide) {
+          return;
         }
-        this.detailCourseScroll = true;
-        let screenWidth;
-        await wepy.getSystemInfo().then(res => {
-          screenWidth = parseFloat(res.screenWidth / 750);
-        });
-        this.$apply();
-        let firstCourseAnimation = wepy.createAnimation({
+        this.chosenWeek = `第${this.chooseWeek}周`;
+        const animation = wepy.createAnimation({
           duration: 100
         });
-        let translateLeft = screenWidth * 140;
-        firstCourseAnimation.translate(-translateLeft, 0).step();
-        this.firstCourseAnimation = firstCourseAnimation.export();
+        if (this.packup) {
+          animation.translate(0, 198).step();
+          this.packup = false;
+        } else {
+          animation.translate(0, 0).step();
+          this.packup = true;
+        }
+        this.animationData = animation.export();
+        this.toView = `week${this.chooseWeek}`;
+      },
+      showCourse(e) {
+        let index = e.currentTarget.dataset.index;
+        let id = e.currentTarget.dataset.id;
+        let thisCourse = this.nowCourse[index][id];
+        // 避免一个时间段有两个同时要上的课只显示一个
+        for (let i of this.nowCourse[index]) {
+          if (
+            i.sectionstart === thisCourse.sectionstart &&
+            i.sectionend === thisCourse.sectionend
+          ) {
+            this.swiperCourse.unshift(i);
+          }
+        }
+        for (let i of this.elseCourse[index]) {
+          if (
+            i.sectionstart === thisCourse.sectionstart &&
+            i.sectionend === thisCourse.sectionend
+          ) {
+            this.swiperCourse.unshift(i);
+          }
+        }
+        this.swiperCourse.sort(x => (x.bgc === "#D8D8D8" ? 1 : -1));
+        this.swiperHide = false;
+        this.navBackground = "#808080";
+        this.detailCourseScroll = true;
         this.$apply();
+      },
+      hideDetailCourse() {
+        this.swiperHide = true;
+        let firstCourseAnimation = wepy.createAnimation({
+          duration: 0
+        });
+        firstCourseAnimation.translate(0, 0).step();
+        this.firstCourseAnimation = firstCourseAnimation.export();
         for (let i = 0; i < this.swiperCourse.length - 1; i++) {
           let otherCourseAnimation = wepy.createAnimation({
-            duration: 100
+            duration: 0
           });
-          let translateRight =
-            (i + 1) * screenWidth * 400 -
-            screenWidth * 140 -
-            (i + 1) * 90 * screenWidth;
-          otherCourseAnimation.translate(translateRight, 0).step();
+          otherCourseAnimation.translate(0, 0).step();
           this.otherCourseAnimation[i] = otherCourseAnimation.export();
           this.$apply();
         }
-        this.$apply();
-      } else {
+        this.swiperCourse = [];
         this.detailCourseScroll = false;
+        this.navBackground = "#fff";
         this.$apply();
+      },
+      async changeTerm(e) {
+        let item = e.currentTarget.dataset.item;
+        let requestYear = item.substr(0, 9);
+        let requestTerm;
+        if (item.indexOf("一") === -1 || item.indexOf("一") === "-1") {
+          requestTerm = 2;
+        } else {
+          requestTerm = 1;
+        }
+        this.chosenRequestYear = requestYear;
+        this.chosenRequestTerm = requestTerm;
+        let changedTermCourse = await classSchedule(requestYear, requestTerm);
+        if (changedTermCourse.data.success) {
+          this.trueCourses = changedTermCourse.data.data.timetable;
+          this.dataStart = changedTermCourse.data.data.dataStart;
+          this.chosenTerm = item;
+          this.setCoursesCategory(this.trueCourses, this.chooseWeek, item);
+          this.passwordModelOptions.passwordModelProps = false;
+        } else {
+          this.passwordModelOptions.passwordModelProps = true;
+        }
+        this.$apply();
+      },
+      changeWeek(e) {
+        this.isExam = false;
+        this.chosenWeek = this.weeks[e.currentTarget.dataset.index];
+        this.chooseWeek = parseInt(e.currentTarget.dataset.index + 1);
+        this.setCoursesCategory(
+          this.trueCourses,
+          this.chooseWeek,
+          this.chosenTerm
+        );
+      },
+      changeModel(e) {
+        const index = e.currentTarget.dataset.index;
+        this.chosenModel = this.models[index];
+        wepy.setStorageSync("chosenModel", this.models[index]);
+        this.setCoursesCategory(
+          this.trueCourses,
+          this.chooseWeek,
+          this.chosenTerm
+        );
+        this.$apply();
+      },
+      changeStyle(e) {
+        const index = e.currentTarget.dataset.index;
+        this.chosenStyle = this.styles[index];
+        wepy.setStorageSync("chosenStyle", this.chosenStyle);
+        this.$apply();
+      },
+      errorBind(e) {
+        this.detailCourseScroll = true;
+      },
+      navigateToSearchCourse() {
+        wepy.navigateTo({
+          url: `search-course`
+        });
+      },
+      deleteAddCourse(e) {
+        let course = e.currentTarget.dataset.md5;
+        let swiperCourse = this.swiperCourse;
+        let md5 = [];
+        md5.push(course);
+        wepy
+          .showModal({
+            title: "移除此课程",
+            content: "将本节课程从课程表移除",
+            confirmColor: "#47CFF5"
+          })
+          .then(res => {
+            if (res.confirm) {
+              deleteCourse(md5).then(res => {
+                if (res.data.data) {
+                  wepy.showToast({
+                    title: "删除成功",
+                    icon: "success",
+                    duration: 2000
+                  });
+                  for (let i in swiperCourse) {
+                    if (swiperCourse[i].md5 === course) {
+                      swiperCourse.splice(i, 1);
+                    }
+                  }
+                  this.swiperCourse = swiperCourse;
+                  if (!swiperCourse.length) {
+                    this.swiperHide = true;
+                  }
+                  this.init();
+                  this.$apply();
+                } else {
+                  wepy.showToast({
+                    title: "删除失败",
+                    icon: "success",
+                    duration: 2000
+                  });
+                }
+              });
+            }
+          });
+      }
+    };
+    startTouching(e) {
+      if (e.touches.length === 1) {
+        this.startX = e.touches[0].clientX;
       }
     }
-  }
+    async endTouching(e) {
+      if (e.changedTouches.length === 1) {
+        this.endX = e.changedTouches[0].clientX;
+        if (
+          parseInt(this.startX - this.endX) >= 10 &&
+          this.swiperCourse.length > 1
+        ) {
+          if (this.otherCourseAnimation.length === 0) {
+            for (let i = 0; i < this.swiperCourse.length - 1; i++) {
+              this.otherCourseAnimation.push({});
+            }
+          }
+          this.detailCourseScroll = true;
+          let screenWidth;
+          await wepy.getSystemInfo().then(res => {
+            screenWidth = parseFloat(res.screenWidth / 750);
+          });
+          this.$apply();
+          let firstCourseAnimation = wepy.createAnimation({
+            duration: 100
+          });
+          let translateLeft = screenWidth * 140;
+          firstCourseAnimation.translate(-translateLeft, 0).step();
+          this.firstCourseAnimation = firstCourseAnimation.export();
+          this.$apply();
+          for (let i = 0; i < this.swiperCourse.length - 1; i++) {
+            let otherCourseAnimation = wepy.createAnimation({
+              duration: 100
+            });
+            let translateRight =
+              (i + 1) * screenWidth * 400 -
+              screenWidth * 140 -
+              (i + 1) * 90 * screenWidth;
+            otherCourseAnimation.translate(translateRight, 0).step();
+            this.otherCourseAnimation[i] = otherCourseAnimation.export();
+            this.$apply();
+          }
+          this.$apply();
+        } else {
+          this.detailCourseScroll = false;
+          this.$apply();
+        }
+      }
+    }
+    async getTerms() {
+      /**
+       * 根据入学的年份(例如：2018)和semester（例如：202001）计算学期数组元素的个数。
+       * 如果nextTerm为true或者现在的时间超过了dataStart，则元素个数加1。
+       * 再根据元素个数生成学期数组。
+       */
+      const { dataStart, nextTerm, semester } = await this.getCommon();
+      const { studentId } = wepy.getStorageSync("User");
+      const startDate = Date.parse(dataStart);
+      const parseSemester =
+        parseInt(semester.slice(0, 4)) +
+        (parseInt(semester.slice(5, 6)) === 1 ? 0 : 0.5) -
+        1;
+      const enterYear = parseInt(`20${studentId.slice(1, 3)}`);
 
-  getTerms() {
-    let that = this;
-    return new Promise(resolve => {
-      let userInfo = wepy.getStorageSync("User");
-      let nowYear = parseInt(
-        new Date()
-          .getFullYear()
-          .toString()
-          .substr(2, 3)
-      );
-      let enterYear = parseInt(userInfo.studentId.substr(1, 2));
-      let nowTerm = 1;
-      let allTerms = parseInt((nowYear - enterYear) * 2 + nowTerm);
-      for (let i = 0; i < allTerms; i++) {
-        that.terms.unshift(
-          `20${enterYear + parseInt(i / 2)}-20${parseInt(
-            enterYear + parseInt(i / 2) + 1
-          )} 第${i % 2 === 0 ? "一" : "二"}学期`
+      let termsCount = (parseSemester - enterYear) / 0.5;
+      if (Date.now() > startDate) termsCount++;
+      if (nextTerm) termsCount++;
+      for (let i = 0; i < termsCount; i++) {
+        this.terms.unshift(
+          `${enterYear + Math.floor(i / 2)}-${enterYear +
+            Math.floor(i / 2) +
+            1} 第${i % 2 === 0 ? "一" : "二"}学期`
         );
       }
-      resolve();
-    });
-  }
-
-  async init() {
-    const date = new Date();
-    const day = date.getDay() === 0 ? 7 : date.getDay();
-    this.Day = parseInt(day - 1);
-    let common = wepy.getStorageSync("common");
-    if (!common) {
-      common = await commonInformation();
-      common = common.data.data;
-    }
-    this.chooseWeek = parseInt(common.week);
-    if (wepy.getStorageSync("timetable")) {
-      let dealedCourse = this.handleCourses(
-        wepy.getStorageSync("timetable"),
-        common.week
-      );
-      this.nowCourse = dealedCourse[0];
-      this.elseCourse = dealedCourse[1];
-      this.unshowCourse = dealedCourse[2];
       this.$apply();
     }
-    await this.getTerms();
-    if (common.nextTerm) {
-      this.terms.unshift(
-        common.semester.substr(-1) === "1"
-          ? common.year + " 第二学期"
-          : common.semester.substr(0, 4) +
-              "-" +
-              parseInt(Number(common.semester.substr(0, 4)) + 1).toString() +
-              " 第一学期"
-      );
-    }
-    if (this.chooseWeek > 18 || this.chooseWeek < 1) {
-      this.isExam = true;
-      this.$apply();
-    }
-    for (let i = 1; i <= 18; i++) {
-      this.weeks.push(`第${i}周`);
-      if (i <= 12) {
-        this.classNumber.push(i);
+    async getAddCourses() {
+      let addCoursesRes = this.visitorModeStatus
+        ? await mockGetAddCourses()
+        : await getCourses();
+      let addCoursesModel = [];
+      if (addCoursesRes.data.data) {
+        let addCourses = addCoursesRes.data.data;
+        addCourses.map(item => {
+          item.courseModel.md5 = item.md5;
+          addCoursesModel.push(item.courseModel);
+        });
       }
+      this.addCourses = addCoursesModel;
+      return addCoursesModel;
     }
-    let res = await classSchedule();
-    if (!res.data) {
-      this.placeholder = "正方密码";
-      this.$invoke("qy-modal", "open");
-    } else {
-      this.trueCourses = res.data.data.timetable;
-      if (wepy.getStorageSync("common")) {
-        this.chosenTerm = `${wepy.getStorageSync("common").year} 第${
-          wepy.getStorageSync("common").semester.substr(-1) === "1"
-            ? "一"
-            : "二"
-        }学期`;
+    // 用于刷新该周的课表信息，并修改周一到周日的日期
+    async setCoursesCategory(trueCourses, week, term) {
+      if (this.dataStart) {
+        const createShortTime = unixTime => {
+          const time = new Date(unixTime);
+          return `${time.getMonth() + 1}/${time.getDate()}`;
+        };
+        const ONE_DAY = 86400000;
+        const dataStartUnixTime = new Date(this.dataStart).getTime();
+        const mondayUnixTime = (week - 1) * ONE_DAY * 7 + dataStartUnixTime;
+        for (let i = 0; i < 7; i++) {
+          this.days[i].date = createShortTime(mondayUnixTime + i * ONE_DAY);
+        }
+      }
+      if (term === this.commonTerm) {
+        let addCoursesModel = await this.getAddCourses();
+        trueCourses = trueCourses.concat(addCoursesModel);
+      }
+      trueCourses = trueCourses.concat(this.addCourseIcon);
+      if (this.chosenModel !== "只显示本周") {
+        const dealedCourse = this.handleCourses(trueCourses, week, false);
+        this.nowCourse = dealedCourse[0];
+        this.elseCourse = dealedCourse[1];
+        this.unshowCourse = dealedCourse[2];
+        this.$apply();
       } else {
-        this.chosenTerm = `2018-2019 第一学期`;
+        const dealedCourse = this.handleCourses(trueCourses, week, true);
+        this.nowCourse = dealedCourse[0];
+        this.elseCourse = dealedCourse[1];
+        this.unshowCourse = dealedCourse[2];
+        this.$apply();
       }
-      const dealedCourse = this.handleCourses(this.trueCourses, common.week);
-      this.nowCourse = dealedCourse[0];
-      this.elseCourse = dealedCourse[1];
-      this.unshowCourse = dealedCourse[2];
+    }
+    async init() {
+      const chosenModel = wepy.getStorageSync("chosenModel");
+      if (chosenModel) {
+        this.chosenModel = chosenModel;
+      } else {
+        wepy.setStorageSync("chosenModel", "显示单双周");
+        this.chosenModel = "显示单双周";
+      }
+      const chosenStyle = wepy.getStorageSync("chosenStyle");
+      if (chosenStyle) {
+        this.chosenStyle = chosenStyle;
+      } else {
+        wepy.setStorageSync("chosenStyle", "详细模式");
+        this.chosenStyle = "详细模式";
+      }
+      const timetable = wepy.getStorageSync("timetable");
+      if (timetable) {
+        this.trueCourses = timetable;
+        this.setCoursesCategory(timetable, this.commonWeek, this.commonTerm);
+        this.passwordModelOptions.passwordModelProps = false;
+      } else {
+        let res = await classSchedule();
+        if (!res.data.data) {
+          this.passwordModelOptions.passwordModelProps = true;
+        } else {
+          this.passwordModelOptions.passwordModelProps = false;
+          this.trueCourses = res.data.data.timetable;
+          this.setCoursesCategory(
+            this.trueCourses,
+            this.commonWeek,
+            this.commonTerm
+          );
+        }
+      }
       this.$apply();
     }
-  }
-
-  async onLoad() {
-    this.init();
-  }
-
-  async onPullDownRefresh() {
-    const data = {
-      type: "coursePullRefresh"
-    };
-    if (this.chosenRequestTerm !== "") {
-      data.year = this.chosenRequestYear;
-      data.term = this.chosenRequestTerm;
+    async getCommon() {
+      let common = wepy.getStorageSync("common");
+      if (!common) {
+        const response = await commonInformation();
+        if (response.data.data) {
+          common = response.data.data;
+        }
+      }
+      return common;
     }
-    let changedTermCourse = await classSchedule(
-      data.year,
-      data.term,
-      data.type
-    );
-    if (changedTermCourse.data.success) {
-      this.trueCourses = changedTermCourse.data.data.timetable;
-      let dealedCourse = this.handleCourses(this.trueCourses, this.chooseWeek);
-      this.nowCourse = dealedCourse[0];
-      this.elseCourse = dealedCourse[1];
-      this.unshowCourse = dealedCourse[2];
+    async courseRefetchData() {
+      const date = new Date();
+      const day = date.getDay() === 0 ? 7 : date.getDay();
+      this.Day = parseInt(day - 1);
+      if (!this.visitorModeStatus) {
+        const common = await this.getCommon();
+        this.dataStart = common.dataStart;
+        this.chooseWeek = parseInt(common.week);
+        this.commonWeek = this.chooseWeek;
+        await this.getTerms();
+        if (wepy.getStorageSync("common")) {
+          this.chosenTerm = `${wepy.getStorageSync("common").year} 第${
+            wepy.getStorageSync("common").semester.substr(-1) === "1"
+              ? "一"
+              : "二"
+          }学期`;
+        } else {
+          this.chosenTerm = `2018-2019 第一学期`;
+        }
+        this.commonTerm = this.chosenTerm;
+      } else {
+        this.chooseWeek = 1;
+        this.commonWeek = 1;
+      }
+      if (this.chooseWeek > 18 || this.chooseWeek < 1) {
+        this.isExam = true;
+      }
+      this.weeks = [];
+      for (let i = 1; i <= 18; i++) {
+        this.weeks.push(`第${i}周`);
+      }
+      this.init();
+    }
+    onLoad(op) {
+      this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+      wepy.setStorageSync("courseRoute", "cannotRefresh");
+      this.judgeStatus(op.name);
+      this.courseRefetchData();
+    }
+    onShow() {
+      if (wepy.getStorageSync("courseRoute") === "canRefresh") {
+        this.courseRefetchData();
+        wepy.setStorageSync("courseRoute", "cannotRefresh");
+      }
+    }
+    async onPullDownRefresh() {
+      if (!this.visitorModeStatus) {
+        const data = {
+          type: "coursePullRefresh"
+        };
+        if (this.chosenRequestTerm !== "") {
+          data.year = this.chosenRequestYear;
+          data.term = this.chosenRequestTerm;
+        }
+        let changedTermCourse = await classSchedule(
+          data.year,
+          data.term,
+          data.type
+        );
+        if (!changedTermCourse.data.data) {
+          this.passwordModelOptions.passwordModelProps = true;
+        } else {
+          this.passwordModelOptions.passwordModelProps = false;
+          this.trueCourses = changedTermCourse.data.data.timetable;
+          this.setCoursesCategory(
+            this.trueCourses,
+            this.chooseWeek,
+            this.chosenTerm
+          );
+        }
+        wepy.showToast({
+          title: "刷新成功",
+          icon: "success",
+          duration: 1000
+        });
+      }
       this.$apply();
+      wepy.stopPullDownRefresh();
     }
-    wepy.stopPullDownRefresh();
   }
-}
 </script>
 
 <style lang="stylus" type="text/stylus" scoped>
@@ -477,24 +720,20 @@ export default class Course extends wepy.page {
   .top-line
     height 90rpx
     width 750rpx
-    line-height 90rpx
+    line-height 45rpx
+    .top-line-day
+      font-weight 600
+      font-size 30rpx
+    .top-line-date
+      font-size 25rpx
+    .top-line-full
+      line-height 90rpx
   .lines
-    width 750rpx
+    width 670rpx
     height 107rpx
     border-top 1rpx dotted #E3E3E3
     display flex
     align-items center
-
-.nav
-  display flex
-  align-items center
-  justify-content center
-  text-align center
-  height 66rpx
-  .nav-image
-    margin-left 15rpx
-    width 30rpx
-    height 66rpx
 
 .hide-page
   position fixed
@@ -512,11 +751,12 @@ export default class Course extends wepy.page {
       position relative
       margin 0 auto
       top 27vh
-      height 30vh
-      width 330rpx
+      height 420rpx
+      width 350rpx
       margin-right 70rpx
-      border-radius 30rpx
-      box-shadow 5px 0 10px 0 rgba(0, 0, 0, 0.1)
+      border-radius 10rpx
+      box-shadow 5px 0 5px 0 rgba(0, 0, 0, 0.1)
+      // opacity 0.75
       z-index 202
       flex-shrink 0
       display flex
@@ -526,51 +766,34 @@ export default class Course extends wepy.page {
         flex-direction column
         padding 53rpx 30rpx
         color #fff
-        .course-name
-          height 15vh
-          font-size 30rpx
+        .course-delete
+          position absolute
+          left 16rpx
+          top 14rpx
           font-weight bold
+          font-size 30rpx
+          color #fff
+          line-height 30rpx
+          display flex
+          align-items center
+        .course-name
+          height 180rpx
+          font-size 30rpx
+          font-weight 700
         .course-info
-          font-size 28rpx
+          font-size 30rpx
           display flex
           flex-direction column
     .swiper-behind
       position absolute
-      height 30vh
-      width 330rpx
-      left 100rpx
-      top 27vh
-      border-radius 30rpx
-      margin-right 70rpx
-      background #fff
-      box-shadow 5px 0 10px 0 rgba(0, 0, 0, 0.1)
-      z-index 201
-      flex-shrink 0
-      display flex
-      justify-content center
-      .course-container
-        display flex
-        flex-direction column
-        padding 53rpx 30rpx
-        color #fff
-        .course-name
-          height 15vh
-          font-size 30rpx
-          font-weight bold
-        .course-info
-          font-size 28rpx
-          display flex
-          flex-direction column
-
 .course
   min-height 100vh
-  .animation-button
+  .animation-icon
     position absolute
+    z-index 100
+  .animation-button
     height 90rpx
     width 90rpx
-    display flex
-    align-items center
-    z-index 100
     .animation-button-image
       width 90rpx
       height 90rpx
@@ -579,17 +802,16 @@ export default class Course extends wepy.page {
       background-position center
       background-size contain
   .chooseItem
-    background #EEEEEE
-    height 180rpx
+    background #fff
+    height 270rpx
     font-size 26rpx
-    margin 0 0 -180rpx 0
+    margin 0 0 -270rpx 0
     .choose-item-container
-      width 670rpx
       height 90rpx
       display flex
       align-items center
-      margin 0 0 0 80rpx
       border-bottom 1rpx solid #E3E3E3
+      padding-right 20rpx
       .change-choose
         display flex
         width 130rpx
@@ -600,45 +822,42 @@ export default class Course extends wepy.page {
           text-align center
           width 110rpx
           color #353535
+          font-weight 700
       .topScroll
         position relative
         display inline-block
-        width 540rpx
+        max-width 540rpx
+        font-family PingFangSC-Light
         white-space nowrap
         height 90rpx
         color #fff
-        text-align center
+        font-weight 700
+        display flex
+        flex-direction row
+        align-items center
         .course-choose
-          position relative
           display inline-block
-          margin-top 20rpx
-          height 50rpx
-          font-family PingFangSC-Light
-          line-height 50rpx
-          padding-left 15rpx
-          padding-right 15rpx
-          background #D8D8D8
-          margin-left 26rpx
-          background-repeat no-repeat
-          background-position center
-          background-size contain
-        .course-choose-circle
-          position relative
-          display inline-block
-          margin-top 10rpx
-          height 70rpx
-          width 70rpx
-          font-family PingFangSC-Light
-          line-height 70rpx
-          background #D8D8D8
-          margin-left 26rpx
           text-align center
-          background-repeat no-repeat
-          background-position center
-          background-size contain
+          background rgba(106, 213, 225, 0.4)
+          margin-left 26rpx
+        .course-choose-text
+          margin-top 20rpx
+          line-height 50rpx
+          height 50rpx
+          font-size 22rpx
+          padding-left 20rpx
+          padding-right 20rpx
+          border-radius 25rpx
+        .course-choose-circle
+          margin-top 15rpx
+          height 60rpx
+          width 60rpx
+          font-size 40rpx
+          line-height 60rpx
           border-radius 50%
   .main
     width 750rpx
+    position absolute
     .main-scroll
       width 100%
       font-size 26rpx
@@ -678,49 +897,50 @@ export default class Course extends wepy.page {
         display inline-block
         width 95rpx
         height 1296rpx
-        .course-item
-          position absolute
-          width 84rpx
-          padding-left 3rpx
-          padding-right 3rpx
-          border-radius 10rpx
-          font-size 22rpx
-          color #fff
-          display flex
-          align-items center
-          justify-content center
-          flex-direction column
+      .course-item
+        position absolute
+        width 84rpx
+        padding-left 3rpx
+        padding-right 3rpx
+        border-radius 10rpx
+        font-size 22rpx
+        color #fff
+        display flex
+        align-items center
+        justify-content center
+        flex-direction column
+        overflow hidden
+        .course-text
+          text-overflow ellipsis
+          display -webkit-box
+          -webkit-box-orient vertical
           overflow hidden
-          .class-name
-            text-overflow ellipsis
-            overflow hidden
-            display -webkit-box
-            -webkit-line-clamp 4
-            -webkit-box-orient vertical
-            overflow hidden
-            width 80rpx
-            text-align center
-          .class-teacher
-            text-overflow ellipsis
-            overflow hidden
-            display -webkit-box
-            -webkit-line-clamp 3
-            -webkit-box-orient vertical
-            width 80rpx
-            text-align center
-          .bottom-angel
-            position absolute
-            right 0rpx
-            bottom 0rpx
-            border-right 22rpx solid transparent
-            border-top-left-radius 10rpx
-          .bottom-angel-2
-            position absolute
-            bottom 0rpx
-            right -20rpx
-            border-left 20rpx solid transparent
-            border-right 20rpx solid transparent
-            border-bottom 20rpx solid #D8D8D8
+          width 80rpx
+          text-align center
+        .class-name
+          -webkit-line-clamp 4
+        .class-teacher
+          -webkit-line-clamp 3
+        .bottom-angel
+          position absolute
+          right 0rpx
+          bottom 0rpx
+          border-right 22rpx solid transparent
+          border-top-left-radius 10rpx
+        .bottom-angel-2
+          position absolute
+          bottom 0rpx
+          right -20rpx
+          border-left 20rpx solid transparent
+          border-right 20rpx solid transparent
+          border-bottom 20rpx solid #D8D8D8
+      .course-add-item
+        .course-text
+          width 46rpx
+        .course-add
+          line-height 40rpx
+          font-size 40rpx
+          font-weight bold
     .column_1
       position absolute
       top 90rpx
@@ -735,7 +955,20 @@ export default class Course extends wepy.page {
       .left-column
         text-align center
         height 108rpx
-        line-height 108rpx
+        color #888888
+        .left-column-sequence
+          line-height 52rpx
+          height 52rpx
+          font-weight 500
+        .left-column-time
+          line-height 27rpx
+          height 54rpx
+          font-size 20rpx
+          text-align right
+          width 50rpx
+        .left-column-full
+          line-height 108rpx
+
 
 .bind-container
   display flex

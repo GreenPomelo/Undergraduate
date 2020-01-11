@@ -13,41 +13,88 @@
         </view>
         <view class="content-body">
           <view class="input-container">
-            <image mode="widthFix" class="input-image"
-                   src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
-            <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+            <image
+              mode="widthFix"
+              class="input-image"
+              src="https://static.airbob.org/under-graduate/image/png/login/phone.png"
+            >
+            <input
+              type="number"
+              @input="getNumber"
+              class="input"
+              placeholder="请输入手机号"
+              maxlength="11"
+            >
           </view>
           <view class="input-container">
-            <image mode="widthFix" class="input-image"
-                   src="https://static.airbob.org/under-graduate/image/png/login/password.png"/>
-            <input type="{{isShowPassword ? 'text' : 'password'}}" @input="getPassword" class="input"
-                   placeholder="请输入初次绑定的正方密码"/>
-            <image mode="widthFix" class="input-image" @tap="togglePassword"
-                   src="{{isShowPassword ? 'https://static.airbob.org/under-graduate/image/png/login/showpassword.png' : 'https://static.airbob.org/under-graduate/image/png/login/hidepassword.png'}}"/>
+            <image
+              mode="widthFix"
+              class="input-image"
+              src="https://static.airbob.org/under-graduate/image/png/login/password.png"
+            >
+            <input
+              type="{{isShowPassword ? 'text' : 'password'}}"
+              @input="getPassword"
+              class="input"
+              placeholder="请输入小程序密码"
+            >
+            <image
+              mode="widthFix"
+              class="input-image"
+              @tap="togglePassword"
+              src="{{isShowPassword ? 'https://static.airbob.org/under-graduate/image/png/login/showpassword.png' : 'https://static.airbob.org/under-graduate/image/png/login/hidepassword.png'}}"
+            >
           </view>
+          <view class="forget-password" @tap="forgetPassword">忘记密码</view>
           <view class="login-btn {{isLogining ? 'btn-disabled' : ''}}" @tap="goLogin">登录</view>
-          <view class="login-toggle" @tap="toggleStep">还没注册？点这里</view>
+          <view class="login-choice">
+            <view class="login-toggle" @tap="toggleStep">还没注册？点这里</view>
+            <view class="login-toggle" @tap="toggleVisitor">游客模式</view>
+          </view>
         </view>
         <view class="content-body">
           <view class="input-container">
-            <image mode="widthFix" class="input-image"
-                   src="https://static.airbob.org/under-graduate/image/png/login/phone.png"/>
-            <input type="number" @input="getNumber" class="input" placeholder="请输入手机号" maxlength="11"/>
+            <image
+              mode="widthFix"
+              class="input-image"
+              src="https://static.airbob.org/under-graduate/image/png/login/phone.png"
+            >
+            <input
+              type="number"
+              @input="getNumber"
+              class="input"
+              placeholder="请输入手机号"
+              maxlength="11"
+            >
           </view>
           <view class="input-container">
-            <image mode="widthFix" class="input-image"
-                   src="https://static.airbob.org/under-graduate/image/png/login/verification.png"/>
-            <input type="number" @input="getVertication" class="input" placeholder="请输入验证码" maxlength="6"/>
-            <button open-type="{{flag ? 'getUserInfo' : ''}}" @getuserinfo="onGotUserInfo"
-                    class="input-after {{flag ? '' : 'btn-disabled'}}" @tap="fetchVertication">{{verticationMsg}}
-            </button>
+            <image
+              mode="widthFix"
+              class="input-image"
+              src="https://static.airbob.org/under-graduate/image/png/login/verification.png"
+            >
+            <input
+              type="number"
+              @input="getVertication"
+              class="input"
+              placeholder="请输入验证码"
+              maxlength="6"
+            >
+            <button
+              open-type="{{flag ? 'getUserInfo' : ''}}"
+              @getuserinfo="onGotUserInfo"
+              class="input-after {{flag ? '' : 'btn-disabled'}}"
+              @tap="fetchVertication"
+            >{{verticationMsg}}</button>
           </view>
           <view class="login-btn {{isInputing ? 'btn-disabled' : ''}}" @tap="checkPhoneNumber">下一步</view>
           <view class="login-agreement">
-            <image class="obey" @tap="obeyPro"
-                   src="{{!obeyed ? 'https://static.airbob.org/under-graduate/image/png/login/unchoose.png' : 'https://static.airbob.org/under-graduate/image/png/login/chosen.png'}}"
-                   mode="aspectFill"/>
-            我已阅读并遵守
+            <image
+              class="obey"
+              @tap="obeyPro"
+              src="{{!obeyed ? 'https://static.airbob.org/under-graduate/image/png/login/unchoose.png' : 'https://static.airbob.org/under-graduate/image/png/login/chosen.png'}}"
+              mode="aspectFill"
+            >我已阅读并遵守
             <view class="agreement-url">
               <navigator url="./personalPages/protocol" hover-class="navigator-hover">南邮小程序用户协议</navigator>
             </view>
@@ -56,17 +103,31 @@
         </view>
         <view class="content-body">
           <view class="input-container">
-            <image mode="widthFix" class="input-image"
-                   src="https://static.airbob.org/under-graduate/%E6%AD%A3%E6%96%B9%E8%B4%A6%E5%8F%B7.png"/>
-            <input type="text" @input="getZfAccount" class="input" placeholder="请输入学号"/>
+            <image
+              mode="widthFix"
+              class="input-image"
+              src="https://static.airbob.org/under-graduate/%E6%AD%A3%E6%96%B9%E8%B4%A6%E5%8F%B7.png"
+            >
+            <input type="text" @input="getZfAccount" class="input" placeholder="请输入学号">
           </view>
           <view class="input-container">
-            <image mode="widthFix" class="input-image"
-                   src="https://static.airbob.org/under-graduate/%E5%AF%86%E7%A0%81.png"/>
-            <input type="{{isShowPassword ? 'text' : 'password'}}" @input="getPassword" class="input"
-                   placeholder="请输入正方密码"/>
-            <image mode="widthFix" class="input-image" @tap="togglePassword"
-                   src="{{isShowPassword ? 'https://static.airbob.org/under-graduate/image/png/login/showpassword.png' : 'https://static.airbob.org/under-graduate/image/png/login/hidepassword.png'}}"/>
+            <image
+              mode="widthFix"
+              class="input-image"
+              src="https://static.airbob.org/under-graduate/%E5%AF%86%E7%A0%81.png"
+            >
+            <input
+              type="{{isShowPassword ? 'text' : 'password'}}"
+              @input="getPassword"
+              class="input"
+              placeholder="请输入正方密码"
+            >
+            <image
+              mode="widthFix"
+              class="input-image"
+              @tap="togglePassword"
+              src="{{isShowPassword ? 'https://static.airbob.org/under-graduate/image/png/login/showpassword.png' : 'https://static.airbob.org/under-graduate/image/png/login/hidepassword.png'}}"
+            >
           </view>
           <view class="login-btn {{isBinding ? 'btn-disabled' : ''}}" @tap="goBind">绑定</view>
         </view>
@@ -76,150 +137,156 @@
 </template>
 
 <script>
-  import wepy from "wepy";
-  import Input from "@/components/qy-input";
-  import {
-    login,
-    sendSms,
-    checkCaptcha,
-    register,
-    getToken,
-    getUserInfo
-  } from "@/api/common";
+import wepy from "wepy";
+import Input from "@/components/qy-input";
+import {
+  login,
+  sendSms,
+  checkCaptcha,
+  register,
+  getToken,
+  getUserInfo
+} from "@/api/common";
 
-  export default class Login extends wepy.page {
-    config = {
-      navigationBarTitleText: "",
-      navigationBarBackgroundColor: "#95EDFF"
-    };
-    components = {
-      "qy-input": Input
-    };
+export default class Login extends wepy.page {
+  config = {
+    navigationBarTitleText: "",
+    navigationBarBackgroundColor: "#95EDFF"
+  };
+  components = {
+    "qy-input": Input
+  };
 
-    data = {
-      userInfo: {},
-      userId: "",
-      token: "",
-      isRegister: true,
-      obeyed: true,
-      verticationMsg: "获取验证码",
-      phoneNumber: "",
-      vertication: "",
-      password: "",
-      zfAccount: "",
-      flag: true,
-      isShowPassword: false,
-      step: 0,
-      initFinish: true
-    };
+  data = {
+    userInfo: {},
+    userId: "",
+    token: "",
+    isRegister: true,
+    obeyed: true,
+    verticationMsg: "获取验证码",
+    phoneNumber: "",
+    vertication: "",
+    password: "",
+    zfAccount: "",
+    flag: true,
+    isShowPassword: false,
+    step: 0,
+    initFinish: true,
+    stepTimeout: null
+  };
 
-    methods = {
-      onGotUserInfo(e) {
-        this.userInfo = e.detail.userInfo;
-        wepy.setStorageSync("userInfo", e.detail.userInfo);
-      },
-      getNumber(e) {
-        this.phoneNumber = e.detail.value;
-      },
-      getPassword(e) {
-        this.password = e.detail.value;
-      },
-      getZfAccount(e) {
-        this.zfAccount = e.detail.value;
-      },
-      getVertication(e) {
-        this.vertication = e.detail.value;
-      },
-      togglePassword() {
-        this.isShowPassword = !this.isShowPassword;
-      },
-      obeyPro() {
-        this.obeyed = !this.obeyed;
-      },
-      async fetchVertication() {
-        if (this.phoneNumber.trim().length === 0) {
-          this.$parent.showTip("手机号不能为空");
-        } else {
-          // 60s
-          if (this.flag) {
-            await this.getTokenAndUserInfo();
-            this.flag = false;
-            let count = 60;
-            let t = setInterval(() => {
-              this.verticationMsg = `${count--}s`;
-              if (count === 0) {
-                clearInterval(t);
-                this.verticationMsg = "获取验证码";
-                this.flag = true;
-              }
-              this.$apply();
-            }, 1000);
-            sendSms(this.phoneNumber).then(res => {
-              if (!res.data) {
-                this.$parent.showTip(res.data.errMsg);
-              }
-            });
-          }
-        }
-      },
-      checkPhoneNumber() {
-        if (!this.isInputing) {
-          checkCaptcha(this.vertication).then(res => {
-            if (res.data) {
-              // 验证码正确
-              if (this.obeyed) {
-                // 如果遵守协议, 跳转到绑定正方账号密码
-                this.step = 3;
-                this.password = "";
-                this.$apply();
-              } else {
-                this.$parent.showTip("您还没有同意用户协议呢");
-              }
-            } else {
-              this.$parent.showTip("验证码错误");
+  methods = {
+    onGotUserInfo(e) {
+      this.userInfo = e.detail.userInfo;
+      wepy.setStorageSync("userInfo", e.detail.userInfo);
+    },
+    getNumber(e) {
+      this.phoneNumber = e.detail.value;
+    },
+    getPassword(e) {
+      this.password = e.detail.value;
+    },
+    getZfAccount(e) {
+      this.zfAccount = e.detail.value;
+    },
+    getVertication(e) {
+      this.vertication = e.detail.value;
+    },
+    togglePassword() {
+      this.isShowPassword = !this.isShowPassword;
+    },
+    obeyPro() {
+      this.obeyed = !this.obeyed;
+    },
+    async fetchVertication() {
+      if (this.phoneNumber.trim().length === 0) {
+        this.$parent.showTip("手机号不能为空");
+      } else {
+        // 60s
+        if (this.flag) {
+          await this.getTokenAndUserInfo();
+          this.flag = false;
+          let count = 60;
+          let t = setInterval(() => {
+            this.verticationMsg = `${count--}s`;
+            if (count === 0) {
+              clearInterval(t);
+              this.verticationMsg = "获取验证码";
+              this.flag = true;
+            }
+            this.$apply();
+          }, 1000);
+          sendSms(this.phoneNumber).then(res => {
+            if (!res.data) {
+              this.$parent.showTip(res.data.errMsg);
             }
           });
         }
-      },
-      async goLogin() {
+      }
+    },
+    checkPhoneNumber() {
+      if (!this.isInputing) {
+        checkCaptcha(this.vertication).then(res => {
+          if (res.data) {
+            // 验证码正确
+            if (this.obeyed) {
+              // 如果遵守协议, 跳转到绑定正方账号密码
+              this.step = 3;
+              this.password = "";
+              this.$apply();
+            } else {
+              this.$parent.showTip("您还没有同意用户协议呢");
+            }
+          } else {
+            this.$parent.showTip("验证码错误");
+          }
+        });
+      }
+    },
+    async goLogin() {
+      wepy.showLoading({
+        title: "加载中"
+      });
+      if (!this.isLogining) {
+        try {
+          await this.getTokenAndUserInfo();
+          const res = await login(
+            this.phoneNumber,
+            this.password,
+            wepy.$appConfig.fromQQ
+          );
+          await wepy.setStorageSync(
+            "indexIcon",
+            this.$parent.globalData.modules.slice(0, 8)
+          );
+          wepy.hideLoading();
+          if (res.data) {
+            wepy.reLaunch({
+              url: "../../pages/index"
+            });
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      }
+    },
+    async goBind() {
+      if (!this.isBinding) {
         wepy.showLoading({
           title: "加载中"
         });
-        if (!this.isLogining) {
-          try {
-            await this.getTokenAndUserInfo();
-            const res = await login(this.phoneNumber, this.password);
-            await wepy.setStorageSync(
-              "indexIcon",
-              this.$parent.globalData.modules.slice(0, 8)
-            );
-            wepy.hideLoading();
-            if (res.data) {
-              wepy.reLaunch({
-                url: "../../pages/index"
-              });
-            }
-          } catch (e) {
-            console.log(e);
-          }
-        }
-      },
-      async goBind() {
-        if (!this.isBinding) {
-          wepy.showLoading({
-            title: "加载中"
-          });
-          register(
-            this.phoneNumber,
-            this.zfAccount,
-            this.password,
-            this.userInfo.avatarUrl,
-            this.userInfo.gender,
-            this.userInfo.nickName
-          ).then(res => {
-            wepy.hideLoading();
-            if (res.data) {
-              login(this.phoneNumber, this.password).then(response => {
+        register(
+          this.phoneNumber,
+          this.zfAccount,
+          this.password,
+          this.userInfo.avatarUrl,
+          this.userInfo.gender,
+          this.userInfo.nickName
+        ).then(res => {
+          wepy.hideLoading();
+          if (res.data) {
+            login(this.phoneNumber, this.password, wepy.$appConfig.fromQQ).then(
+              response => {
                 if (response.data) {
                   wepy.setStorageSync(
                     "indexIcon",
@@ -231,403 +298,211 @@
                 } else {
                   this.$parent.showTip("登录失败");
                 }
-              });
-            } else {
-              this.$parent.showTip("学号或正方教务系统密码错误，请核对重试");
-              this.$apply();
-            }
-          });
-        }
-      },
-      toggleStep() {
-        if (this.step === 1) {
-          this.step = 2;
-        } else if (this.step === 2) {
-          this.step = 1;
-        }
-        this.$apply();
+              }
+            );
+          } else {
+            this.$parent.showTip("学号或正方教务系统密码错误，请核对重试");
+            this.$apply();
+          }
+        });
       }
-    };
-
-    events = {
-      TapFunc: (e, tap) => {}
-    };
-
-    computed = {
-      isLogining() {
-        return (
-          this.phoneNumber.trim().length !== 11 ||
-          this.password.trim().length === 0
-        );
-      },
-      isInputing() {
-        return (
-          this.phoneNumber.trim().length !== 11 ||
-          this.vertication.trim().length !== 6
-        );
-      },
-      isBinding() {
-        return (
-          this.zfAccount.trim().length === 0 || this.password.trim().length === 0
-        );
-      },
-      centerBody() {
-        switch (this.step) {
-          case 0:
-            return "welcome-step";
-          case 1:
-            return "login-step";
-          case 2:
-            return "sms-step";
-          case 3:
-            return "bind-step";
-          default:
-            return "login-step";
-        }
+    },
+    toggleStep() {
+      if (this.step === 1) {
+        this.step = 2;
+      } else if (this.step === 2) {
+        this.step = 1;
       }
-    };
+      this.$apply();
+    },
+    toggleVisitor() {
+      wepy.reLaunch({ url: "../../pages/index" });
+      wepy.$store.dispatch({ type: `ENTER_VISITOR_MODE` });
+    },
+    forgetPassword() {
+      wepy.navigateTo({ url: "./personalPages/change-password" });
+    }
+  };
 
-    onLoad({ step }) {
-      if (step) {
-        this.step = Number(step);
-      } else {
-        setTimeout(() => {
-          this.step = 1;
-          this.$apply();
-        }, 2800);
+  events = {
+    TapFunc: (e, tap) => {}
+  };
+
+  computed = {
+    isLogining() {
+      return (
+        this.phoneNumber.trim().length !== 11 ||
+        this.password.trim().length === 0
+      );
+    },
+    isInputing() {
+      return (
+        this.phoneNumber.trim().length !== 11 ||
+        this.vertication.trim().length !== 6
+      );
+    },
+    isBinding() {
+      return (
+        this.zfAccount.trim().length === 0 || this.password.trim().length === 0
+      );
+    },
+    centerBody() {
+      switch (this.step) {
+        case 0:
+          return "welcome-step";
+        case 1:
+          return "login-step";
+        case 2:
+          return "sms-step";
+        case 3:
+          return "bind-step";
+        default:
+          return "login-step";
       }
     }
+  };
 
-    getTokenAndUserInfo = async () => {
-      const { code } = await wepy.login();
-      const getTokenResponse = await getToken(code);
-      if (getTokenResponse !== null) {
-        this.token = getTokenResponse.data.data;
-        wepy.setStorageSync("token", this.token);
-      } else {
-        this.$parent.showTip();
-      }
-    };
+  onLoad({ step }) {
+    if (step) {
+      this.step = Number(step);
+    } else {
+      this.stepTimeout = setTimeout(() => {
+        this.step = 1;
+        this.$apply();
+      }, 2800);
+    }
   }
+  onUnload() {
+    clearTimeout(this.stepTimeout);
+  }
+  getTokenAndUserInfo = async () => {
+    const { code } = await wepy.login();
+    const getTokenResponse = await getToken(code, wepy.$appConfig.fromQQ);
+    if (getTokenResponse !== null) {
+      this.token = getTokenResponse.data.data;
+      wepy.setStorageSync("token", this.token);
+    } else {
+      this.$parent.showTip();
+    }
+  };
+}
 </script>
 <style lang="stylus" scoped>
-  vendors
-
-  =
-  official
-  animation-time
-
-  =
-  2.5
-  s
-
-  @import '../../css/global-style'
-  .content
+vendors = official
+animation-time = 2.5s
+@import '../../css/global-style'
+.content
   position absolute
-  top
-
-  0
-  left
-
-  0
-  width
-
-  100
-  vw
-  height
-
-  100
-  vh
-  z-index
-
-  0
-  background
-  url
-
-  (
-  'https://static.airbob.org/under-graduate/image/png/login/background.png'
-  )
-  no-repeat
+  top 0
+  left 0
+  width 100vw
+  height 100vh
+  z-index 0
+  background url('https://static.airbob.org/under-graduate/image/png/login/background.png') no-repeat
   background-size cover
   overflow hidden
-  .toggle-body
+.toggle-body
   display flex
   position absolute
-  top
-
-  43
-  %
-  height
-
-  57
-  %
-  width
-
-  400
-  vw
-  transition all
-
-  0.5
-  s
-  .welcome-step
-  transform
-  translateX
-
-  (
-  0
-  vw
-
-  )
-  .login-step
-  transform
-  translateX
-
-  (
-  -
-  100
-  vw
-
-  )
-  .sms-step
-  transform
-  translateX
-
-  (
-  -
-  200
-  vw
-
-  )
-  .bind-step
-  transform
-  translateX
-
-  (
-  -
-  300
-  vw
-
-  )
-  .content-body
-  width
-
-  100
-  vw
-  .welcome-container
-  height
-
-  100
-  %
+  top 43%
+  height 57%
+  width 400vw
+  transition all 0.5s
+.welcome-step
+  transform translateX(0vw)
+.login-step
+  transform translateX(-100vw)
+.sms-step
+  transform translateX(-200vw)
+.bind-step
+  transform translateX(-300vw)
+.content-body
+  width 100vw
+.welcome-container
+  height 100%
   display flex
   font-family PingFangSC-Light
-  font-size
-
-  90
-  rpx
-  line-height
-
-  108
-  rpx
+  font-size 90rpx
+  line-height 108rpx
   color #9b9b9b
   flex-direction column
   justify-content space-between
   align-items center
   .welcome-image
-  background-image
-  url
-
-  (
-  'https://static.airbob.org/under-graduate/welcome-borad.png'
-  )
-  background-repeat no-repeat
-  background-position bottom
-  background-size contain
-  width
-
-  450
-  rpx
-  height
-
-  388
-  rpx
-  .input-container
+    background-image url('https://static.airbob.org/under-graduate/welcome-borad.png')
+    background-repeat no-repeat
+    background-position bottom
+    background-size contain
+    width 450rpx
+    height 388rpx
+.input-container
   display flex
-  width
-
-  586
-  rpx
-  margin
-
-  30
-  rpx auto
-
-  0
-  padding-bottom
-
-  6
-  rpx
-  border-bottom
-
-  1
-  rpx solid #F2F2F2
+  width 586rpx
+  margin 30rpx auto 0
+  padding-bottom 6rpx
+  border-bottom 1rpx solid #F2F2F2
   align-items center
   .input-image
-  width
-
-  26
-  rpx
-  height
-
-  40
-  rpx
-  margin-right
-
-  20
-  rpx
+    width 26rpx
+    height 40rpx
+    margin-right 20rpx
   .input
-  font-size
-
-  28
-  rpx
-  flex
-
-  1
+    font-size 28rpx
+    flex 1
   .input-after
-  width
-
-  160
-  rpx
-  height
-
-  45
-  rpx
-  margin-left
-
-  20
-  rpx
-  padding
-
-  0
-  background
-  linear-gradient
-
-  (
-  -
-  225
-  deg, #ABDCFF
-
-  0
-  %
-  ,
-  #6AE4FF
-
-  100
-  %
-  )
-  color #fff
-  font-size
-
-  24
-  rpx
-  line-height
-
-  45
-  rpx
-  text-align center
-  border-radius
-
-  30
-  rpx
-    & :after
-  border
-
-  0
-  .input-placeholder
+    width 160rpx
+    height 45rpx
+    margin-left 20rpx
+    padding 0
+    background linear-gradient(-225deg, #ABDCFF 0%, #6AE4FF 100%)
+    color #fff
+    font-size 24rpx
+    line-height 45rpx
+    text-align center
+    border-radius 30rpx
+    &:after
+      border 0
+.input-placeholder
   color #888
-  .login-btn
-  height
-
-  74
-  rpx
-  width
-
-  586
-  rpx
-  margin
-
-  90
-  rpx auto
-
-  40
-  rpx
-  line-height
-
-  74
-  rpx
+.login-btn
+  height 74rpx
+  width 586rpx
+  margin 30rpx auto 40rpx
+  line-height 74rpx
   color #fff
-  font-size
-
-  32
-  rpx
+  font-size 32rpx
   text-align center
-  border-radius
-
-  30
-  rpx
-  background
-  linear-gradient
-
-  (
-  -
-  225
-  deg, #ABDCFF
-
-  0
-  %
-  ,
-  #6AE4FF
-
-  100
-  %
-  )
-  .login-agreement
+  border-radius 30rpx
+  background linear-gradient(-225deg, #ABDCFF 0%, #6AE4FF 100%)
+.login-agreement
   display flex
   justify-content center
-  font-size
-
-  20
-  rpx
+  font-size 20rpx
   .obey
-  width
-
-  30
-  rpx
-  height
-
-  30
-  rpx
-  margin-right
-
-  20
-  rpx
-  color #353535
-  .agreement-url
+    width 30rpx
+    height 30rpx
+    margin-right 20rpx
+    color #353535
+.agreement-url
   text-decoration underline
   color #47CFF5
-  .login-toggle
-  margin-top
-
-  40
-  rpx
-  font-size
-
-  20
-  rpx
-  text-decoration underline
+.login-choice
+  width 320rpx
+  margin 0 auto
+  display flex
+  justify-content space-between
+.login-toggle
+  margin-top 40rpx
+  font-size 20rpx
   color #47CFF5
   text-align center
-  .btn-disabled
-  background #D0F5FF
-
-  !important
+.forget-password
+  padding-top 30rpx
+  font-size 20rpx
+  color #47CFF5
+  text-align right
+  width 586rpx
+  margin 0 auto
+.btn-disabled
+  background #D0F5FF !important
 </style>

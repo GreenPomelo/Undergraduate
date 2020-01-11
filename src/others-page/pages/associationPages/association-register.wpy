@@ -1,77 +1,75 @@
 <template>
-  <view class="container" style="{{perfectInfoStatus === false ? 'height:100vh;overflow:hidden;' : ''}}">
-    <view class="perfect-info" wx:if="{{perfectInfoStatus === false}}">
-      <view class="perfect-info-body">
-        <view class="perfect-img">
-          <image src="https://static.airbob.org/under-graduate/tip.png" />
-        </view>
-        <view class="perfect-info-card">
-          <view class="perfect-info-tip">请先完善个人基本信息再进行报名哦</view>
-          <view class="submission" style="width: 202px;height:49px;margin-bottom:0" @tap="navigateToPersonal">
-            <view>完善基本信息</view>
+  <BaseContainer navTitle="社团报名">
+    <view slot="qy-content" class="container" style="{{perfectInfoStatus === false ? 'height:100vh;overflow:hidden;' : ''}}">
+      <view class="perfect-info" wx:if="{{perfectInfoStatus === false}}">
+        <view class="perfect-info-body">
+          <view class="perfect-img">
+            <image src="https://static.airbob.org/under-graduate/tip.png" />
           </view>
-        </view>
-      </view>
-    </view>
-    <view class="header">
-      <view class="header-container">
-        <view class="association-avatar">
-        <image src="{{associationAvatar}}" />
-      </view>
-      <view class="association-info">
-        <view class="association-name">{{associationInfo.fullname}}</view>
-        <view class="association-hot">
-          <image class="heat-icon" src="https://static.airbob.org/under-graduate/hot.png" />
-          <view class="heat-degree">校谈热度{{associationInfo.heat}}>></view>
-        </view>
-      </view>
-      </view>
-    </view>
-    <view class="body">
-      <view class="info-container">
-        <view class="body-slogan">你想要加入什么部门？</view>
-        <view class="apartment-selection">
-          <picker mode = "selector" value="{{apartFirstIndex}}" range="{{apartmentFirst}}" range-key="departmentName" @change="firstSelection">
-            <view class="picker-container">
-              <view>
-                <text class="picker-content">{{firstPicker}}</text>
-              </view>
-              <view class="picker-img">
-                <image src="{{firstArrow}}" />
-              </view>
-            </view>
-          </picker>
-          <picker mode = "selector" value="{{apartSecondIndex}}" range="{{apartmentSecond}}" range-key="departmentName" @change="secondSelection">
-            <view class="picker-container">
-              <view>
-                <text class="picker-content">{{secondPicker}}</text>
-              </view>
-              <view class="picker-img">
-                <image src="{{secondArrow}}" />
-              </view>
-            </view>
-          </picker>
-        </view>
-        <view class="body-slogan">让我们更深入地了解你：</view>
-        <view class="question-container">
-          <view class="question" wx:for="{{registerInfo}}" wx:key="index">
-            <view class="question-title">{{index+1}}. {{item.question}}</view>
-            <view class="question-input">
-              <view wx:if="{{perfectInfoStatus}}">
-                <textarea placeholder="请输入内容" data-idx="{{index}}" bindinput="quesInput" value="{{item.answer}}" />
-              </view>
-              <view class="instead" wx:else>
-                {{item.answer}}
-              </view>
+          <view class="perfect-info-card">
+            <view class="perfect-info-tip">请先完善个人基本信息再进行报名哦</view>
+            <view class="submission" style="width: 202px;height:49px;margin-bottom:0" @tap="navigateToPersonal">
+              <view>完善基本信息</view>
             </view>
           </view>
         </view>
       </view>
-      <view class="submission" @tap="{{modifyStatus === true ? 'registerAssociation' : 'modifyAssociation'}}">
-        <view>{{modifyOrSubmit}}</view>
+      <view class="header">
+        <view class="header-container">
+          <view class="association-avatar">
+          <image src="{{associationAvatar}}" />
+        </view>
+        <view class="association-info">
+          <view class="association-name">{{associationInfo.fullname}}</view>
+        </view>
+        </view>
+      </view>
+      <view class="body">
+        <view class="info-container">
+          <view class="body-slogan">你想要加入什么部门？</view>
+          <view class="apartment-selection">
+            <picker mode = "selector" value="{{apartFirstIndex}}" range="{{apartmentFirst}}" range-key="departmentName" @change="firstSelection">
+              <view class="picker-container">
+                <view>
+                  <text class="picker-content">{{firstPicker}}</text>
+                </view>
+                <view class="picker-img">
+                  <image src="{{firstArrow}}" />
+                </view>
+              </view>
+            </picker>
+            <picker mode = "selector" value="{{apartSecondIndex}}" range="{{apartmentSecond}}" range-key="departmentName" @change="secondSelection">
+              <view class="picker-container">
+                <view>
+                  <text class="picker-content">{{secondPicker}}</text>
+                </view>
+                <view class="picker-img">
+                  <image src="{{secondArrow}}" />
+                </view>
+              </view>
+            </picker>
+          </view>
+          <view class="body-slogan">让我们更深入地了解你：</view>
+          <view class="question-container">
+            <view class="question" wx:for="{{registerInfo}}" wx:key="index">
+              <view class="question-title">{{index+1}}. {{item.question}}</view>
+              <view class="question-input">
+                <view wx:if="{{perfectInfoStatus}}">
+                  <textarea placeholder="请输入内容" maxlength="5000" data-idx="{{index}}" bindinput="quesInput" value="{{item.answer}}" />
+                </view>
+                <view class="instead" wx:else>
+                  {{item.answer}}
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="submission" @tap="{{modifyStatus === true ? 'registerAssociation' : 'modifyAssociation'}}">
+          <view>{{modifyOrSubmit}}</view>
+        </view>
       </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
@@ -79,12 +77,16 @@ import wepy from "wepy";
 import {
   associationAccept,
   changeAssociationAccept,
-  schoolTalkAssociation,
-  getAssociationAccept
+  getAssociationAccept,
+  associationUsers
 } from "@/api/recruit";
+import BaseContainer from "@/components/baseContainer";
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "社团报名"
+  };
+  components = {
+    BaseContainer
   };
   data = {
     associationAvatar: ``,
@@ -151,14 +153,16 @@ export default class extends wepy.page {
       }
     },
     firstArrow() {
-      return this.apartFirstStatus
-        ? `https://static.airbob.org/under-graduate/up.png`
-        : `https://static.airbob.org/under-graduate/down.png`;
+      return "";
+      // return this.apartFirstStatus
+      //   ? `https://static.airbob.org/under-graduate/up.png`
+      //   : `https://static.airbob.org/under-graduate/down.png`;
     },
     secondArrow() {
-      return this.apartSecondStatus
-        ? `https://static.airbob.org/under-graduate/up.png`
-        : `https://static.airbob.org/under-graduate/down.png`;
+      return "";
+      // return this.apartSecondStatus
+      //   ? `https://static.airbob.org/under-graduate/up.png`
+      //   : `https://static.airbob.org/under-graduate/down.png`;
     },
     modifyOrSubmit() {
       return this.modifyStatus === true ? `提交报名表` : `修改`;
@@ -196,17 +200,15 @@ export default class extends wepy.page {
       });
     },
     registerAssociation() {
-      if (this.firstApartmentId === this.secondApartmentId) {
-        wepy.showModal({
-          content: "两个志愿的部门不能相同哦~",
-          confirmText: "知道了",
-          showCancel: false,
-          confirmColor: "#47CFF5"
-        });
-      } else if (
-        this.apartFirstStatus === false ||
-        this.apartSecondStatus === false
-      ) {
+      // if (this.firstApartmentId === this.secondApartmentId) {
+      //   wepy.showModal({
+      //     content: "两个志愿的部门不能相同哦~",
+      //     confirmText: "知道了",
+      //     showCancel: false,
+      //     confirmColor: "#47CFF5"
+      //   });
+      // } else
+      if (this.apartFirstStatus === false || this.apartSecondStatus === false) {
         wepy.showModal({
           content: "要填两个部门哦~",
           confirmText: "知道了",
@@ -256,14 +258,15 @@ export default class extends wepy.page {
         this.answerPostData[1] !== this.originData[3] ||
         this.answerPostData[2] !== this.originData[4]
       ) {
-        if (this.firstApartmentId === this.secondApartmentId) {
-          wepy.showModal({
-            content: "两个志愿的部门不能相同哦~",
-            confirmText: "知道了",
-            showCancel: false,
-            confirmColor: "#47CFF5"
-          });
-        } else if (this.answerPostData.some(x => x === null || x === "")) {
+        // if (this.firstApartmentId === this.secondApartmentId) {
+        //   wepy.showModal({
+        //     content: "两个志愿的部门不能相同哦~",
+        //     confirmText: "知道了",
+        //     showCancel: false,
+        //     confirmColor: "#47CFF5"
+        //   });
+        // } else
+        if (this.answerPostData.some(x => x === null || x === "")) {
           wepy.showModal({
             content: "问题回答不能为空~",
             confirmText: "知道了",
@@ -275,7 +278,7 @@ export default class extends wepy.page {
             this.formId,
             wepy.getStorageSync("userInfo").studentId ||
               wepy.getStorageSync("User").studentId,
-            this.associationInfo.description,
+            this.associationInfo.fullname,
             this.firstApartmentId,
             this.secondApartmentId,
             this.answerPostData[0],
@@ -308,25 +311,13 @@ export default class extends wepy.page {
       }
     }
   };
-  schoolTalkHeat(requestData) {
-    this.commandData = requestData.assoInfo;
-    schoolTalkAssociation(requestData.tagId).then(res => {
-      if (res.statusCode === 200 || res.code === 200) {
-        const requestData = res.data.data;
-        this.topicArray = requestData.topics;
-        this.associationInfo.heat =
-          requestData.heat === null ? 0 : requestData.heat;
-        this.topicLength = requestData.topics_count;
-        this.$apply();
-      }
-    });
-  }
-  onLoad(option) {
+  async onLoad(option) {
     let associationStatus = this.$parent.globalData.associationStatus.data;
     const associationInfo = this.$parent.globalData.associationUserTableInfo;
     this.associationInfo = associationInfo;
     if (associationInfo.associationName !== undefined) {
-      this.associationInfo.description = associationInfo.associationName;
+      this.associationInfo.fullname =
+        associationInfo.fullName || associationInfo.fullname;
     }
     this.associationAvatar = decodeURIComponent(option.avatar);
     if (option.clubPersonalStatus) {
@@ -338,9 +329,9 @@ export default class extends wepy.page {
       this.associationAvatar = associationInfo.logo;
       this.$apply();
     }
-    if (associationStatus.success) {
+    if (associationStatus && associationStatus.success) {
       const filterAssociationStatus = associationStatus.data.filter(
-        item => item.associationName === associationInfo.description
+        item => item.associationName === associationInfo.fullname
       )[0];
       if (filterAssociationStatus !== undefined) {
         if (filterAssociationStatus.status !== 0) {
@@ -389,12 +380,29 @@ export default class extends wepy.page {
         }
       }
     }
-    getAssociationAccept(
-      wepy.getStorageSync("userInfo").studentId ||
-        wepy.getStorageSync("User").studentId,
-      this.associationInfo.description
-    ).then(res => {
-      // 错误提示
+    wepy.showLoading({
+      title: "加载报名信息中..."
+    });
+    try {
+      if (!this.perfectInfoStatus) {
+        const {
+          data: { data: associationUserInfo }
+        } = await associationUsers(
+          wepy.getStorageSync("userInfo").studentId ||
+            wepy.getStorageSync("User").studentId
+        );
+        if (associationUserInfo.birthday === "0000-00-00") {
+          this.perfectInfoStatus = false;
+        } else {
+          wepy.setStorageSync("associationInfo", associationUserInfo);
+          this.perfectInfoStatus = true;
+        }
+      }
+      const res = await getAssociationAccept(
+        wepy.getStorageSync("userInfo").studentId ||
+          wepy.getStorageSync("User").studentId,
+        this.associationInfo.associationName
+      );
       if (res.data.errCode === 55) {
         wepy
           .showModal({
@@ -411,7 +419,6 @@ export default class extends wepy.page {
       }
       const requestData = res.data.data;
       // 获取校谈热度
-      this.schoolTalkHeat(requestData);
       this.tagId = requestData.tagId;
       this.formId = requestData.applicationFormId;
       let selectArr = [];
@@ -434,7 +441,8 @@ export default class extends wepy.page {
         this.modifyStatus = true;
       } else {
         this.apartFirstIndex = selectArr[0];
-        this.apartSecondIndex = selectArr[1];
+        this.apartSecondIndex =
+          selectArr[1] !== undefined ? selectArr[1] : this.apartFirstIndex;
         this.firstApartmentId =
           requestData.zxdepartmentModelSelected[this.apartFirstIndex].id;
         this.secondApartmentId =
@@ -451,14 +459,20 @@ export default class extends wepy.page {
       this.apartmentFirst = requestData.zxdepartmentModelSelected;
       this.apartmentSecond = requestData.zxdepartmentModelSelected;
       this.originData = [
-        this.apartmentFirst[this.apartFirstIndex].id,
-        this.apartmentSecond[this.apartSecondIndex].id,
+        this.apartmentFirst.length !== 0
+          ? this.apartmentFirst[this.apartFirstIndex].id
+          : -1,
+        this.apartmentSecond.length !== 0
+          ? this.apartmentSecond[this.apartSecondIndex].id
+          : -1,
         this.answerPostData[0],
         this.answerPostData[1],
         this.answerPostData[2]
       ];
       this.$apply();
-    });
+    } finally {
+      wepy.hideLoading();
+    }
   }
 }
 </script>
@@ -493,7 +507,7 @@ export default class extends wepy.page {
       font-size 18px
       color #ffffff
   .perfect-info
-    position absolute
+    position relative
     z-index 999
     width 100%
     height 100%
@@ -531,7 +545,7 @@ export default class extends wepy.page {
     height 136px
     background-image linear-gradient(135deg, #a7f3d5 0%, #45d3fb 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%)
     background-blend-mode normal, normal
-    position fixed
+    position relative
     top 0
     z-index -1
     .header-container
@@ -579,7 +593,7 @@ export default class extends wepy.page {
       background-color #ffffff
       box-shadow 0px 0px 12px 0px rgba(168, 168, 168, 0.5)
       border-radius 14px
-      margin-top 119px
+      margin-top 30px
       // height 661px
       margin-bottom 15px
       .body-slogan

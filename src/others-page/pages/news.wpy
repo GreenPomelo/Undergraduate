@@ -1,19 +1,29 @@
 <template>
   <view>
+    <qy-navigation :title="navTitle"></qy-navigation>
     <view class="container">
       <view style="margin-bottom:128rpx;">
         <view class="news-title">{{title}}</view>
-        <view class="news-date">发布时间：{{date}}<view class="ads-tip" wx-if="{{isAds}}">推广资讯</view></view>
+        <view class="news-date">
+          发布时间：{{date}}
+          <view class="ads-tip" wx-if="{{isAds}}">推广资讯</view>
+        </view>
         <view class="news-content">
           <rich-text nodes="{{content}}"></rich-text>
         </view>
       </view>
       <view class="news-file-list" hidden="{{fileList.length === 0}}">
-        <repeat for="{{fileList}}">
+        <repeat for="{{fileList}}" key="index" index="index" item="item">
           <view class="news-file-item">
-            <image mode="aspectFit" src="{{filterWxs.filter(item.name)}}" class="file-type-img"/>
+            <image mode="aspectFit" src="{{filterWxs.filter(item.name)}}" class="file-type-img">
             <view class="file-name">{{item.name}}</view>
-            <image mode="aspectFit" @tap="downLoad(item.url)" src="https://static.airbob.org/admin/news_icon_download.png" class="file-download-img"/>
+            <image
+              mode="aspectFit"
+              @tap="downLoad"
+              data-url="{{item.url}}"
+              src="https://static.airbob.org/admin/news_icon_download.png"
+              class="file-download-img"
+            >
           </view>
           <view class="divide"></view>
         </repeat>
@@ -26,12 +36,17 @@
 import wepy from "wepy";
 import filterWxs from "../wxs/filter.wxs";
 import { getNewsInformationContent } from "@/api/common";
+import navigation from "@/components/qy-navigation";
 
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: ""
   };
+  components = {
+    "qy-navigation": navigation
+  };
   data = {
+    navTitle: "资讯详情",
     title: "",
     content: "",
     date: "",
@@ -42,7 +57,12 @@ export default class extends wepy.page {
     filterWxs
   };
   methods = {
-    downLoad(url) {
+    downLoad(event) {
+      const {
+        currentTarget: {
+          dataset: { url }
+        }
+      } = event;
       wepy
         .showModal({
           title: "提示",
@@ -76,12 +96,12 @@ export default class extends wepy.page {
                   });
               })
               .catch(() => {
+                wepy.hideLoading();
                 wepy.showToast({
                   title: "下载失败！",
                   icon: "none",
                   mask: true
                 });
-                wepy.hideLoading();
               });
           }
         });

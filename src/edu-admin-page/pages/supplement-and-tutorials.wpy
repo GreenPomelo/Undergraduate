@@ -1,62 +1,104 @@
 <template>
-  <view>
-    <view class="head">
-      <text class="title">你一共挂了{{credit}}个学分</text>
-    </view>
-    <view class="button-list">
-      <view @tap.stop="toTutorials" class="button-common {{current==='tutorials'?'button-active':null}}">考前辅导</view>
-      <view @tap.stop="toSupplements" class="button-common {{current==='supplements'?'button-active':null}}"> 补考安排</view>
-    </view>
-    <!-- <view class="line" /> -->
-    <view class="card-list">
-      <repeat wx:if="{{current==='tutorials'}}" for="{{tutorials}}" key="index" index="index" item="item">
-        <card1 :item.sync="item" :bg.sync="bg[index % 4]" showbg="https://static.airbob.org/under-graduate/%E8%BE%85%E5%AF%BC%E8%AF%BE.png" />
-      </repeat>
-      <repeat wx:if="{{current==='supplements'}}" for="{{supplements}}" key="index" index="index" item="item">
-        <card2 :item.sync="item" :bg.sync="bg[index % 4]" showbg="https://static.airbob.org/under-graduate/%E8%AF%95%E5%8D%B7.png" />
-      </repeat>
-      <view wx:if="{{supplements.length === 0}}">
-        <image class="no-image" mode="widthFix" src="https://static.airbob.org/under-graduate/%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B52.png" />
-        <view class="no-text">你不需要补考哦</view>
+  <BaseContainer navTitle="辅导课">
+    <view slot="qy-content">
+      <view>
+        <view class="head">
+          <text class="title">你一共挂了{{credit}}个学分</text>
+        </view>
+        <view class="button-list">
+          <view
+            @tap.stop="toTutorials"
+            class="button-common {{current==='tutorials'?'button-active':null}}"
+          >考前辅导</view>
+          <view
+            @tap.stop="toSupplements"
+            class="button-common {{current==='supplements'?'button-active':null}}"
+          >补考安排</view>
+        </view>
+        <!-- <view class="line" /> -->
+        <view class="card-list">
+          <repeat
+            wx:if="{{current==='tutorials'}}"
+            for="{{tutorials}}"
+            key="index"
+            index="index"
+            item="item"
+          >
+            <card1
+              :item.sync="item"
+              :bg.sync="bg[index % 4]"
+              showbg="https://static.airbob.org/under-graduate/%E8%BE%85%E5%AF%BC%E8%AF%BE.png"
+            />
+          </repeat>
+          <repeat
+            wx:if="{{current==='supplements'}}"
+            for="{{supplements}}"
+            key="index"
+            index="index"
+            item="item"
+          >
+            <card2
+              :item.sync="item"
+              :bg.sync="bg[index % 4]"
+              showbg="https://static.airbob.org/under-graduate/%E8%AF%95%E5%8D%B7.png"
+            />
+          </repeat>
+          <view wx:if="{{supplements.length === 0}}">
+            <image
+              class="no-image"
+              mode="widthFix"
+              src="https://static.airbob.org/under-graduate/%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B52.png"
+            >
+            <view class="no-text">你不需要补考哦</view>
+          </view>
+        </view>
       </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
 import card from "../components/card";
+import JudgeStatus from "@/mixins/module";
 import { getUserGrade, getSupplyment, getYourOwnExam } from "@/api/education";
+import {
+  mockGetUserGrade,
+  mockGetSupplyment,
+  mockGetYourOwnExam
+} from "@/mock/education";
+import BaseContainer from "@/components/baseContainer";
+
 // import QyNav from "@/components/qy-navigation";
-// import QyContainer from "@/components/qy-container";
 export default class SupplementAndTutorials extends wepy.page {
   // 辅导课和补考查询页面
   components = {
     card1: card,
-    card2: card
+    card2: card,
+    BaseContainer
     // QyNav,
-    // QyContainer
   };
   config = {
     navigationBarTitleText: "辅导课" // "补考"
   };
+  mixins = [JudgeStatus];
   data = {
     credit: 0,
     current: "tutorials", // or supplements补考
     supplements: [
       // {
-      //   subject: "微型计算机原理与接口技术",
-      //   teacher: "薛明",
-      //   place: "3-203",
-      //   time: "2018.3.14"
+      //   courseName: "微型计算机原理与接口技术",
+      //   courseTeacher: "薛明XXXXXXXXXXX",
+      //   examPosition: "3-203",
+      //   examDate: "2018.3.14"
       // }
     ],
     tutorials: [
       // {
-      //   subject: "C语言",
-      //   teacher: "xxx",
-      //   place: "3-221",
-      //   time: "2018.2.14"
+      //   courseName: "C语言",
+      //   courseTeacher: "xxxXXXXXXXXXXXXXXXXXXXXX",
+      //   examPosition: "3-221",
+      //   examDate: "2018.2.14"
       // }
     ],
     bg: [
@@ -64,38 +106,60 @@ export default class SupplementAndTutorials extends wepy.page {
       "https://static.airbob.org/under-graduate/supplementary/bg2.png",
       "https://static.airbob.org/under-graduate/supplementary/bg3.png",
       "https://static.airbob.org/under-graduate/supplementary/bg4.png"
-    ]
+    ],
+    visitorModeStatus: false
   };
   onLoad(option) {
-    option.title = option.title || "tutorials";
-    this.current = option.title;
-    const title = option.title === "tutorials" ? "辅导课" : "补考查询";
-    wepy.setNavigationBarTitle({
-      title
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.judgeStatus(option.name).then(() => {
+      if (option.name === "辅导课查询") {
+        option.title = "tutorials";
+      } else if (option.name === "补考查询") {
+        option.title = "supplements";
+      }
+      this.current = option.title;
+      const title = option.title === "tutorials" ? "辅导课查询" : "补考查询";
+      this.navTitle = title;
+      this.getData();
+      this.$apply();
     });
-    this.getData();
   }
   methods = {
     toTutorials() {
       if (this.current !== "tutorials") {
-        wepy.setNavigationBarTitle({
-          title: "辅导课"
-        });
+        this.navTitle = "辅导课查询";
         this.current = "tutorials";
+        this.$apply();
       }
     },
     toSupplements() {
       if (this.current !== "supplements") {
-        wepy.setNavigationBarTitle({
-          title: "补考查询"
-        });
+        this.navTitle = "补考查询";
         this.current = "supplements";
+        this.$apply();
       }
     }
   };
+  judgeApi(cmd) {
+    switch (cmd) {
+      case "getUserGrade":
+        return this.visitorModeStatus ? mockGetUserGrade() : getUserGrade();
+        break;
+      case "getSupplyment":
+        return this.visitorModeStatus ? mockGetSupplyment() : getSupplyment();
+        break;
+      case "getYourOwnExam":
+        return this.visitorModeStatus
+          ? mockGetYourOwnExam()
+          : getYourOwnExam(1);
+        break;
+      default:
+        break;
+    }
+  }
   getData() {
     // 获取挂了的学分
-    getUserGrade().then(res => {
+    this.judgeApi("getUserGrade").then(res => {
       if (res.data) {
         this.credit =
           Number(res.data.data.creditSelected) -
@@ -105,7 +169,7 @@ export default class SupplementAndTutorials extends wepy.page {
     });
 
     // 获取辅导课
-    getSupplyment().then(res => {
+    this.judgeApi("getSupplyment").then(res => {
       if (res.statusCode === 200) {
         if (res.data.data != null) {
           const requestData = res.data.data.map(x => {
@@ -133,7 +197,7 @@ export default class SupplementAndTutorials extends wepy.page {
       }
     });
     // 获取补考
-    getYourOwnExam(1).then(res => {
+    this.judgeApi("getYourOwnExam").then(res => {
       if (res.statusCode === 200) {
         const requestData = res.data.data;
         const formatData = requestData.map(x => {

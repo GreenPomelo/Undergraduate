@@ -1,16 +1,29 @@
 <template>
   <view>
-    <image src="https://static.airbob.org/2018-2019.jpg" mode="widthFix" class="img"/>
+    <qy-navigation :title="navTitle"></qy-navigation>
+    <image src="https://static.airbob.org/2019-2020/QjE2MDEyMzI3LTIwMTktMjAyMC5qcGc=" mode="widthFix" class="img">
   </view>
 </template>
 
 <script>
 import wepy from "wepy";
+import JudgeStatus from "@/mixins/module";
+import navigation from "@/components/qy-navigation";
 
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "校历"
   };
+  components = {
+    "qy-navigation": navigation
+  };
+  data = {
+    navTitle: "校历"
+  };
+  mixins = [JudgeStatus];
+  onLoad(op) {
+    this.judgeStatus(op.name);
+  }
 }
 </script>
 

@@ -1,39 +1,59 @@
 <template>
-  <view class="container">
-    <view wx:if="{{rooms.length === 0}}" class="not-used">你还没冲过电费呢～</view>
-    <view wx:else class="room-container">
-      <view class="room-item-container" wx:for="{{rooms}}" index="index" item="item" wx:key="index">
-        <view class="room-item">
-          <view class="room-name-container">
-            <view class="room-name">{{item.campusName}}校区 {{item.areaName}} {{item.buildingName}} {{item.bigRoom}}{{item.smallRoom ? '-' + item.smallRoom : ''}}</view>
-            <view class="use-once" @tap="useOnce({{index}})">本次使用</view>
-          </view>
-          <view class="opera-container">
-            <view class="opera-default-container" @tap="changeDefult({{index}})">
-              <view class="opera-default" style="background-image:url({{item.default ? 'https://static.airbob.org/under-graduate/btn_circle_hightlight.png' : 'https://static.airbob.org/under-graduate/btn_circle_disable.png'}})"></view>
-              <span>设为默认</span>
+  <BaseContainer navTitle="管理宿舍地址">
+    <view slot="qy-content">
+      <view class="container">
+        <view wx:if="{{rooms.length === 0}}" class="not-used">你还没充过电费呢～</view>
+        <view wx:else class="room-container">
+          <view class="room-item-container" wx:for="{{rooms}}" index="index" item="item" wx:key="index">
+            <view class="room-item">
+              <view class="room-name-container">
+                <view
+                  class="room-name"
+                >{{item.campusName}}校区 {{item.areaName}} {{item.buildingName}} {{item.bigRoom}}{{item.smallRoom ? '-' + item.smallRoom : ''}}</view>
+                <view class="use-once" @tap="useOnce({{index}})">本次使用</view>
+              </view>
+              <view class="opera-container">
+                <view class="opera-default-container" @tap="changeDefult({{index}})">
+                  <view
+                    class="opera-default"
+                    style="background-image:url({{item.default ? 'https://static.airbob.org/under-graduate/btn_circle_hightlight.png' : 'https://static.airbob.org/under-graduate/btn_circle_disable.png'}})"
+                  ></view>
+                  <span>设为默认</span>
+                </view>
+                <view class="opera">
+                  <view
+                    class="opera-item"
+                    @tap="edit({{item}},{{index}})"
+                    style="background-image:url('https://static.airbob.org/under-graduate/edit.png');"
+                  ></view>
+                  <view
+                    class="opera-item"
+                    @tap="Delete({{index}})"
+                    style="background-image:url('https://static.airbob.org/under-graduate/campus-card/delete.png');"
+                  ></view>
+                </view>
+              </view>
             </view>
-            <view class="opera">
-              <view class="opera-item" @tap="edit({{item}},{{index}})" style="background-image:url('https://static.airbob.org/under-graduate/edit.png');"></view>
-              <view class="opera-item" @tap="Delete({{index}})" style="background-image:url('https://static.airbob.org/under-graduate/campus-card/delete.png');"></view>
-            </view>
+            <view class="divide"></view>
           </view>
         </view>
-        <view class="divide"></view>
+        <view class="rectangle" @tap="addNewAddress">+ 添加新地址</view>
       </view>
     </view>
-    <view class="rectangle" @tap="addNewAddress">+ 添加新地址</view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
+import { changeDefaultDorm } from "@/api/common";
+import BaseContainer from "@/components/baseContainer";
+
 export default class selectRoom extends wepy.page {
   data = {
     rooms: []
   };
-  config = {
-    navigationBarTitleText: "管理宿舍地址"
+  components = {
+    BaseContainer
   };
   onShow() {
     this.rooms = wepy.getStorageSync("selectRoom")
@@ -50,10 +70,50 @@ export default class selectRoom extends wepy.page {
         url: "./add-room"
       });
     },
-    changeDefult(index) {
-      this.rooms.map(item => (item.default = false));
-      this.rooms[index].default = true;
-      wepy.setStorageSync("selectRoom", this.rooms);
+    async changeDefult(index) {
+      wepy.showLoading();
+      let changeRoom = {};
+      const rowDefaultRoom = this.rooms.find(room => room.default);
+      Object.entries(rowDefaultRoom).forEach(([key, value]) => {
+        if (
+          ["campus", "areaName", "buildingId", "bigRoom", "smallRoom"].includes(
+            key
+          )
+        ) {
+          if (rowDefaultRoom[key] !== this.rooms[index][key]) {
+            if (key === "campus") {
+              changeRoom[key] = this.rooms[index][key] === 0 ? "XL" : "SPL";
+            } else {
+              changeRoom[key] = this.rooms[index][key];
+            }
+          }
+        }
+      });
+      if (Object.keys(changeRoom).length) {
+        const { studentId } =
+          wepy.getStorageSync("userInfo") || wepy.getStorageSync("User");
+        console.log(changeRoom);
+        const {
+          data: { data, success }
+        } = await changeDefaultDorm(changeRoom, studentId);
+        wepy.hideLoading();
+        if (success && data) {
+          this.rooms.forEach(item => {
+            item.default = false;
+          });
+          this.rooms[index].default = true;
+          wepy.setStorageSync("selectRoom", this.rooms);
+          this.methods.useOnce(index);
+        } else {
+          wepy.showToast({
+            title: "不知道为什么失败了呢~",
+            icon: "none",
+            duration: 2000
+          });
+        }
+      } else {
+        this.methods.useOnce(index);
+      }
     },
     Delete(index) {
       this.rooms.splice(index, 1);
@@ -78,8 +138,8 @@ export default class selectRoom extends wepy.page {
 
 <style lang="stylus" scoped>
 .container
-  position relative
-  min-height 100vh
+  // position relative
+  // min-height 100vh
   font-family PingFangSC-Regular
   font-size 32rpx
   .room-container
@@ -150,7 +210,6 @@ export default class selectRoom extends wepy.page {
     color #fff
     background-color #47cff5
     border-radius 50rpx
-
 .divide
   width 750rpx
   height 20rpx

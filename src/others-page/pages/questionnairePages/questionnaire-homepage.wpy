@@ -1,41 +1,65 @@
 <template>
-  <view class="container">
-      <view class="container-header">
-          <view class="header-avatar">
-              <open-data type='userAvatarUrl'></open-data>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <view class="container">
+        <view class="container-header">
+          <view class="my-portrait">
+            <open-data type="userAvatarUrl"></open-data>
           </view>
+          <!-- <image class="header-avatar" mode="aspectFit" src="{{avatar}}"/> -->
           <view class="header-username">{{ username }}</view>
-      </view>
-      <view class="container-body">
+        </view>
+        <view class="container-body">
           <repeat for="{{ questionnaires }}" index="index" key="key" item="item">
-          <view class="questionnaire-card {{ item.status==2?'questionnaire-card-finished':'' }}" style="display:{{ item.status>=0?'flex':'none' }};" @tap="toQuestionnaire" data-id="{{item.questionId}}" data-status="{{item.status}}" data-deadline="{{item.deadline}}" data-assignName="{{item.assignName}}">
+            <view
+              class="questionnaire-card {{ item.status==2?'questionnaire-card-finished':'' }}"
+              style="display:{{ item.status>=0?'flex':'none' }};"
+              @tap="toQuestionnaire"
+              data-id="{{item.questionId}}"
+              data-status="{{item.status}}"
+              data-deadline="{{item.deadline}}"
+              data-assign-name="{{item.assignName}}"
+            >
               <view class="card-title">{{ item.title }}(匿名)</view>
               <view class="card-detail">
-                  <view class="detail-status {{ item.status==1?'detail-status-finished':'detail-status-unfinished' }}">{{ item.status==1?'已填写':'未填写' }}</view>
-                  <view class="detail-deadline">{{ item.deadline }}</view>
+                <view
+                  class="detail-status {{ item.status==1?'detail-status-finished':'detail-status-unfinished' }}"
+                >{{ item.status==1?'已填写':'未填写' }}</view>
+                <view class="detail-deadline">{{ item.deadline }}</view>
               </view>
-          </view>
+            </view>
           </repeat>
+        </view>
+        <view class="container-footer">没有更多了</view>
       </view>
-      <view class="container-footer">没有更多了</view>
-  </view>
+    </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
+import JudgeStatus from "@/mixins/module";
+import BaseContainer from "@/components/baseContainer";
 import {
   getAllQuestionnaires,
   questionnaireWithAuth
 } from "@/api/questionnaire";
+
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "问卷测评"
   };
+  components = {
+    BaseContainer
+  };
+  mixins = [JudgeStatus];
   data = {
-    avatar: "",
+    navTitle: "问卷测评",
+    // avatar: "",
     username: "",
     questionnaires: [],
-    relativeDeadline: ""
+    relativeDeadline: "",
+    visitorModeStatus: false
   };
   methods = {
     toQuestionnaire(e) {
@@ -133,17 +157,30 @@ export default class extends wepy.page {
     //     wepy.getStorageSync("token"),
     //   method: "GET"
     // });
+    wepy.showLoading({
+      title: "加载中"
+    });
     let login = await questionnaireWithAuth(wepy.getStorageSync("token"));
     if (login.data) {
       wepy.setStorageSync("questionnaire_token", login.data.data);
     }
     await this.getQuestionnaires();
+    wepy.hideLoading();
   }
-  onLoad() {
+  onLoad(op) {
     // this.avatar = wepy.getStorageSync("User").nativeInformation.avatar;
-    this.username = wepy.getStorageSync("User").name;
-    this.init();
-    this.$apply();
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    if (!this.visitorModeStatus) {
+      this.judgeStatus(op.name).then(() => {
+        this.username = wepy.getStorageSync("User").name;
+        this.init();
+        this.$apply();
+      });
+    } else {
+      this.$redirect({
+        url: "../../../others-page/pages/close"
+      });
+    }
   }
   onShow() {
     const getPage = this.getCurrentPages();

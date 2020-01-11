@@ -1,30 +1,47 @@
 <!--
-- background 控制导航栏背景色
+- background 导航栏背景色
 - showBackBtn 强制显示回退按钮（除非是产生Bug的时候，不然不建议使用）
 - backBtnColor 回退按钮的颜色
-- title 存在即忽略 slot 的内容，标题为文字，文字居中
-- titleColor 默认标题的颜色
+- title ios居中，android位于左边
+- titleColor 标题的颜色
 -->
 <template>
-  <view class="nav-container" style="background: {{background}}">
-    <view class="back-wrapper" @tap="goBack" wx:if="{{showBack || showBackBtn}}">
-      <view class="back-icon" style="color: {{backBtnColor}}"></view>
-    </view>
-    <view class="nav-content">
-      <view class="title" style="color: {{titleColor}}">{{title}}</view>
-      <view wx-if="{{title.length < 1}}">
-        <slot name="content"></slot>
+  <view class="navigation-container">
+    <view
+      class="nav-container"
+      style="background: {{background}}; height: {{titleBarHeight + statusBarHeight}}px;"
+    >
+      <view
+        class="nav-inner-container"
+        style="top: {{statusBarHeight + (titleBarHeight - 32)/2}}px;"
+      >
+        <view class="back-wrapper" @tap="goBack" wx:if="{{showBack || showBackBtn}}">
+          <view class="back-icon" style="color: {{backBtnColor}};"></view>
+        </view>
+        <view class="nav-content">
+          <view
+            class="{{textCenter?'title-ios':'title-android'}}"
+            style="color: {{titleColor}}; padding-left: {{paddingLeft}}rpx;"
+          >{{title}}</view>
+          <view wx-if="{{title.length < 1}}">
+            <slot name="content"></slot>
+          </view>
+        </view>
       </view>
     </view>
+    <view class="nav-block" style="height: {{titleBarHeight + statusBarHeight}}px;"></view>
   </view>
 </template>
 
 <script>
 import wepy from "wepy";
-
 export default class extends wepy.component {
   data = {
-    showBack: false
+    showBack: false,
+    statusBarHeight: 0, //状态栏高度
+    textCenter: true,
+    titleBarHeight: 44, //ios默认44，android默认48
+    paddingLeft: 0 //ios默认0，android首页30rpx，子页面80rpx
   };
   methods = {
     goBack() {
@@ -53,51 +70,76 @@ export default class extends wepy.component {
       type: String
     }
   };
+  computed = {
+    paddingLeft() {
+      if (!this.textCenter) {
+        if (this.showBack || this.showBackBtn) {
+          return 80;
+        } else {
+          return 30;
+        }
+      } else {
+        return 0;
+      }
+    }
+  };
+  setTaskStyle() {
+    this.statusBarHeight = wepy.getSystemInfoSync().statusBarHeight;
+    if (wepy.getSystemInfoSync().system.split(" ")[0] !== "iOS") {
+      this.textCenter = false;
+      this.titleBarHeight = 48;
+    }
+    this.$apply();
+  }
   onLoad() {
+    this.setTaskStyle();
     if (getCurrentPages().length > 1) {
       this.showBack = true;
+      this.$apply();
     }
   }
 }
 </script>
 
 <style lang="stylus" scoped>
-.nav-container {
-  position: fixed;
-  height: 66px;
-  width: 100%;
-  display: flex;
-  padding-top: 30rpx;
-  align-items: center;
-  box-sizing: border-box;
-  top: 0;
-  z-index: 10000;
-
-  .back-wrapper {
-    position: absolute;
-    top: 55%;
-    width: 60rpx;
-    left: 30rpx;
-    text-align: center;
-
-    .back-icon {
-      border-left: 5rpx solid;
-      border-bottom: 5rpx solid;
-      width: 20rpx;
-      height: 20rpx;
-      padding-right: 10rpx;
-      transform: rotate(45deg);
-    }
-  }
-
-  .nav-content {
-    width: 100%;
-
-    .title {
-      text-align: center;
-      font-size: 36rpx;
-      font-weight: bold;
-    }
-  }
-}
+.navigation-container
+  width 100%
+  display flex
+  flex-direction column
+  .nav-container
+    position fixed
+    width 100%
+    display flex
+    top 0
+    z-index 10000
+    .nav-inner-container
+      position absolute
+      width 100%
+      display flex
+      align-items center
+      height 32px
+      .back-wrapper
+        position absolute
+        width 60rpx
+        left 30rpx
+        text-align center
+        .back-icon
+          border-left 5rpx solid
+          border-bottom 5rpx solid
+          width 24rpx
+          height 24rpx
+          transform rotate(45deg)
+      .nav-content
+        width 100%
+        font-family PingFangSC-Regular
+        .title-ios
+          font-weight bold
+          text-align center
+          font-size 30rpx
+        .title-android
+          font-weight normal
+          text-align left
+          font-size 34rpx
+  .nav-block
+    width 100%
 </style>

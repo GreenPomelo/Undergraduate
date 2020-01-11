@@ -1,5 +1,6 @@
 <template>
 <view class="nicp-more">
+  <qy-navigation :title="navTitle" :background="background"></qy-navigation>
   <web-view class="webview" src="https://miniprogram.banoflife.cn/v/2tok4Z35/"></web-view>
 </view>
 </template>
@@ -7,11 +8,19 @@
 
 <script>
 import wepy from "wepy";
+import navigation from "@/components/qy-navigation";
 
 export default class NicpMore extends wepy.page {
   config = {
     navigationBarTitleText: "创新杯",
     navigationBarBackgroundColor: "#45D3FB"
+  };
+  components = {
+    "qy-navigation": navigation
+  };
+  data = {
+    navTitle: "创新杯",
+    background: "#45D3FB"
   };
 }
 </script>

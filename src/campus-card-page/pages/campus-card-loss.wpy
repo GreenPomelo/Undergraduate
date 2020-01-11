@@ -1,27 +1,36 @@
 <template>
-  <view class="container">
-    <image class="loss-bg" mode="aspectFill" src="https://static.airbob.org/loss/loss.png"/>
-    <view class="loss-list">
-        <repeat for="{{items}}" key="index">
-        <view class="list-item" @tap="toLossPage" data-index="{{index}}">
-            <image class="card-pic" mode="aspectFit" src="https://static.airbob.org/loss/card{{index+1}}.png"/>
-            <view class="card-detail-container">
+  <BaseContainer navTitle="校园卡挂失">
+    <view slot="qy-content">
+      <view class="container">
+        <image class="loss-bg" mode="aspectFill" src="https://static.airbob.org/loss/loss.png"/>
+        <view class="loss-list">
+          <repeat for="{{items}}" key="index">
+            <view class="list-item" @tap="toLossPage" data-index="{{index}}">
+              <image class="card-pic" mode="aspectFit" src="https://static.airbob.org/loss/card{{index+1}}.png"/>
+              <view class="card-detail-container">
                 <view class="card-text">{{item}}</view>
-            <image class="card-arrow" mode="aspectFit" src="https://static.airbob.org/loss/arrow.png"/>
+                <image class="card-arrow" mode="aspectFit" src="https://static.airbob.org/loss/arrow.png"/>
+              </view>
             </view>
+          </repeat>
         </view>
-        </repeat>
+      </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
 import wepy from "wepy";
+import JudgeStatus from "@/mixins/module";
+import BaseContainer from "@/components/baseContainer";
 export default class CampusCardLoss extends wepy.page {
-  components = {};
+  components = {
+    BaseContainer
+  };
   config = {
     navigationBarTitleText: "校园卡挂失"
   };
+  mixins = [JudgeStatus];
   data = {
     items: ["校园卡丢失", "拾到校园卡", "挂失信息", "失物招领", "挂失解除"]
   };
@@ -33,6 +42,9 @@ export default class CampusCardLoss extends wepy.page {
       });
     }
   };
+  onLoad(op) {
+    this.judgeStatus(op.name);
+  }
 }
 </script>
 
@@ -65,7 +77,7 @@ export default class CampusCardLoss extends wepy.page {
         height 50rpx
       .card-detail-container
         height 100%
-        width 100% 
+        width 100%
         margin-left 50rpx
         display flex
         align-items center
@@ -76,5 +88,5 @@ export default class CampusCardLoss extends wepy.page {
           font-size 32rpx
           color #353535
         .card-arrow
-          width 60rpx 
+          width 60rpx
 </style>

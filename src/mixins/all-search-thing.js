@@ -100,7 +100,7 @@ export default class allSearch extends wepy.mixin {
         icon: "https://static.airbob.org/under-graduate/more/sport.png",
         isIndex: true,
         id: 10,
-        path: "../edu-admin-page/pages/pe-score",
+        path: "../others-edu-page/pages/pe-score",
         isOpen: true,
         module: "体育部"
       },

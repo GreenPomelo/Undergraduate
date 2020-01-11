@@ -1,170 +1,184 @@
 <template>
-    <view class="container">
-        <view class="container-top column">
-            <image class="bg-index" style="height:{{showPage==1?'calc(80vh + 20rpx)':'calc(35vh + 20rpx)'}};" src="https://static.airbob.org/under-graduate/bg_index.png" />
-            <view class="club-header row">
-                <view class="user-container row" @tap="changePage" data-page="1">
-                    <image class="user-avatar" mode="aspectFit" src="{{avatar}}" />
-                    <view class="user-name">{{ username }}</view>
-                    <view class="userinfo-complete {{userInfoCompleted?'userinfo-completed':''}}"><span>{{userInfoCompleted?'已完善':'完善信息'}}</span></view>
-                </view>
-                <image @tap="scanQrcode" class="scan-icon" src="https://static.airbob.org/under-graduate/scan.png" />
-            </view>
-            <view class="club-line"></view>
-        </view>
-        <scroll-view class="club-scroll" scroll-y="true">
-            <view class="club-move">
-                <navigator open-type="navigate" hover-class="none" path="/pages/index?token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="xiaotan row">
-                    <image class="xiaotan-logo" mode="aspectFit" src="https://static.airbob.org/under-graduate/xtlogo.png" />
-                    <view class="xiaotan-text">
-                        <span>南邮事,校谈说</span>
-                        <view>去校谈聊聊社团吧>></view>
-                    </view>
-                </navigator>
-                <view class="club-num" @tap="changePage" data-page="2">
-                    <view class="number"><span>{{ clubNum }}</span>个</view>
-                    <span>已报名社团</span>
-                </view>
-            </view>
-            <view class="info-container" wx:if="{{ showPage==1 }}">
-                <view class="questionnaire">
-                    <view class="personal-info">
-                        <view class="questionnaire-title">个人信息</view>
-                        <view class="questionnaire-row row">
-                            <input class="club-box user-name" placeholder="{{username}}" disabled="true" />
-                            <picker class="club-box user-gender" value="{{gIndex}}" range="{{genderArr}}" @change="setInformation" data-type="gIndex">
-                              <view class="picker-gender">{{gIndex===null?"性别":genderArr[gIndex]}}</view>
-                              <view class="picker-arrow"></view>
-                            </picker>
-                        </view>
-                        <view class="questionnaire-row row">
-                            <picker class="club-box user-birth-year" value="{{yIndex}}" range="{{yearArr}}" @change="setInformation" data-type="yIndex">
-                                <view class="picker-year">{{yIndex==null?"生日":yearArr[yIndex]}}</view>
+    <BaseContainer :navTitle="navTitle" :background.sync="backgroundStatus">
+        <view slot="qy-content" class="container">
+          <view class="container-top column">
+              <image class="bg-index" style="height:{{showPage==1?'calc(80vh + 20rpx)':'calc(35vh + 20rpx)'}};" src="https://static.airbob.org/under-graduate/bg_index.png" />
+              <view class="club-header row">
+                  <view class="user-container row" @tap="changePage" data-page="1">
+                      <view class="user-container-avatar">
+                        <open-data type="userAvatarUrl"/>
+                      </view>
+                      <!-- <image class="user-avatar" mode="aspectFit" src="{{avatar}}" /> -->
+                      <view class="user-name">{{ username }}</view>
+                      <view class="userinfo-complete {{userInfoCompleted?'userinfo-completed':''}}"><span>{{userInfoCompleted?'已完善':'完善信息'}}</span></view>
+                  </view>
+                  <image @tap="scanQrcode" class="scan-icon" src="https://static.airbob.org/under-graduate/scan.png" />
+              </view>
+              <view class="club-line"></view>
+          </view>
+          <scroll-view class="club-scroll" scroll-y="true">
+              <view class="club-move">
+                  <!-- <navigator open-type="navigate" hover-class="none" path="/pages/index?token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="xiaotan row">
+                      <image class="xiaotan-logo" mode="aspectFit" src="https://static.airbob.org/under-graduate/xtlogo.png" />
+                      <view class="xiaotan-text">
+                          <span>南邮事,校谈说</span>
+                          <view>去校谈聊聊社团吧>></view>
+                      </view>
+                  </navigator> -->
+                  <view class="club-num" @tap="changePage" data-page="2">
+                      <view class="number"><span>{{ clubNum }}</span>个</view>
+                      <span>已报名社团</span>
+                  </view>
+              </view>
+              <view class="info-container" wx:if="{{ showPage==1 }}">
+                  <view class="questionnaire">
+                      <view class="personal-info">
+                          <view class="questionnaire-title">个人信息</view>
+                          <view class="questionnaire-row row">
+                              <input class="club-box user-name" placeholder="{{username}}" disabled="true" />
+                              <picker class="club-box user-gender" value="{{gIndex}}" range="{{genderArr}}" @change="setInformation" data-type="gIndex">
+                                <view class="picker-gender">{{gIndex===null?"性别":genderArr[gIndex]}}</view>
                                 <view class="picker-arrow"></view>
-                            </picker>
-                            <picker class="club-box user-birth-month" value="{{mIndex}}" range="{{monthArr}}" @change="setInformation" data-type="mIndex">
-                                <view class="picker-month">{{mIndex==null?"月":monthArr[mIndex]}}</view>
-                                <view class="picker-arrow"></view>
-                            </picker>
-                            <picker class="club-box user-birth-day" value="{{dIndex}}" range="{{dateArr}}" @change="setInformation" data-type="dIndex">
-                                <view class="picker-day">{{dIndex==null?"日":dateArr[dIndex]}}</view>
-                                <view class="picker-arrow"></view>
-                            </picker>
-                        </view>
-                        <view class="questionnaire-row row">
-                            <picker class="club-box user-college" disabled="true">
-                                <view class="picker-college">{{college}}</view>
-                                <view class="picker-arrow"></view>
-                            </picker>
-                            <picker class="club-box user-major" disabled="true">
-                                <view class="picker-major">{{major}}</view>
-                                <view class="picker-arrow"></view>
-                            </picker>
-                        </view>
-                        <input class="club-box user-highschool" placeholder="中学学校" value="{{highschool}}" @input="setInformation" data-type="highschool"/>
-                        <input class="club-box user-dorm" placeholder="宿舍(格式:xx-xxx-x)" value="{{dorm}}" @input="setInformation" data-type="dorm"/>
-                    </view>
-                    <view class="personal-contact">
-                        <view class="questionnaire-title">联系方式</view>
-                        <input class="club-box user-phonenumber" placeholder="电话号码" value="{{phonenumber}}" @input="setInformation" data-type="phonenumber"/>
-                        <input class="club-box user-qq" placeholder="QQ号" value="{{qq}}" @input="setInformation" data-type="qq"/>
-                        <input class="club-box user-email" placeholder="邮箱" value="{{email}}" @input="setInformation" data-type="email"/>
-                    </view>
-                    <view class="club-des column">
-                        <view>使用南邮小程序招新系统报名社团与线下填写</view>
-                        <view>纸质表具有相同报名效力。</view>
-                        <view>且线上报名更加方便、快捷、环保。</view>
-                    </view>
-                </view>
+                              </picker>
+                          </view>
+                          <view class="questionnaire-row row">
+                              <picker class="club-box user-birth-year" value="{{yIndex}}" range="{{yearArr}}" @change="setInformation" data-type="yIndex">
+                                  <view class="picker-year">{{yIndex==null?"生日":yearArr[yIndex]}}</view>
+                                  <view class="picker-arrow"></view>
+                              </picker>
+                              <picker class="club-box user-birth-month" value="{{mIndex}}" range="{{monthArr}}" @change="setInformation" data-type="mIndex">
+                                  <view class="picker-month">{{mIndex==null?"月":monthArr[mIndex]}}</view>
+                                  <view class="picker-arrow"></view>
+                              </picker>
+                              <picker class="club-box user-birth-day" value="{{dIndex}}" range="{{dateArr}}" @change="setInformation" data-type="dIndex">
+                                  <view class="picker-day">{{dIndex==null?"日":dateArr[dIndex]}}</view>
+                                  <view class="picker-arrow"></view>
+                              </picker>
+                          </view>
+                          <view class="questionnaire-row row">
+                              <picker class="club-box user-college" disabled="true">
+                                  <view class="picker-college">{{college}}</view>
+                                  <view class="picker-arrow"></view>
+                              </picker>
+                              <picker class="club-box user-major" disabled="true">
+                                  <view class="picker-major">{{major}}</view>
+                                  <view class="picker-arrow"></view>
+                              </picker>
+                          </view>
+                          <input class="club-box user-highschool" placeholder="中学学校" value="{{highschool}}" @input="setInformation" data-type="highschool"/>
+                          <input class="club-box user-dorm" placeholder="宿舍(格式:xx-xxx-x)" value="{{dorm}}" @input="setInformation" data-type="dorm"/>
+                      </view>
+                      <view class="personal-contact">
+                          <view class="questionnaire-title">联系方式</view>
+                          <input class="club-box user-phonenumber" placeholder="电话号码" value="{{phonenumber}}" @input="setInformation" data-type="phonenumber"/>
+                          <input class="club-box user-qq" placeholder="QQ号" value="{{qq}}" @input="setInformation" data-type="qq"/>
+                          <input class="club-box user-email" placeholder="邮箱" value="{{email}}" @input="setInformation" data-type="email"/>
+                      </view>
+                      <view class="club-des column">
+                          <view>使用南邮小程序招新系统报名社团与线下填写</view>
+                          <view>纸质表具有相同报名效力。</view>
+                          <view>且线上报名更加方便、快捷、环保。</view>
+                      </view>
+                  </view>
                 <button class="save-btn" @tap="submitInformation"><span>保存</span></button>
-            </view>
-            <view class="club-container" wx:if="{{ showPage==2 }}">
-                <view wx:if="{{ nojoin }}">
-                    <view class="card-container">
-                        <view class="club-card column" style="align-items:center;">
-                            <image class="nojoin-pic" mode="aspectFit" src="https://static.airbob.org/under-graduate/nojoin.png" />
-                        </view>
-                        <view class="card-line"></view>
-                    </view>
-                    <view class="card-container">
-                        <view class="club-card column"></view>
-                        <view class="card-line"></view>
-                    </view>
-                </view>
-                <view wx:if="{{ !nojoin }}">
-                    <repeat for="{{clubs}}" index="index" key="key" item="item">
-                        <view class="card-container"> 
-                            <view class="club-card column">
-                                <view class="card-header row">
-                                    <view class="card-info row">
-                                        <image class="club-avatar" mode="as1pectFit" src="{{item.logo}}" />
-                                        <view class="card-name column">
-                                            <view class="club-name">{{item.fullname}}</view>
-                                            <view class="card-key row" @tap="copyKey" data-code="{{item.kouling}}" data-name="{{ item.associationName }}">
-                                                <span>招新口令</span>
-                                                <view class="club-key">{{item.kouling}}</view>
-                                                <span>点击复制分享</span>
-                                            </view>
-                                        </view>
-                                    </view>
-                                    <view class="card-detail">
-                                        <view class="club-date">{{item.lastModifiedDate}}</view>
-                                        <view class="club-status">{{ item.status }}</view>
-                                    </view>
-                                </view>
-                                <view class="card-choice row">
-                                    <view class="club-first-choice column">
-                                        <view style="font-weight:bold;">{{item.departmentModelList[0].departmentName?item.departmentModelList[0].departmentName:'无'}}</view>
-                                        <span>第一志愿</span>
-                                    </view>
-                                    <view class="club-second-choice column">
-                                        <view style="font-weight:bold;">{{item.departmentModelList[1].departmentName?item.departmentModelList[1].departmentName:'无'}}</view>
-                                        <span>第二志愿</span>
-                                    </view>
-                                </view>
-                                <view class="card-footer row">
-                                    <span @tap="toClubPage" data-idx="{{index}}">了解社团信息</span>
-                                    <span @tap="toFormPage" data-idx="{{index}}">查看报名表</span>
-                                </view>
-                            </view>
-                            <view class="card-line"></view>
-                        </view>
-                    </repeat>
-                    <view class="card-container" @tap="toHomePage">
-                        <view class="club-card row" style="align-items:center;">
-                            <span class="card-nomore">没有更多了，去首页看看？</span>
-                        </view>
-                        <view class="card-line"></view>
-                    </view>
-                </view>
-            </view>
-            <view class="footer-container" wx:if="{{ showPage==2 }}">
-                <view class="club-footer">
-                    <view class="club-des column">
-                        <view>使用南邮小程序招新系统报名社团与线下填写</view>
-                        <view>纸质表具有相同报名效力。</view>
-                        <view>且线上报名更加方便、快捷、环保。</view>
-                    </view>
-                    <navigator open-type="navigate" hover-class="none" path="/pages/index?token={{schoolTalkToken}}" target="miniProgram" app-id="wxa16acae9f9d131fb" class="xiaotan-btn"><span>去校谈,聊社团</span></navigator>
-                </view>
-            </view>
-        </scroll-view>
-        <view class="club-toast  {{showToast?'club-toast-fadeInUp':''}}">
-          <view>口令复制成功！快去QQ/微信中粘贴给同学</view>
-          <view>一起报名这个社团吧</view>
-        </view>
-    </view>
+              </view>
+              <view class="club-container" wx:if="{{ showPage==2 }}">
+                  <view wx:if="{{ nojoin }}">
+                      <view class="card-container">
+                          <view class="club-card column" style="align-items:center;">
+                              <image class="nojoin-pic" mode="aspectFit" src="https://static.airbob.org/under-graduate/nojoin.png" />
+                          </view>
+                          <view class="card-line"></view>
+                      </view>
+                      <view class="card-container">
+                          <view class="club-card column"></view>
+                          <view class="card-line"></view>
+                      </view>
+                  </view>
+                  <view wx:if="{{ !nojoin }}">
+                      <repeat for="{{clubs}}" index="index" key="key" item="item">
+                          <view class="card-container">
+                              <view class="club-card column">
+                                  <view class="card-header row">
+                                      <view class="card-info row">
+                                          <image class="club-avatar" mode="as1pectFit" src="{{item.logo}}" />
+                                          <view class="card-name column">
+                                              <view class="club-name">{{item.fullname}}</view>
+                                              <view class="card-key row" @tap="copyKey" data-code="{{item.kouling}}" data-name="{{ item.associationName }}">
+                                                  <span>招新口令</span>
+                                                  <view class="club-key">{{item.kouling}}</view>
+                                                  <span>点击复制分享</span>
+                                              </view>
+                                          </view>
+                                      </view>
+                                      <view class="card-detail">
+                                          <view class="club-date">{{item.lastModifiedDate}}</view>
+                                          <view class="club-status">{{ item.status }}</view>
+                                      </view>
+                                  </view>
+                                  <view class="card-choice row">
+                                      <view class="club-first-choice column">
+                                          <view style="font-weight:bold;">{{item.departmentModelList[0].departmentName?item.departmentModelList[0].departmentName:'无'}}</view>
+                                          <span>第一志愿</span>
+                                      </view>
+                                      <view class="club-second-choice column">
+                                          <view style="font-weight:bold;">{{item.departmentModelList[1].departmentName?item.departmentModelList[1].departmentName:'无'}}</view>
+                                          <span>第二志愿</span>
+                                      </view>
+                                  </view>
+                                  <view class="card-footer row">
+                                      <span @tap="toClubPage" data-idx="{{index}}">了解社团信息</span>
+                                      <span @tap="toFormPage" data-idx="{{index}}">查看报名表</span>
+                                  </view>
+                              </view>
+                              <view class="card-line"></view>
+                          </view>
+                      </repeat>
+                      <view class="card-container" @tap="toHomePage">
+                          <view class="club-card row" style="align-items:center;">
+                              <span class="card-nomore">没有更多了，去首页看看？</span>
+                          </view>
+                          <view class="card-line"></view>
+                      </view>
+                  </view>
+              </view>
+              <view class="footer-container" wx:if="{{ showPage==2 }}">
+                  <view class="club-footer">
+                      <view class="club-des column">
+                          <view>使用南邮小程序招新系统报名社团与线下填写</view>
+                          <view>纸质表具有相同报名效力。</view>
+                          <view>且线上报名更加方便、快捷、环保。</view>
+                      </view>
+                      <view class="xiaotan-btn" @tap.stop="toAssociationHome"><span>去社团广场看看</span></view>
+                  </view>
+              </view>
+          </scroll-view>
+          <view class="club-toast  {{showToast?'club-toast-fadeInUp':''}}">
+            <view>口令复制成功！快去QQ/微信中粘贴给同学</view>
+            <view>一起报名这个社团吧</view>
+          </view>
+      </view>
+    </BaseContainer>
 </template>
 <script>
 import wepy from "wepy";
 import { associationUpdate, getAssociationStatus } from "@/api/recruit";
+import { educationSystemInformation } from "@/api/education";
+import BaseContainer from "@/components/baseContainer";
+import pageJump from "@/others-page/mixins/page-jump.js";
+
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "社团报名",
     navigationBarBackgroundColor: "#45d3fb",
     disableScroll: true
   };
+  components = {
+    BaseContainer
+  };
   data = {
+    navTitle: "社团报名",
+    background: "#45d3fb",
     userInfoCompleted: false,
     clubNum: 0,
     showPage: 2,
@@ -189,7 +203,8 @@ export default class extends wepy.page {
     email: "",
     clubs: [],
     showToast: false,
-    schoolTalkToken: ""
+    schoolTalkToken: "",
+    backgroundStatus: "transparent"
   };
   computed = {
     userInfoCompleted() {
@@ -200,9 +215,15 @@ export default class extends wepy.page {
           ).length === 0;
     }
   };
+  mixins = [pageJump];
   methods = {
     changePage(e) {
-      this.showPage = Number(e.currentTarget.dataset.page);
+      const { page } = e.currentTarget.dataset;
+      if (this.userInfoCompleted && 1 === Number(page) && this.showPage === 1) {
+        this.showPage = 2;
+      } else {
+        this.showPage = Number(page);
+      }
     },
     setInformation(e) {
       let type = e.currentTarget.dataset.type;
@@ -212,9 +233,8 @@ export default class extends wepy.page {
     // 扫描二维码
     scanQrcode() {
       wepy.scanCode().then(res => {
-        const postData = res.path.match(/{(.+?)}/g)[0];
         wepy.navigateTo({
-          url: `./association-detail?info=${postData}`
+          url: "../../../" + res.path
         });
       });
     },
@@ -248,11 +268,16 @@ export default class extends wepy.page {
       let response = await associationUpdate(data);
       if (response.data.success) {
         wepy.setStorageSync("associationInfo", data);
-        wepy.showToast({
-          title: "保存成功",
-          icon: "none",
-          duration: 1500
-        });
+        wepy
+          .showToast({
+            title: "保存成功",
+            icon: "none",
+            duration: 1500
+          })
+          .then(() => {
+            this.showPage = 2;
+            this.$apply();
+          });
       } else if (response.data.errCode === 53) {
         wepy.showToast({
           title: "用户信息未更改",
@@ -296,11 +321,7 @@ export default class extends wepy.page {
       let postData = this.clubs[index];
       postData.description = postData.associationName;
       wepy.navigateTo({
-        url: `./association-detail?info=${JSON.stringify(
-          postData.associationName
-        )}&fullname=${JSON.stringify(
-          postData.fullname
-        )}&clubPersonalStatus=true`
+        url: `./association-detail?associationName=${postData.associationName}`
       });
     },
     toFormPage(e) {
@@ -337,10 +358,23 @@ export default class extends wepy.page {
   async getUserInfo() {
     let that = this;
     let response = wepy.getStorageSync("associationInfo");
+    const userInfo = wepy.getStorageSync("userInfo");
     if (response) {
-      let birthday = response.birthday.split("-");
-      that.username = response.name;
-      that.gIndex = response.sex === 1 ? 0 : 1;
+      let birthday =
+        response.birthday !== "0000-00-00"
+          ? response.birthday.split("-")
+          : `${userInfo.birthday.slice(0, 4)}-${userInfo.birthday.slice(
+              4,
+              6
+            )}-${userInfo.birthday.slice(6, 8)}`.split("-");
+      that.username = response.name ? response.name : userInfo.name;
+      that.gIndex = response.sex
+        ? response.sex === 1
+          ? 0
+          : 1
+        : userInfo.gender === "男"
+        ? 0
+        : 1;
       that.yIndex =
         that.yearArr.indexOf(birthday[0]) === -1
           ? null
@@ -358,6 +392,12 @@ export default class extends wepy.page {
       that.phonenumber = Number(response.phone) === 0 ? "" : response.phone;
       that.qq = Number(response.qq) === 0 ? "" : response.qq;
       that.email = response.mail;
+    } else {
+      that.username = userInfo.name;
+      that.gIndex = userInfo.gender === "男" ? 0 : 1;
+      that.yIndex = that.yearArr.indexOf(userInfo.birthday.slice(0, 4));
+      that.mIndex = that.monthArr.indexOf(userInfo.birthday.slice(4, 6));
+      that.dIndex = that.dateArr.indexOf(userInfo.birthday.slice(6, 8));
     }
     this.$apply();
   }
@@ -419,8 +459,13 @@ export default class extends wepy.page {
         this.dateArr.push(String(i));
       }
     }
-    await this.getUserInfo();
-    await this.getClubInfo();
+    try {
+      wepy.showLoading({ title: "加载个人信息中" });
+      await this.getUserInfo();
+      await this.getClubInfo();
+    } finally {
+      wepy.hideLoading();
+    }
   }
   async onLoad(options) {
     this.schoolTalkToken = wepy.getStorageSync("token");
@@ -430,12 +475,22 @@ export default class extends wepy.page {
     }
     if (
       wepy.getStorageSync("token") &&
-      wepy.getStorageSync("User").enabled &&
-      wepy.getStorageSync("userInfo")
+      wepy.getStorageSync("User").enabled
+      // wepy.getStorageSync("userInfo")
     ) {
-      this.avatar = wepy.getStorageSync("User").nativeInformation.avatar;
+      const userInfoCache = wepy.getStorageSync("userInfo");
+
+      if (!userInfoCache || !userInfoCache.studentId) {
+        await educationSystemInformation().then(res => {
+          if (res.data && res.data.data) {
+            wepy.setStorageSync("userInfo", res.data.data);
+          }
+        });
+      }
+
       this.college = wepy.getStorageSync("userInfo").college;
       this.major = wepy.getStorageSync("userInfo").major;
+      this.avatar = wepy.getStorageSync("User").nativeInformation.avatar;
       this.xh =
         wepy.getStorageSync("userInfo").studentId ||
         wepy.getStorageSync("User").studentId;
@@ -458,8 +513,9 @@ vendors = official
   height 100%
   min-height 100vh
   font-family PingFangSC-Regular
+  margin-top 40px
   .container-top
-    position fixed
+    position absolute
     top 0
     right 0
     left 0
@@ -474,9 +530,16 @@ vendors = official
   .club-header
     justify-content space-between
     align-items center
+    margin-top 90px
     .user-container
       align-items center
       height 100rpx
+      .user-container-avatar
+        overflow hidden
+        border-radius 50%
+        height 56rpx
+        margin-left 30rpx
+        width 56rpx
       .user-avatar
         height 56rpx
         width 56rpx
@@ -505,9 +568,10 @@ vendors = official
       .userinfo-completed
         background #7ed321
     .scan-icon
-      height 40rpx
-      width 40rpx
+      height 28.5px
+      width 30px
       margin-right 30rpx
+      z-index 10000
   .club-line
     margin 0 auto
     height 2rpx
@@ -520,6 +584,7 @@ vendors = official
     align-items center
     justify-content space-between
     position relative
+    flex-direction row-reverse
     .xiaotan
       align-items center
       .xiaotan-logo
@@ -545,6 +610,7 @@ vendors = official
           font-size 52rpx
   .info-container
     padding 0 30rpx 10rpx 30rpx
+    height 1600rpx
     .questionnaire
       background #fff
       box-shadow 0rpx 0rpx 24rpx 0rpx rgba(168, 168, 168, 0.5)
@@ -725,8 +791,10 @@ vendors = official
 button:after
   border none
 .club-scroll
-  height calc(100vh - 102rpx)
-  padding-top 102rpx
+  height calc(100vh - 272rpx)
+  position absolute
+  top 280rpx
+  // padding-top 45rpx
 .row
   display flex
   flex-direction row

@@ -1,0 +1,303 @@
+<template>
+  <view class="container">
+    <qy-navigation :title="navTitle"></qy-navigation>
+    <view class="search-bar">
+      <image src="https://static.airbob.org/under-graduate/magnifying glass.png" class="search-icon">
+        <input type="text" class="search-input" placeholder="老师名字/课程名" placeholder-style="color:#fff;" @input="searchConfirm" value="{{search}}">
+    </view>
+    <view class="search-list" wx:if="{{search&&searchList.length}}">
+      <repeat for="{{searchList}}" index="index" item="item" key="key">
+        <view class="list-item" data-item="{{item}}" @tap="searchCourses">
+          <repeat for="{{item.keyArray}}" item="text" key="textKey">
+            <text class="{{text == search ? 'text-highlight' : '' }}">{{text}}</text>
+          </repeat>
+        </view>
+      </repeat>
+    </view>
+    <view class="search-content" hidden="{{!courses.length}}">
+      <view class="search-status" hidden="{{!searchInfo}}">通过搜索“{{searchInfo}}”检索到的课程：</view>
+      <repeat for="{{courses}}" index="index" item="item" key="key">
+        <view class="course-item" style="background:{{item.bgc}};">
+          <view class="course-detail">
+            <view class="course-name">{{item.name}}</view>
+            <view class="course-info">
+              <span>老师：</span> {{item.teacher}}
+            </view>
+            <view class="course-info">
+              <span>教室：</span> {{item.locale}}
+            </view>
+            <view class="course-info">
+              <span>上课周数：</span> {{item.week}}
+            </view>
+            <view class="course-info">
+              <span>上课时间：</span> {{item.day}}
+            </view>
+          </view>
+          <image src="https://static.airbob.org/under-graduate/course-add.png" class="add-icon" data-coursesid="{{item.coursesId}}" @tap="addNewCourse">
+        </view>
+      </repeat>
+    </view>
+    <view class="search-blank" hidden="{{courses.length||search}}">快搜搜看自己喜欢的老师都上什么课吧！</view>
+  </view>
+</template>
+
+<script>
+  import wepy from "wepy";
+  import ClassMixin from "@/mixins/class.js";
+  import navigation from "@/components/qy-navigation";
+  import {
+    searchList,
+    queryCoursesByteacher,
+    queryCoursesByCourse,
+    addCourse
+  } from "@/api/education";
+  export default class SearchCourse extends wepy.page {
+    config = {
+      navigationBarTitleText: "搜课"
+    };
+    mixins = [ClassMixin];
+    data = {
+      navTitle: "搜课",
+      search: "", // 输入框中输入的信息
+      searchInfo: "", // 调用接口时传入的key值（完整的课程名/教师名）
+      courses: [],
+      allCourses: [],
+      searchList: [],
+      timer: null
+    };
+    components = {
+      "qy-navigation": navigation
+    };
+    methods = {
+      addNewCourse(e) {
+        let coursesId = e.currentTarget.dataset.coursesid;
+        let course = [];
+        for (let key in this.allCourses) {
+          if (key === coursesId) {
+            course[key] = this.allCourses[key];
+            addCourse(course).then(res => {
+              if (res.data && res.data.data) {
+                wepy.setStorageSync("courseRoute", "canRefresh");
+                wepy.showToast({
+                  title: "添加成功",
+                  icon: "success",
+                  duration: 2000
+                });
+              } else {
+                wepy.showToast({
+                  title: "添加失败！",
+                  icon: "none",
+                  mask: true
+                });
+              }
+            });
+          }
+        }
+      },
+      searchConfirm(e) {
+        let search = e.detail.value;
+        this.search = search;
+      }
+    };
+    watch = {
+      search() {
+        this.searchInfo = "";
+        this.searchList = [];
+        this.courses = [];
+        this.throttle(
+          this.returnSearchList(encodeURIComponent(this.search)),
+          200
+        );
+      }
+    };
+    returnSearchList(search) {
+      searchList(search).then(res => {
+        if (res.data && res.data.data.length) {
+          let searchList = res.data.data;
+          searchList.map(item => {
+            item.keyArray = this.getHilightStrArray(item.key, search);
+          });
+          this.searchList = searchList;
+        } else {
+          this.searchInfo = decodeURIComponent(search);
+        }
+        this.$apply();
+      });
+    }
+    throttle(method, delay) {
+      return function() {
+        var context = this,
+          args = arguments;
+        clearTimeout(this.timer);
+        this.timer = setTimeout(function() {
+          method.apply(context, args);
+        }, delay);
+      };
+    }
+    searchCourses(e) {
+      const item = e.currentTarget.dataset.item;
+      let searchInfo = item.key;
+      const type = item.type;
+      wepy.showLoading({
+        title: "搜索中"
+      });
+      if (type === "teacherName") {
+        queryCoursesByteacher(searchInfo).then(res => {
+          this.setCourses(res);
+          wepy.hideLoading();
+        });
+      } else if (type === "course") {
+        queryCoursesByCourse(searchInfo).then(res => {
+          this.setCourses(res);
+          wepy.hideLoading();
+        });
+      }
+      this.searchList = [];
+      this.searchInfo = searchInfo;
+      this.$apply();
+    }
+    changeNumber(num) {
+      const num1 = [1, 2, 3, 4, 5, 6, 7];
+      const num2 = ["一", "二", "三", "四", "五", "六", "日"];
+      for (let i in num1) {
+        if (num === num1[i]) {
+          return num2[i];
+        }
+      }
+    }
+    handleCourseItem(courseItem) {
+      let course = [];
+      let week = [];
+      let day = [];
+      const { locale, name, teacher } = courseItem[0];
+      courseItem.map(item => {
+        week.push(item.week);
+        day.push(
+          "周" +
+            this.changeNumber(item.day) +
+            String(item.sectionstart) +
+            String(item.sectionend) +
+            "节"
+        );
+      });
+      course = {
+        locale,
+        name,
+        teacher,
+        week: week.join("|"),
+        day: day.join("|")
+      };
+      return course;
+    }
+    setCourses(res) {
+      if (res.data.data) {
+        this.allCourses = res.data.data;
+        let course = [];
+        let courses = [];
+        for (let key in res.data.data) {
+          course = this.handleCourseItem(res.data.data[key].timetable);
+          course.coursesId = key;
+          courses.push(course);
+        }
+        this.courses = this.getColor(courses);
+        this.$apply();
+      }
+    }
+    getHilightStrArray(str, key) {
+      return str.replace(new RegExp(`${key}`, "g"), `%%${key}%%`).split("%%");
+    }
+    onLoad() {
+      this.$apply();
+    }
+  }
+</script>
+
+<style lang="stylus" type="text/stylus" scoped>
+.container
+  width 100%
+  height 100%
+  color #fff
+  font-size 30rpx
+  .search-list
+    width calc(100% - 50rpx)
+    height 100%
+    background #fff
+    display flex
+    flex-direction column
+    align-items center
+    margin 24rpx 25rpx
+    .list-item
+      width calc(100% - 50rpx)
+      color #353535
+      height 83rpx
+      font-size 32rpx
+      line-height 83rpx
+      border-bottom solid 2rpx #e3e3e3
+      padding 0 24rpx
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
+      .text-highlight
+        font-weight bold
+  .search-content
+    display flex
+    flex-direction column
+    align-items center
+    .search-status
+      width calc(100% - 60rpx)
+      color #4a4a4a
+      margin 24rpx 0 9rpx 0
+    .course-item
+      width calc(100% - 60rpx)
+      height 281rpx
+      margin 15rpx 0
+      border-radius 20rpx
+      box-shadow 5rpx 5rpx 5rpx 0rpx rgba(0, 0, 0, 0.1)
+      padding 26rpx 32rpx 30rpx 30rpx
+      box-sizing border-box
+      position relative
+      display flex
+      align-items center
+      .course-detail
+        height 100%
+        display flex
+        flex-direction column
+        justify-content space-between
+        .course-name
+          font-weight 700
+        .course-info
+          font-size 28rpx
+          letter-spacing 1rpx
+      .add-icon
+        width 50rpx
+        height 50rpx
+        position absolute
+        right 32rpx
+  .search-blank
+    color #4a4a4a
+    width 270rpx
+    margin 0 auto
+    margin-top 40vh
+.search-bar
+  display flex
+  align-items center
+  justify-content center
+  box-shadow 0px 4px 5px 0px rgba(0, 0, 0, 0.1)
+  padding 24rpx 60rpx 30rpx 60rpx
+  position relative
+  .search-icon
+    height 30rpx
+    width 30rpx
+    position absolute
+    left 198rpx
+    z-index 2
+    margin-right 23rpx
+  .search-input
+    width 100%
+    background #5bcfe6
+    height 60rpx
+    border-radius 50rpx
+    font-size 28rpx
+    text-align center
+    padding 0 180rpx
+</style>

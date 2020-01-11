@@ -1,45 +1,42 @@
 <template>
-  <view>
-    <view class="box-container">
-      <view class="box-hide" hidden="{{!noInfo}}">
-        <view class="box-hide-content">目前还没有收到消息哦</view>
-      </view>
-      <view class="box-top" hidden="{{noInfo}}">
-        <view class="box-container-top">
-          <view>消息列表</view>
-          <view class="all-read" @tap="allRead"></view>
-          <view class="delete" @tap="Delete"></view>
+  <BaseContainer :navTitle="navTitle">
+    <view slot="qy-content">
+      <view class="box-container" hidden="{{isLoading}}">
+        <view class="box-hide" hidden="{{!noInfo}}">
+          <view class="box-hide-content">目前还没有收到消息哦</view>
+        </view>
+        <view class="box-information-category" wx:if="{{!noInfo}}">
+          <view class="bottom-bar" animation="{{animationData}}"/>
+          <repeat for="{{category}}" key="index" index="index" item="item">
+            <view
+              class="category-container {{currentCategoryIndex === index ? 'current-category' : ''}}"
+              @tap="changeCategory"
+              data-category="{{index}}"
+            >
+              {{item.text}}
+              <view class="red-dot" wx:if="{{item.unreadCount !== 0}}">{{item.unreadCount}}</view>
+            </view>
+          </repeat>
+        </view>
+        <view class="box-top" hidden="{{noInfo}}">
+          <view class="box-container-top">
+            <view style="color: #b4b4b4;font-weight: 600;width: 20%;text-align: center">消息列表</view>
+            <view class="all-read" @tap="allRead"></view>
+            <view class="delete" @tap="Delete"></view>
+          </view>
+        </view>
+        <view class="info-wrapper-container" wx:if="{{!noInfo}}">
+          <swiper class="swiper-container" current="{{lastCategoryIndex}}" @change="handleSwiperChange">
+            <repeat for="{{category}}" key="index" index="index" item="item">
+              <swiper-item @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="handleTouchEnd">
+                <InfoCard :info.sync="item.info" :id.sync="item.tag" />
+              </swiper-item>
+            </repeat>
+          </swiper>
         </view>
       </view>
-      <view hidden="{{noInfo}}">
-        <repeat for="{{info}}" index="index" key="key" item="item">
-          <view
-            class="{{item.read ? 'box-item-read' : 'box-item-unread'}} {{item.ontap ? 'box-item-tap':''}}"
-            @tap="tapCard"
-            data-taptype="{{item.type}}"
-            data-title="{{item.title}}"
-            data-id="{{item.id}}"
-            data-ontap="{{item.ontap}}"
-          >
-            <view class="box-item-container">
-              <view class="box-item-in">
-                <view
-                  class="lines"
-                  style="font-size:34rpx;padding-top:20rpx;color:#353535;font-weight:bold;"
-                >
-                  <view wx:if="{{!item.read}}" class="dot"></view>
-                  {{item.title}}{{item.ontap?'*点击*':''}}
-                </view>
-                <view class="lines">{{item.content}}</view>
-                <view class="lines" style="color:#888888;font-size:24rpx;">{{item.creatDate}}</view>
-              </view>
-              <view class="right-line"></view>
-            </view>
-          </view>
-        </repeat>
-      </view>
     </view>
-  </view>
+  </BaseContainer>
 </template>
 
 <script>
@@ -49,25 +46,72 @@ import {
   getOwnMessageAlready,
   getOwnMessageClear,
   noClassConfirm,
-  noClassConfirmNext
+  noClassConfirmNext,
+  setMessageRead
 } from "@/api/notification";
+import {
+  mockGetNotification,
+  mockMarkAllAsRead,
+  mockDeleteAll
+} from "@/mock/notification";
+import BaseContainer from "@/components/baseContainer";
+import InfoCard from "../components/information-card";
+
 export default class extends wepy.page {
   config = {
     navigationBarTitleText: "消息盒子"
   };
+  components = {
+    BaseContainer,
+    InfoCard
+  };
   data = {
+    navTitle: "消息盒子",
     noInfo: true,
     background: [
       "https://static.airbob.org/under-graduate/un-read.png",
       "https://static.airbob.org/under-graduate/read.png",
       "https://static.airbob.org/under-graduate/already-read.png"
     ],
-    info: [],
-    tapType: [5, 6, 7] //5:反馈,6:无课表,7:问卷
+    tapType: [5, 6, 7, 8], //5:反馈,6:无课表,7:问卷,8:跑操
+    visitorModeStatus: false,
+    category: [
+      {
+        text: "全部通知",
+        tag: 0,
+        info: [],
+        unreadCount: 0
+      },
+      {
+        text: "系统通知",
+        tag: 1,
+        info: [],
+        unreadCount: 0
+      },
+      {
+        text: "授权通知",
+        tag: 2,
+        info: [],
+        unreadCount: 0
+      },
+      {
+        text: "活动通知",
+        tag: 3,
+        info: [],
+        unreadCount: 0
+      }
+    ],
+    currentCategoryIndex: 0,
+    lastCategoryIndex: 0,
+    animation: null,
+    animationData: null,
+    moveRatio: 0,
+    touchDot: 0,
+    pageWidth: 0,
+    isLoading: true
   };
   methods = {
     allRead() {
-      let that = this;
       wepy
         .showModal({
           title: "全标为已读",
@@ -76,18 +120,21 @@ export default class extends wepy.page {
         })
         .then(response => {
           if (response.confirm) {
-            getOwnMessageAlready().then(res => {
+            this.judgeNotification("allRead").then(res => {
               if (res.data) {
-                for (let i of that.info) {
-                  i.read = true;
-                  i.ontap = false;
-                }
+                this.category.forEach(item => {
+                  item.unreadCount = 0;
+                  item.info.forEach(msg => {
+                    msg.read = true;
+                    msg.ontap = false;
+                  });
+                });
                 wepy.showToast({
                   title: "已全部已读",
                   icon: "success",
                   duration: 2000
                 });
-                that.$apply();
+                this.$apply();
               } else {
                 wepy.showToast({
                   title: "不知道为什么失败了呢",
@@ -100,7 +147,6 @@ export default class extends wepy.page {
         });
     },
     Delete() {
-      let that = this;
       wepy
         .showModal({
           title: "清空消息列表",
@@ -109,14 +155,17 @@ export default class extends wepy.page {
         })
         .then(response => {
           if (response.confirm) {
-            getOwnMessageClear().then(res => {
+            this.judgeNotification("deleteAll").then(res => {
               if (res.data) {
                 wepy.showToast({
                   title: "已清空",
                   icon: "success",
                   duration: 2000
                 });
-                this.info = [];
+                this.category.forEach(item => {
+                  item.unreadCount = 0;
+                  item.info = [];
+                });
                 this.noInfo = true;
                 this.$apply();
               } else {
@@ -130,12 +179,99 @@ export default class extends wepy.page {
           }
         });
     },
-    tapCard(e) {
-      let type = e.currentTarget.dataset.taptype;
-      let asso = e.currentTarget.dataset.title.split(" ")[0];
-      let id = e.currentTarget.dataset.id;
-      let ontap = e.currentTarget.dataset.ontap;
-      let that = this;
+    changeCategory(e) {
+      const { category: index } = e.currentTarget.dataset;
+      if (this.currentCategoryIndex !== index) {
+        this.animationData = this.animation
+          .left(`${25 * index}%`)
+          .step()
+          .export();
+        this.currentCategoryIndex = this.lastCategoryIndex = index;
+        this.$apply();
+      }
+    },
+    handleTouchMove(e) {
+      const touchMove = e.touches[0].pageX;
+      //  左滑负， 右滑正
+      this.moveRatio = Number(
+        (touchMove - this.touchDot) / this.pageWidth
+      ).toFixed(2);
+      if (this.lastCategoryIndex === 0 && this.moveRatio < 0) {
+        this.animationData = this.animation
+          .left(`${Math.abs(this.moveRatio) * 25}%`)
+          .step()
+          .export();
+        if (
+          this.moveRatio <= -0.5 &&
+          this.lastCategoryIndex === this.currentCategoryIndex
+        ) {
+          this.currentCategoryIndex = this.currentCategoryIndex + 1;
+        } else if (
+          this.moveRatio > -0.5 &&
+          this.lastCategoryIndex !== this.currentCategoryIndex
+        ) {
+          this.currentCategoryIndex = this.currentCategoryIndex - 1;
+        }
+      } else if (this.lastCategoryIndex === 3 && this.moveRatio > 0) {
+        this.animationData = this.animation
+          .left(`${(this.lastCategoryIndex - this.moveRatio) * 25}%`)
+          .step()
+          .export();
+        if (
+          this.moveRatio >= 0.5 &&
+          this.lastCategoryIndex === this.currentCategoryIndex
+        ) {
+          this.currentCategoryIndex = this.currentCategoryIndex - 1;
+        } else if (
+          this.moveRatio < 0.5 &&
+          this.lastCategoryIndex !== this.currentCategoryIndex
+        ) {
+          this.currentCategoryIndex = this.currentCategoryIndex - 1;
+        }
+      } else if (this.lastCategoryIndex !== 0 && this.lastCategoryIndex !== 3) {
+        this.animationData = this.animation
+          .left(`${(this.lastCategoryIndex - this.moveRatio) * 25}%`)
+          .step()
+          .export();
+        if (
+          (this.moveRatio >= 0.5 || this.moveRatio <= -0.5) &&
+          this.lastCategoryIndex === this.currentCategoryIndex
+        ) {
+          this.currentCategoryIndex =
+            this.moveRatio > 0
+              ? this.currentCategoryIndex - 1
+              : this.currentCategoryIndex + 1;
+        } else if (
+          this.moveRatio < 0.5 &&
+          this.moveRatio > -0.5 &&
+          this.lastCategoryIndex !== this.currentCategoryIndex
+        ) {
+          this.currentCategoryIndex =
+            this.moveRatio > 0
+              ? this.currentCategoryIndex + 1
+              : this.currentCategoryIndex - 1;
+        }
+      }
+    },
+    handleTouchStart(e) {
+      this.touchDot = e.touches[0].pageX;
+      this.moveRatio = 0;
+      this.lastCategoryIndex = this.currentCategoryIndex;
+    },
+    handleTouchEnd() {
+      this.animationData = this.animation
+        .left(`${this.currentCategoryIndex * 25}%`)
+        .step()
+        .export();
+      this.lastCategoryIndex = this.currentCategoryIndex;
+      this.touchDot = -1;
+      this.moveRatio = 0;
+    }
+  };
+  events = {
+    tapCard(dataset) {
+      const { taptype: type, id, ontap, read, title } = dataset;
+      const asso = title.split(" ")[0];
       if (type === 5 && ontap) {
         wepy.navigateTo({
           url: "./feedbackPages/historyfeedback"
@@ -153,7 +289,7 @@ export default class extends wepy.page {
                 if (res.data) {
                   noClassConfirmNext(id).then(res => {
                     if (res.data) {
-                      that.onLoad();
+                      this.init();
                     }
                   });
                   wepy.showToast({
@@ -175,6 +311,45 @@ export default class extends wepy.page {
         wepy.navigateTo({
           url: "./questionnairePages/questionnaire-homepage"
         });
+      } else if (type === 8 && ontap) {
+        wepy.showLoading({
+          title: "正在跳转..."
+        });
+        setMessageRead(id).then(res => {
+          if (res.data && res.data.data) {
+            wepy.hideLoading();
+            this.init();
+            wepy.navigateTo({ url: "./run?showPoster=true" });
+          }
+        });
+      } else if (!read) {
+        wepy
+          .showModal({
+            content: "是否将这条消息标为已读？",
+            showCancel: true,
+            confirmColor: "#3CC51F"
+          })
+          .then(res => {
+            if (res.confirm) {
+              setMessageRead(id).then(res => {
+                if (res.data && res.data.data) {
+                  wepy.showToast({
+                    title: "已读~",
+                    icon: "success",
+                    duration: 1000,
+                    mask: true
+                  });
+                  this.init();
+                } else {
+                  wepy.showToast({
+                    title: "不知道为什么失败了呢",
+                    icon: "none",
+                    duration: 2000
+                  });
+                }
+              });
+            }
+          });
       }
     }
   };
@@ -191,16 +366,42 @@ export default class extends wepy.page {
       return ~~(time / 86400) + " 天前";
     }
   }
-  async onLoad() {
-    let that = this;
-    let res = await getNotification();
+  judgeNotification(cmd) {
+    switch (cmd) {
+      case "allRead":
+        return this.visitorModeStatus
+          ? mockMarkAllAsRead()
+          : getOwnMessageAlready();
+        break;
+      case "deleteAll":
+        return this.visitorModeStatus ? mockDeleteAll() : getOwnMessageClear();
+        break;
+      default:
+        break;
+    }
+  }
+  handleSwiperChange(e) {
+    const {
+      detail: { current }
+    } = e;
+    this.currentCategoryIndex = this.lastCategoryIndex = current;
+    this.animationData = this.animation
+      .left(`${current * 25}%`)
+      .step()
+      .export();
+  }
+  async init() {
+    let res = !this.visitorModeStatus
+      ? await getNotification()
+      : await mockGetNotification();
     let info = [];
     let read = [];
     if (res.data) {
       let data = [];
       for (let i of res.data.data) {
-        i.creatDate = that.dealTheDate(~~(Date.now() - i.createDate));
-        if (that.tapType.indexOf(i.type) !== -1 && !i.read) {
+        i.creatDate = this.dealTheDate(Date.now() - i.createDate);
+        i.content = i.content.trim().split("\n");
+        if (this.tapType.indexOf(i.type) !== -1 && !i.read) {
           i.ontap = true;
         }
         if (i.enable) {
@@ -213,13 +414,33 @@ export default class extends wepy.page {
         }
       }
       info = info.concat(read);
-      that.isNewInfo = data.length !== 0;
     }
-    that.info = info;
-    if (that.info[0]) {
-      that.noInfo = false;
+    if (info.length !== 0) {
+      this.noInfo = false;
+      this.pageWidth = wepy.getSystemInfoSync().windowWidth;
+      this.category.forEach(item => {
+        item.info =
+          item.tag === 0 ? info : info.filter(msg => msg.tag === item.tag);
+        item.unreadCount = item.info.filter(msg => !msg.read).length;
+      });
     }
-    that.$apply();
+    this.$apply();
+  }
+  async onLoad() {
+    wepy.showLoading({
+      title: "加载中"
+    });
+    this.visitorModeStatus = this.$com.BaseContainer.visitorModeStatus;
+    this.pageWidth = wepy.getSystemInfoSync().windowWidth;
+    this.animation = wepy.createAnimation({ duration: 300 });
+    this.animationData = this.animation
+      .left("0%")
+      .step()
+      .export();
+    await this.init();
+    wepy.hideLoading();
+    this.isLoading = false;
+    this.$apply();
   }
 }
 </script>
@@ -242,15 +463,57 @@ export default class extends wepy.page {
     top 400rpx
     font-size 30rpx
     color #E3E3E3
+.box-information-category
+  width 710rpx
+  height 80rpx
+  display flex
+  justify-content space-around
+  align-items center
+  margin 0 auto
+  border-bottom 2rpx solid #e3e3e3
+  position relative
+  .bottom-bar
+    position absolute
+    border-bottom 3px solid #cc4545
+    width 90rpx
+    bottom 0
+    transform translateX(50%)
+  .category-container
+    display flex
+    justify-content center
+    align-items center
+    position relative
+    font-size 30rpx
+    font-weight 600
+    color #474747
+    width 25%
+    height 100%
+    .red-dot
+      width 30rpx
+      height 30rpx
+      border-radius 50%
+      background-color #e33c3c
+      position absolute
+      top 15%
+      right 3%
+      color #fff
+      font-size 24rpx
+      font-weight 500
+      line-height 30rpx
+      display flex
+      justify-content center
+    &.current-category
+      color #cc4545
 .box-top
   width 710rpx
   margin 0 auto
   border-bottom 2rpx solid #E3E3E3
-  padding 30rpx 0
+  padding 20rpx 0
   .box-container-top
     display flex
     align-items center
     font-size 30rpx
+    padding-left 20rpx
     .all-read
       position absolute
       right 125rpx
@@ -269,75 +532,11 @@ export default class extends wepy.page {
       background-position center
       background-repeat no-repeat
       background-size contain
-.box-item-read
-  width 700rpx
-  min-height 150rpx
-  margin-top 30rpx
-  margin-left 25rpx
-  background #F5F5F5
-  border-radius 15rpx
-  color #888888
-  display flex
-  align-items center
-  font-size 24rpx
-  .box-item-container
-    width 700rpx
-    .box-item-in
-      width 620rpx
-      margin 0 auto
-      .lines
-        overflow hidden
-        padding-bottom 20rpx
-        font-size 28rpx
-.box-item-unread
-  width 700rpx
-  min-height 150rpx
-  margin-top 30rpx
-  margin-left 25rpx
-  background #D8D8D8
-  background-image linear-gradient(-225deg, #E5F4FF 0%, #E8FBFF 100%)
-  border-radius 15rpx
-  color #353535
-  font-size 24rpx
-  .box-item-container
-    width 700rpx
-    display flex
-    .box-item-in
-      min-height 150rpx
-      width 620rpx
-      display flex
-      align-items center
-      flex-wrap wrap
-      margin 0 auto
-      .lines
-        flex-grow 0
-        width 620rpx
-        text-align justify
-        overflow hidden
-        padding-bottom 20rpx
-        font-size 28rpx
-        .dot
-          background #47CFF5
-          width 15rpx
-          height 15rpx
-          margin-right 15rpx
-          display inline-block
-          border-radius 50%
-    .right-line
-      width 14rpx
-      min-height 150rpx
-      background #47CFF5
-      overflow hidden
-      border-top-right-radius 15rpx
-      border-bottom-right-radius 15rpx
-.box-item-tap
-  background #d8d8d8
-  background-image linear-gradient(44deg, #f7e5a4 0%, #fee082 100%)
-  .box-item-container
-    .right-line
-      background #f6b500
-    .box-item-in
-      .lines
-        .dot
-          background #f6b500
+.info-wrapper-container
+  width 100vw
+  height calc(100vh - 64px - 160rpx)
+  .swiper-container
+    width 100%
+    height 100%
+    white-space nowrap
 </style>

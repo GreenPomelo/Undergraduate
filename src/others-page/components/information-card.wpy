@@ -1,0 +1,146 @@
+<template>
+  <view class="info-container" id="tag{{id}}">
+    <view wx:if="{{info.length !== 0}}">
+      <repeat for="{{info}}" key="index" index="index" item="item">
+        <view
+          class="{{item.read ? 'box-item-read' : 'box-item-unread'}} {{item.ontap ? 'box-item-tap' : ''}}"
+          @tap="tapCard"
+          data-taptype="{{item.type}}"
+          data-title="{{item.title}}"
+          data-id="{{item.id}}"
+          data-ontap="{{item.ontap}}"
+          data-read="{{item.read}}"
+        >
+          <view class="box-item-container">
+            <view class="box-item-in">
+              <view
+                class="lines"
+                style="font-size:34rpx;padding-top:20rpx;color:#353535;font-weight:bold;"
+              >
+                <view wx:if="{{!item.read}}" class="dot"></view>
+                {{item.title}}{{item.ontap?'*点击*':''}}
+              </view>
+              <view class="lines">
+                <repeat for="{{item.content}}" key="index2" index="index2" item="content">
+                  <view>{{content}}</view>
+                </repeat>
+              </view>
+              <view class="lines" style="color:#888888;font-size:24rpx;">{{item.creatDate}}</view>
+            </view>
+            <view class="right-line"></view>
+          </view>
+        </view>
+      </repeat>
+    </view>
+    <view wx:else class="noInfo">目前没有这类通知哦~</view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+export default class InfoCard extends wepy.component {
+  props = {
+    info: {
+      type: Array,
+      default: []
+    },
+    id: {
+      type: Number,
+      default: -1
+    }
+  };
+  methods = {
+    tapCard(e) {
+      this.$emit("tapCard", e.currentTarget.dataset);
+    }
+  };
+}
+</script>
+
+<style lang="stylus" scoped>
+.info-container
+  width 100vw
+  height 100%
+  overflow-y auto
+  display inline-block
+  white-space normal
+  .noInfo
+    width 100%
+    height 100%
+    display flex
+    justify-content center
+    align-items center
+    font-size 32rpx
+    font-weight 800
+  .box-item-read
+    width 700rpx
+    min-height 150rpx
+    margin-top 30rpx
+    margin-left 25rpx
+    background #F5F5F5
+    border-radius 15rpx
+    color #888888
+    display flex
+    align-items center
+    font-size 24rpx
+    .box-item-container
+      width 700rpx
+      .box-item-in
+        width 620rpx
+        margin 0 auto
+        .lines
+          overflow hidden
+          padding-bottom 20rpx
+          font-size 28rpx
+  .box-item-unread
+    width 700rpx
+    min-height 150rpx
+    margin-top 30rpx
+    margin-left 25rpx
+    background #D8D8D8
+    background-image linear-gradient(-225deg, #E5F4FF 0%, #E8FBFF 100%)
+    border-radius 15rpx
+    color #353535
+    font-size 24rpx
+    .box-item-container
+      width 700rpx
+      display flex
+      .box-item-in
+        min-height 150rpx
+        width 620rpx
+        display flex
+        align-items center
+        flex-wrap wrap
+        margin 0 auto
+        .lines
+          flex-grow 0
+          width 620rpx
+          text-align justify
+          overflow hidden
+          padding-bottom 20rpx
+          font-size 28rpx
+          .dot
+            background #47CFF5
+            width 15rpx
+            height 15rpx
+            margin-right 15rpx
+            display inline-block
+            border-radius 50%
+      .right-line
+        width 14rpx
+        min-height 150rpx
+        background #47CFF5
+        overflow hidden
+        border-top-right-radius 15rpx
+        border-bottom-right-radius 15rpx
+  .box-item-tap
+    background #d8d8d8
+    background-image linear-gradient(44deg, #f7e5a4 0%, #fee082 100%)
+    .box-item-container
+      .right-line
+        background #f6b500
+      .box-item-in
+        .lines
+          .dot
+            background #f6b500
+</style>
